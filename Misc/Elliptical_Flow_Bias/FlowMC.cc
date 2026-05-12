@@ -40,10 +40,17 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
+    #define DEF_UsePYTHIAJetData true
 
     //other variables
     TH1D* h1D_JetMultiplicityInPsi = new TH1D("h1D_JetMultiplicityInPsi", "h1D_JetMultiplicityInPsi", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
-    TF1 *PhiDist=new TF1("PhiDist","(1/(2*pi))*(1+0.05*cos(2*x))",-Pi,Pi);
+    TF1 *PhiDistLow=new TF1("PhiDist","(1/(2*pi))*(1+0.05*cos(2*x))",-Pi,Pi);
+    TF1 *PhiDistMiddle=new TF1("PhiDist","(1/(2*pi))*(1+0.1*cos(2*x))",-Pi,Pi);
+    TF1 *PhiDistHigh=new TF1("PhiDist","(1/(2*pi))*(1+0.14*cos(2*x))",-Pi,Pi);
+
+    TH2D* h2D_pt_vs_eta_LargeGap = new TH2D("h2D_pt_vs_eta_LargeGap","h2D_pt_vs_eta_LargeGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
+    TH2D* h2D_pt_vs_eta_SmallGap = new TH2D("h2D_pt_vs_eta_SmallGap","h2D_pt_vs_eta_SmallGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
+
     TRandom TR_Eta;
     TR_Eta.SetSeed(0);
 
@@ -51,6 +58,9 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
     PythiaEvent         *PYTHIAEvent;
     PythiaParticle      *PYTHIAParticle;
     Long64_t            file_entries;
+
+    Long64_t            LargeGapEventCounter = 0;
+    Long64_t            SmallGapEventCounter = 0;
 
     //open the root file
     TFile *file = TFile::Open("merge_mult_track_pT.root");
@@ -65,51 +75,55 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
     if(!h1D_NDist){cout << "Multiplicity histogram not found!" << endl; return 0;}
     TH1D* h1D_PtDist = (TH1D*)file->Get("h_particle_pT");
     if(!h1D_PtDist){cout << "Pt histogram not found!" << endl; return 0;}
-    
-    //------------------------------------
-    // Read input data pythia tree
-    TString pinputdirPYTHIA = "/media/nicolas-wirth/INTENSO/PYTHIA_pp/";
-    TString SEListPYTHIA = "/filelist_PYTHIA_pp.txt";
-    //TString SEListPYTHIA = "/filelist_PYTHIA_pp_OnlyHigh.txt";
-    TString Pythia_List =  "/media/nicolas-wirth/INTENSO/PYTHIA_pp";
-    Pythia_List+=SEListPYTHIA;
-    Int_t file_loop = 0;
-    if (!Pythia_List.IsNull())   // if input file is ok
-    {
-        cout << "Open file list " << Pythia_List << endl;
-        ifstream in(Pythia_List);  // input stream
-        if(in)
-        {
-            cout << "file list is ok" << endl;
-            inputPYTHIA = new TChain(PYTHIA_TREE , PYTHIA_TREE );
-            char str[255];       // char array for each file name
-            Long64_t entries_save = 0;
-            while(in)
-            {
-                in.getline(str,255);  // take the lines of the file list
-                if(str[0] != 0)
-                {
-                    TString addfile = str;
-                    addfile = pinputdirPYTHIA+addfile;
-                    //cout << "addfile: " << addfile.Data() << endl;
-                    Long64_t file_entries;////////////////////////////////////////////////////////////////////////////////////////////////////////
-                    //if(file_loop == file_select) inputPYTHIA ->AddFile(addfile.Data(),-1, PYTHIA_TREE );
-                    inputPYTHIA->AddFile(addfile.Data(), -1, PYTHIA_TREE);
-                    file_entries = inputPYTHIA->GetEntries();
-                    cout << "File added to data chain: " << addfile.Data() << " with " << file_entries-entries_save << " entries" << endl;
-                    entries_save = file_entries;
-                    file_loop++;
-                }
-            }
-            file_entries   = inputPYTHIA->GetEntries();
-            cout << "Number of entries in chain: " << file_entries << endl;
 
-            PYTHIAEvent = new PythiaEvent();
-            inputPYTHIA  ->SetBranchAddress( PYTHIA_EVENT_BRANCH, &PYTHIAEvent);
+    if(DEF_UsePYTHIAJetData)
+    {
+        //------------------------------------
+        // Read input data pythia tree
+        TString pinputdirPYTHIA = "/media/nicolas-wirth/INTENSO/PYTHIA_pp/";
+        //TString SEListPYTHIA = "/filelist_PYTHIA_pp.txt";
+        TString SEListPYTHIA = "/filelist_PYTHIA_pp_OnlyHigh.txt";
+        TString Pythia_List =  "/media/nicolas-wirth/INTENSO/PYTHIA_pp";
+        Pythia_List+=SEListPYTHIA;
+        Int_t file_loop = 0;
+        if (!Pythia_List.IsNull())   // if input file is ok
+        {
+            cout << "Open file list " << Pythia_List << endl;
+            ifstream in(Pythia_List);  // input stream
+            if(in)
+            {
+                cout << "file list is ok" << endl;
+                inputPYTHIA = new TChain(PYTHIA_TREE , PYTHIA_TREE );
+                char str[255];       // char array for each file name
+                Long64_t entries_save = 0;
+                while(in)
+                {
+                    in.getline(str,255);  // take the lines of the file list
+                    if(str[0] != 0)
+                    {
+                        TString addfile = str;
+                        addfile = pinputdirPYTHIA+addfile;
+                        //cout << "addfile: " << addfile.Data() << endl;
+                        Long64_t file_entries;////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        //if(file_loop == file_select) inputPYTHIA ->AddFile(addfile.Data(),-1, PYTHIA_TREE );
+                        inputPYTHIA->AddFile(addfile.Data(), -1, PYTHIA_TREE);
+                        file_entries = inputPYTHIA->GetEntries();
+                        cout << "File added to data chain: " << addfile.Data() << " with " << file_entries-entries_save << " entries" << endl;
+                        entries_save = file_entries;
+                        file_loop++;
+                    }
+                }
+                file_entries   = inputPYTHIA->GetEntries();
+                cout << "Number of entries in chain: " << file_entries << endl;
+
+                PYTHIAEvent = new PythiaEvent();
+                inputPYTHIA  ->SetBranchAddress( PYTHIA_EVENT_BRANCH, &PYTHIAEvent);
+            }
         }
+        //------------------------------------
+        printf("StJetAnalysis::InitPythiaTree() finished \n");
+
     }
-    //------------------------------------
-    printf("StJetAnalysis::InitPythiaTree() finished \n");
 
     TString str_out = "./FlowMC_Output.root";
     TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
@@ -125,8 +139,10 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
     {
 
         vector<PseudoJet> ParticleVector;//holds all the particles in the event
-        TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
-        Int_t N = h1D_NDist->GetRandom();
+               
+                
+        Int_t N = h1D_NDist->GetRandom() / 5;//approx max 1000 particles
+        vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
@@ -145,11 +161,17 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
         
         for(Int_t iBGPart = 0; iBGPart < N; iBGPart++)
         {
-            double Phi = PhiDist->GetRandom();
-            double Eta = TR_Eta.Uniform(-0.9, 0.9);
+
             double Pt = h1D_PtDist->GetRandom();
-            //fill histogram
-            h2D_phi_vs_eta->Fill(Phi, Eta, Pt);
+            //get elliptic flow from pt
+            double Phi;
+            if(Pt < 1) Phi = PhiDistLow->GetRandom();
+            else if(Pt < 2) Phi = PhiDistMiddle->GetRandom();
+            else Phi = PhiDistHigh->GetRandom();
+            double Eta = TR_Eta.Uniform(-0.9, 0.9);
+
+            //remember particle
+            ParticleMemory.push_back({Phi, Eta, Pt});
 
             //feed jetfinder
             double p_x = Pt/(sqrt(1+pow(tan(Phi), 2)));//ONLY FOR E CALCULATION - SIGNS NOT NECESSARILY CORRECT
@@ -179,59 +201,57 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
         /
         *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
-        /* 
-        printf("StJetAnalysis::LoopEventPythia() started \n, ");
-        cout << "------------------------iEvent PYTHIA: " << iEvent << endl;
-        */
-        if (!inputPYTHIA->GetEntry( iEvent )) // take the event -> information is stored in event
-            cout << "Error" << endl;
-
-        if (iEvent != 0  &&  iEvent % 100 == 0)
-            cout << "." << flush;
-        if (iEvent != 0  &&  iEvent % 1000 == 0)
+        if(DEF_UsePYTHIAJetData)
         {
-            if((file_entries-0) > 0)
+            if (!inputPYTHIA->GetEntry( iEvent )) // take the event -> information is stored in event
+                cout << "Error" << endl;
+
+            if (iEvent != 0  &&  iEvent % 100 == 0)
+                cout << "." << flush;
+            if (iEvent != 0  &&  iEvent % 1000 == 0)
             {
-                Double_t event_percent = 100.0*((Double_t)(iEvent-0))/((Double_t)(file_entries-0));
-                cout << " " << iEvent << " (" << event_percent << "%) " << "\n" << "==> Processing data " << flush;
+                if((file_entries-0) > 0)
+                {
+                    Double_t event_percent = 100.0*((Double_t)(iEvent-0))/((Double_t)(file_entries-0));
+                    cout << " " << iEvent << " (" << event_percent << "%) " << "\n" << "==> Processing data " << flush;
+                }
             }
+
+            //--------------------
+            // Event information
+            Int_t   N_Particles     = PYTHIAEvent->getNumParticles();
+            if(N_Particles <= 0)
+            {
+                printf("WARNING: iEvent: %d has no entries! \n",iEvent);
+            }
+
+            for(Int_t i_Particle = 0; i_Particle < N_Particles; i_Particle++)
+            {    
+                // Particle information
+                // Particle Level
+                PYTHIAParticle = PYTHIAEvent  ->getParticle(i_Particle);
+                TLorentzVector TLV_pythia_particle = PYTHIAParticle -> get_TLV_part();
+
+                Double_t pt_track  = TLV_pythia_particle.Pt();
+                //if((fabs(pt_track) < 0.15)) continue;
+                Double_t phi_track = TLV_pythia_particle.Phi();
+                Double_t eta_track = TLV_pythia_particle.Eta();
+                Double_t px_track  = TLV_pythia_particle.Px();
+                Double_t py_track  = TLV_pythia_particle.Py();
+                Double_t pz_track  = TLV_pythia_particle.Pz();
+                Double_t E_track   = TLV_pythia_particle.E();
+
+                // track cuts 
+                if((fabs(pt_track) < 0.15)) continue;
+                if((fabs(eta_track)) > 0.9) continue;
+
+                ParticleMemory.push_back({phi_track, eta_track, pt_track});
+
+                ParticleVector.push_back(PseudoJet(px_track, py_track, pz_track, E_track));
+
+            }
+
         }
-
-        //--------------------
-        // Event information
-        Int_t   N_Particles     = PYTHIAEvent->getNumParticles();
-        if(N_Particles <= 0)
-        {
-            printf("WARNING: iEvent: %d has no entries! \n",iEvent);
-        }
-
-        for(Int_t i_Particle = 0; i_Particle < N_Particles; i_Particle++)
-        {    
-            // Particle information
-            // Particle Level
-            PYTHIAParticle = PYTHIAEvent  ->getParticle(i_Particle);
-            TLorentzVector TLV_pythia_particle = PYTHIAParticle -> get_TLV_part();
-
-            Double_t pt_track  = TLV_pythia_particle.Pt();
-            //if((fabs(pt_track) < 0.15)) continue;
-            Double_t phi_track = TLV_pythia_particle.Phi();
-            Double_t eta_track = TLV_pythia_particle.Eta();
-            Double_t px_track  = TLV_pythia_particle.Px();
-            Double_t py_track  = TLV_pythia_particle.Py();
-            Double_t pz_track  = TLV_pythia_particle.Pz();
-            Double_t E_track   = TLV_pythia_particle.E();
-
-            // track cuts 
-            if((fabs(pt_track) < 0.15)) continue;
-            if((fabs(eta_track)) > 0.9) continue;
-
-            //write particle into histogram
-            h2D_phi_vs_eta->Fill(phi_track, eta_track, pt_track);
-
-            ParticleVector.push_back(PseudoJet(px_track, py_track, pz_track, E_track));
-
-        }
-
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
         /
@@ -247,14 +267,19 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
         /
         *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        //R = 0.2
         vector<PseudoJet> JetVector = FindJets(ParticleVector);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
         /
         /                                                     
-        /                                           ONLY WRITE JETS THAT HAVE P_T > XXX INTO THE HISTOGRAM  
-        /                                                     
+        /                                           FILTER EVENTS BASED ON THE CONSTRAINTS AND DIFFER BETW. SMALL/LARGE GAP
+        /                       -DIJET EVENT
+        /                       -LEADING JET PT > 40GeV, SUBLEADING JET PT > 20GeV
+        /                       -Eta_Jet1 > 0
+        /                       -Delta Phi(Jet1, Jet2) > pi/2
+        /                       -(LARGE GAP / SMALL GAP) Eta_Jet1 * Eta_Jet2 (</>) 0        
         /                                                     
         /                                                     
         /
@@ -264,9 +289,63 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
         /
         *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        for(Int_t i=0; i<JetVector.size(); i++)
+        if(true)
         {
-            if(JetVector[i].pt() >= i_PtLowerLimit) h1D_JetMultiplicityInPsi->Fill(JetVector[i].phi_std());
+            if(JetVector.size() != 2) continue;
+
+            if(JetVector[0].pt() <= 40 || JetVector[1].pt() <= 20) continue;
+
+            if(JetVector[0].eta() <= 0) continue;
+
+            if(abs(JetVector[0].phi_std() - JetVector[1].phi_std()) <= Pi/2) continue;
+
+        }
+
+        bool LargeGap = false;
+        if(JetVector[0].eta() * JetVector[1].eta() < 0) LargeGap = true;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*
+        /
+        /                                                     
+        /                                           GET PARTICLE MULTIPLICITES IN THE REGIONS OF INTEREST
+        /                       
+        /                       
+        /                       
+        /                       
+        /                             
+        /                                                     
+        /                                                     
+        /
+        /                                                    
+        /
+        /
+        /
+        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
+
+        if(LargeGap)
+        {
+            for(const auto& particle : ParticleMemory)
+            {
+                //only take particles that are around the leading jet
+                if(abs(particle[1] - JetVector[0].phi_std()) <= Pi/2) h2D_pt_vs_eta_LargeGap->Fill(particle[2], particle[1]);
+                //write particle into histogram
+                h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+            }
+            LargeGapEventCounter++;
+        }
+        else
+        {
+            for(const auto& particle : ParticleMemory)
+            {
+                //only take particles that are around the leading jet
+                if(abs(particle[1] - JetVector[0].phi_std()) <= Pi/2) h2D_pt_vs_eta_SmallGap->Fill(particle[2], particle[1]);
+                //write particle into histogram
+                h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+            }
+            SmallGapEventCounter++;
         }
 
         //write event results
@@ -275,14 +354,78 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40)
         delete h2D_phi_vs_eta;
     }
 
+    cout << "In the end " << ((double)(SmallGapEventCounter + LargeGapEventCounter)/(double)file_entries) * 100 << "percent of events were taken into account." << endl;
+
+    //normalize histograms
+    h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
+    h2D_pt_vs_eta_SmallGap->Scale(1./(double)SmallGapEventCounter);
+
     //write global results
     Results->cd();
-    h1D_JetMultiplicityInPsi->Write();
+    h2D_pt_vs_eta_LargeGap->Write();
+    h2D_pt_vs_eta_SmallGap->Write();
     OutputFile ->Close();
     
     return 1;
 }
 
+//ANALYZE 
+       // TH1D* h1D_MultInEta_LargeGap = h2D_phi_vs_eta->ProjectionX("h1D_pt_vs_eta_Background_Projection", FirstBin, LastBin);
+
+Int_t FlowMC_Ana(const TString DataFile, Int_t i_PtRange, Int_t i_LowPtCut) {
+
+    gStyle->SetOptStat(0);
+    SetRootGraphicStyle();
+
+    //open the root file
+    TFile *file = TFile::Open(DataFile);
+
+    if (!file || file->IsZombie()) {
+        std::cout << "Error while opening the file!" << std::endl;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                   ANALYZE THE DIRECT JET RECOIL SITES AND THE CORRESPONDING BACKGROUND 
+    /
+    /
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //load histograms from root file
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("Event Histos/h2D_pt_vs_eta_SmallGap");
+    if(!h2D_pt_vs_eta_SmallGap) cout << "Small Gap histogram not found!" << endl; return 0;
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("Event Histos/h2D_pt_vs_eta_LargeGap");
+    if(!h2D_pt_vs_eta_LargeGap) cout << "Large Gap histogram not found!" << endl; return 0;
+    
+
+    //get X(pt) binning
+    double BinsPerMomentum = h2D_pt_vs_eta_SmallGap->GetNbinsX() / h2D_pt_vs_eta_SmallGap->GetXaxis()->GetXmax();
+
+    //configure and draw canvas
+    TCanvas* can_ParticleMultiplicities = new TCanvas("ParticleMultiplicities","ParticleMultiplicities",1000,1000);
+    can_ParticleMultiplicities->Divide(2,1, 0, 0);
+
+    //SMALL GAP
+    can_ParticleMultiplicities->cd(1);
+
+    TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    h1D_PartMult_SmallGap->DrawCopy();
+
+    can_ParticleMultiplicities->cd(2);
+
+    TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    h1D_PartMult_LargeGap->DrawCopy();
+
+    cout << "DONE!" << endl;
+    file->Close();
+
+    return 1;
+}
 
 vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
 {
@@ -297,13 +440,13 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // To do: define jet radius, background radius etc
-    #define jet_radius 0.4
+    #define jet_radius 0.2
 
     // define variables 
     vector<PseudoJet> jets_fiducial;//contains the selected jets in the end
 
-    Double_t ghost_maxrap = 2.5; // Fiducial cut for background estimation
-    Double_t eta_acceptance = 2.5;
+    Double_t ghost_maxrap = 0.9; // Fiducial cut for background estimation
+    Double_t eta_acceptance = 0.9;
     // choose a jet definition
     JetDefinition jet_def(antikt_algorithm, jet_radius);
     // jet area definition
@@ -315,28 +458,32 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
     double ptmin = 0.15;
     vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
     Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius); // Fiducial cut for jets
-    jets_fiducial = Fiducial_cut_selector(jets_all);
+    Selector Pt_selector = SelectorPtMin(20.0);
+    Selector N_Hardest = SelectorNHardest(2);
+    Selector Selector_All = Pt_selector && Fiducial_cut_selector;// && N_Hardest;
+
+    jets_fiducial = Selector_All(jets_all);
 
     // background estimation
     // Standard rho calculation with kT algorithm and N hardest jets removed
 
-    /*
+    
     Int_t Rem_n_hardest = 2; 
     Int_t eRem_n_hardest = 2;////???????
     double eBkg_R = 0.4;
     JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R); // <--
-    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
+    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.005));
     Int_t Rem_n_hardest_use = eRem_n_hardest;
-    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest)); // <--
+    Selector Selector_Bkg = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest)); // <--
 
-    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd); // <--
+    JetMedianBackgroundEstimator bkgd_estimator(Selector_Bkg, jet_def_bkgd, area_def_bkgd); // <--
     Subtractor subtractor(&bkgd_estimator);
     bkgd_estimator.set_particles(vec_particles);
     Double_t jet_rho   = bkgd_estimator.rho();
-    */
+    
 
     // loop over jets  
-    Double_t Jet_area_cut = 0.65*TMath::Pi()*TMath::Power(jet_radius,2);
+    Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
     for(Int_t i_jet = 0; i_jet < (Int_t)jets_fiducial.size(); i_jet++)
     {
         Float_t jet_pt         = jets_fiducial[i_jet].perp();
