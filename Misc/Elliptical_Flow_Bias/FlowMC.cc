@@ -7,13 +7,13 @@
 #include "./PythiaEvent.h"
 #include "./PythiaEvent_LinkDef.h"
 //#include "Fastjet/fastjet-3.5.1/include/fastjet/ClusterSequence.hh"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/ClusterSequenceArea.hh"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/config.h"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/PseudoJet.hh"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/Selector.hh"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/tools/Subtractor.hh"
+#include "fastjet/ClusterSequenceArea.hh"
+#include "fastjet/config.h"
+#include "fastjet/PseudoJet.hh"
+#include "fastjet/Selector.hh"
+#include "fastjet/tools/Subtractor.hh"
 //#include "StPhysicalHelixD.hh"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/tools/JetMedianBackgroundEstimator.hh"
+#include "fastjet/tools/JetMedianBackgroundEstimator.hh"
 using namespace fastjet;
 using namespace std;
 
@@ -29,22 +29,22 @@ double GetNByProb(void);
 double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, double i_UpperLim, double i_FuncParams[]);
 double Function_NormGauss(double x, double params[]);
 double Function_PhiByFlow(double x, double params[]);
-double Function_FlowByPt(double x, double params[]);
+double Function_FlowByPtAndEta(double x, double params[]);
 
 /*Parameters:
-i_NoOfEvents is the number of events that is looped over
+i_NoOfEvents optional to limit the total number of events looped over. If you want to separate the input data, use the last two input parameters, not this one. Leave -1
 i_PtLowerLimit is the jet threshold at which it is accepted as a jet
-i_EventPlaneSmearingSigma Sigma of the gaussian function to smear the event plane
-i_EtaMaxSmearing strength of the smearing. bigger values mean less smearing
 i_AllowV2 if false V2=0 always, else it is generated based on a pion v2 depending on pt
 i_AllowV3 if false V3=0 always else ...
 i_OutputFileName should be of form "./(...).root"
+i_InputDataDivisions number of times the input files should be separated (e.g. 10) ->only 1/10 of the input data is processed
+i_InputDataDivisionNumber 1->work off the first 1/10, 2->work off the second 1/10, ... . Goes from 1...i_InputDataDivisions
 
 Additional Info:
 
 Event Plane at \eta=0 is always at \phi = 0
 */
-Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_EventPlaneSmearingSigma = 0, double i_EtaMaxSmearing = 0.9, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "./Default.root")
+Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "./Default.root", uint8_t i_InputDataDivisions = 1, uint16_t i_InputDataDivisionNumber = 1)
 {
 
     gStyle->SetOptStat(0);
@@ -52,7 +52,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
 
     #define DEF_BinningPerUnit 100
     #define DEF_UsePYTHIAJetData true
-    #define DEF_OutputEventOverviews false
+    #define DEF_OutputEventOverviews true
 
     //other variables
     TH1D* h1D_JetMultiplicityInPsi = new TH1D("h1D_JetMultiplicityInPsi", "h1D_JetMultiplicityInPsi", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
@@ -66,6 +66,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
     TRandom TR_Eta;
     TR_Eta.SetSeed(0);
     TRandom TR_EventPlaneAngle;
+    TRandom TR_EventPlaneCoeffCorrelation;
     TR_EventPlaneAngle.SetSeed(0);
 
     TChain              *inputPYTHIA;
@@ -97,10 +98,10 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
     {
         //------------------------------------
         // Read input data pythia tree
-        TString pinputdirPYTHIA = "/media/nicolas-wirth/INTENSO/PYTHIA_pp/";
+        TString pinputdirPYTHIA = "/PYTHIA_Data/";
         //TString SEListPYTHIA = "/filelist_PYTHIA_pp.txt";
         TString SEListPYTHIA = "/filelist_PYTHIA_pp_OnlyHigh.txt";
-        TString Pythia_List =  "/media/nicolas-wirth/INTENSO/PYTHIA_pp";
+        TString Pythia_List =  "/PYTHIA_Data/filelist_PYTHIA_pp_OnlyHigh.txt";
         Pythia_List+=SEListPYTHIA;
         Int_t file_loop = 0;
         if (!Pythia_List.IsNull())   // if input file is ok
@@ -141,18 +142,32 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
         printf("StJetAnalysis::InitPythiaTree() finished \n");
 
     }
-
     TString str_out = i_OutputFileName;
+    if(i_InputDataDivisions != 1)
+    {
+        str_out += Form("_%d", i_InputDataDivisionNumber);
+    }
     TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
     OutputFile->cd();
     cout << "Output file is " << str_out << endl;
     TDirectory *EventHistos = OutputFile->mkdir("Event Histos");
     TDirectory *Results = OutputFile->mkdir("Results");
     
+    //determine the events to loop over
     if(i_NoOfEvents != -1) file_entries = i_NoOfEvents;
+    Int_t FirstEventNo = 0;
+    Int_t LastEventNo = file_entries;
+    if(i_InputDataDivisions != 1)
+    {
+        FirstEventNo = (i_InputDataDivisionNumber - 1) * ceil((float)file_entries / (float)i_InputDataDivisions);
+        LastEventNo = i_InputDataDivisionNumber * floor((float)file_entries / (float)i_InputDataDivisions);
+    }
+
+    cout << "First event number is " << FirstEventNo << endl;
+    cout << "Last event number is " << LastEventNo << endl;
 
     //loop over events
-    for(Int_t iEvent = 0; iEvent < file_entries; iEvent++)
+    for(Int_t iEvent = FirstEventNo; iEvent < LastEventNo; iEvent++)
     {
         //event output
         if (iEvent != 0  &&  iEvent % 100 == 0)
@@ -168,7 +183,8 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
 
         vector<PseudoJet> ParticleVector;//holds all the particles in the event
                 
-        Int_t N = h1D_NDist->GetRandom() / 5;//approx max 1000 particles
+        Int_t N = h1D_NDist->GetRandom();
+        double V2_V3_Phase = TR_EventPlaneCoeffCorrelation.Uniform(-Pi, Pi);
         vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,13 +209,11 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
             //get particle eta
             double Eta = TR_Eta.Uniform(-0.9, 0.9);
             //get elliptic flow strength from pt
-            double pseudoparams[2] = {0,0};
-            double FlowParams = Function_FlowByPt(Pt, pseudoparams);
-            double FlowParamsArray[2] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3};
-            //get event plane smearing depending on eta. At eta=0 psi=0, farther away the smearing increases. Smearing particles phi
-            //is equivalent to smearing psi
-            double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray); 
-            Phi += gRandom->Gaus(0,i_EventPlaneSmearingSigma)*Eta/i_EtaMaxSmearing;
+            double pseudoparams[2] = {Pt,Eta};
+            double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+            double FlowParamsArray[3] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_V3_Phase};
+
+            double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
             if(Phi > Pi) Phi -= 2*Pi;
             else if(Phi < -Pi) Phi += 2*Pi;
             //remember particle
@@ -235,22 +249,11 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
         /
         /
         *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         if(DEF_UsePYTHIAJetData)
         {
             if (!inputPYTHIA->GetEntry( iEvent )) // take the event -> information is stored in event
                 cout << "Error" << endl;
-
-            if (iEvent != 0  &&  iEvent % 100 == 0)
-                cout << "." << flush;
-            if (iEvent != 0  &&  iEvent % 1000 == 0)
-            {
-                if((file_entries-0) > 0)
-                {
-                    Double_t event_percent = 100.0*((Double_t)(iEvent-0))/((Double_t)(file_entries-0));
-                    cout << " " << iEvent << " (" << event_percent << "%) " << "\n" << "==> Processing data " << flush;
-                }
-            }
 
             //--------------------
             // Event information
@@ -302,7 +305,6 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            //R = 0.2
             vector<PseudoJet> JetVector = FindJets(ParticleVector);
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +328,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
 
             if(true)
             {
-                //if(JetVector.size() != 2) continue;
+                if(JetVector.size() < 2 )continue;
 
                 if(JetVector[0].pt() <= 40 || JetVector[1].pt() <= 20) continue;
 
@@ -411,13 +413,23 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, double i_PtLowerLimit = 40, double i_Event
 
     cout << "In the end " << ((double)(SmallGapEventCounter + LargeGapEventCounter)/(double)file_entries) * 100 << " percent of events were taken into account." << endl;
 
-    //normalize histograms
+    //normalize histograms by number of events
     h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
     h2D_pt_vs_eta_SmallGap->Scale(1./(double)SmallGapEventCounter);
+
+    //divide by bin width
+    h2D_pt_vs_eta_LargeGap->Scale(1./(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_LargeGap->GetYaxis()->GetBinWidth(0)));
+    h2D_pt_vs_eta_SmallGap->Scale(1./(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_SmallGap->GetYaxis()->GetBinWidth(0)));
+
+    //do not forget integration over delta phi (-pi/2, +pi/2)
+    h2D_pt_vs_eta_LargeGap->Scale(Pi);
+    h2D_pt_vs_eta_SmallGap->Scale(Pi);
 
     //rebin histograms
     h2D_eta_vs_deltaphi_LargeGap->Rebin2D(8,8);
     h2D_eta_vs_deltaphi_SmallGap->Rebin2D(8,8);
+    h2D_eta_vs_deltaphi_LargeGap->Scale(1./(h2D_eta_vs_deltaphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_deltaphi_LargeGap->GetYaxis()->GetBinWidth(0)));
+    h2D_eta_vs_deltaphi_SmallGap->Scale(1./(h2D_eta_vs_deltaphi_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_deltaphi_SmallGap->GetYaxis()->GetBinWidth(0)));
 
     //write global results
     Results->cd();
@@ -465,9 +477,9 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //load histograms from root file
-    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_SmallGap");
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
     if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
-    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_LargeGap");
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
     if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
     
 
@@ -484,6 +496,7 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
     cout << "Lower bin: " << i_LowPtCut*BinsPerMomentum << endl;
     cout << "Upper bin: " << (i_LowPtCut + i_PtRange) * BinsPerMomentum << endl;
+    h1D_PartMult_SmallGap->Scale(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_SmallGap->GetYaxis()->GetBinWidth(0) * i_PtRange);
 
     //markings
     h1D_PartMult_SmallGap->SetTitle("Small Gap");
@@ -497,6 +510,8 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     can_ParticleMultiplicities->cd(2);
 
     TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    h1D_PartMult_LargeGap->Scale(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_LargeGap->GetYaxis()->GetBinWidth(0) * i_PtRange);
+    
     h1D_PartMult_LargeGap->SetTitle("Large Gap");
     h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
@@ -523,7 +538,7 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     return 1;
 }
 
-vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
+vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
@@ -537,11 +552,12 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
 
     // To do: define jet radius, background radius etc
     #define jet_radius 0.2
+    #define DEF_MinJetAcceptancePt 20
 
     // define variables 
     vector<PseudoJet> jets_fiducial;//contains the selected jets in the end
 
-    Double_t ghost_maxrap = 0.9; // Fiducial cut for background estimation
+    Double_t ghost_maxrap = 1.1; // Fiducial cut for background estimation
     Double_t eta_acceptance = 0.9;
     // choose a jet definition
     JetDefinition jet_def(antikt_algorithm, jet_radius);
@@ -554,29 +570,23 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
     double ptmin = 0.15;
     vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
     Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius); // Fiducial cut for jets
-    Selector Pt_selector = SelectorPtMin(20.0);
-    Selector N_Hardest = SelectorNHardest(2);
-    Selector Selector_All = Pt_selector && Fiducial_cut_selector;// && N_Hardest;
-
-    jets_fiducial = Selector_All(jets_all);
+    jets_fiducial = Fiducial_cut_selector(jets_all);
 
     // background estimation
     // Standard rho calculation with kT algorithm and N hardest jets removed
 
-    
-    Int_t Rem_n_hardest = 2; 
-    Int_t eRem_n_hardest = 2;////???????
-    double eBkg_R = 0.4;
+    Int_t Rem_n_hardest = 1; 
+    double eBkg_R = 0.2;
     JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R); // <--
-    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.005));
-    Int_t Rem_n_hardest_use = eRem_n_hardest;
-    Selector Selector_Bkg = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest)); // <--
+    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
+    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest)); // <--
 
-    JetMedianBackgroundEstimator bkgd_estimator(Selector_Bkg, jet_def_bkgd, area_def_bkgd); // <--
+    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd); // <--
     Subtractor subtractor(&bkgd_estimator);
     bkgd_estimator.set_particles(vec_particles);
     Double_t jet_rho   = bkgd_estimator.rho();
-    
+
+    vector<PseudoJet> AcceptedJets;
 
     // loop over jets  
     Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
@@ -585,12 +595,14 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
         Float_t jet_pt         = jets_fiducial[i_jet].perp();
         if(jet_pt <= 0.0) continue;
         Float_t jet_area       = jets_fiducial[i_jet].area();
-        //Float_t jet_pt_sub     = jets_fiducial[i_jet].perp() - jet_rho*jet_area;
+        Float_t jet_pt_sub     = jets_fiducial[i_jet].perp() - jet_rho*jet_area;
         Float_t jet_eta        = jets_fiducial[i_jet].eta();
         Float_t jet_phi        = jets_fiducial[i_jet].phi();
         Float_t jet_phi_std    = jets_fiducial[i_jet].phi_std();
         if(jet_area < Jet_area_cut) continue; 
+        if(jet_pt_sub < DEF_MinJetAcceptancePt) continue;
 
+        AcceptedJets.push_back(jets_fiducial[i_jet]);
 
         // constituent track loop
         vector<PseudoJet> jet_constituents = jets_fiducial[i_jet].constituents();
@@ -608,8 +620,7 @@ vector<PseudoJet> FindJets(vector<PseudoJet> vec_particles)
         }
     }
 
-    return jets_fiducial;
-
+    return AcceptedJets;
 }
 
 //Yongzhen: I wrote the following functions myself because the root integrated function for getting weighted random numbers is 
@@ -684,12 +695,22 @@ double Function_PhiByFlow(double x, double params[])
 {
     double v_2 = params[0];
     double v_3 = params[1];
-    return (1/(2*pi))*(1+2*(v_2*cos(2*x) + v_3*cos(3*x)));
+    double Phase = params[2];
+    return (1/(2*pi))*(1+2*(v_2*cos(2*x) + v_3*cos(3*(x+Phase))));
 }
 
-double Function_FlowByPt(double x, double params[])
+double Function_FlowByPtAndEta(double x, double params[])
 {
+
+    double Pt = params[0];
+    double Eta = params[1];
+    double FlowParams;
     //an approximation for pions(+), out of paper http://arxiv.org/abs/1301.2348v1
-    if(x<3.0) return -0.015*pow((x-3),2) + 0.14;
-    return 0.14;
+    if(x<3.0) FlowParams =  -0.015*pow((x-3),2) + 0.14;
+    else FlowParams = 0.14;
+
+    //now reduce based on eta, just an approximation
+    FlowParams *= exp(-0.005*pow(Eta,2));
+
+    return FlowParams;
 }
