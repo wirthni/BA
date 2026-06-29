@@ -13,6 +13,7 @@ i_PathToHistosInRootFile: -> subfolder/
 i_Histoname: ->h2D_...
 i_NoOfHistos: clear
 */
+/////////////////////////////////////WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, TString i_HistoName, int i_NoOfHistos, bool i_ScaleByNumber)
 {
 

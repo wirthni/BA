@@ -50,13 +50,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
-    #define DEF_PYTHIAOversampling 5
+    #define DEF_PYTHIAOversampling 20
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_LeadingPt 30
-    #define DEF_SubleadingPt 20
     #define DEF_UsePYTHIAJetData true
-    #define DEF_OutputEventOverviews true   
+    #define DEF_OutputEventOverviews false 
+    #define DEF_JetLeadingPt 25.0
+    #define DEF_JetSubleadingPt 15.0
+    #define DEF_HadLeadingPt 20.0
+    #define DEF_HadSubleadingPt 10.0  
 
     //other variables
     TH1D* h1D_JetMultiplicityInPsi = new TH1D("h1D_JetMultiplicityInPsi", "h1D_JetMultiplicityInPsi", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
@@ -80,6 +82,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
     Long64_t            LargeGapEventCounter = 0;
     Long64_t            SmallGapEventCounter = 0;
+
+    //set jet/had pt limit
+    double LeadingPtLimit = DEF_JetLeadingPt;
+    double SubleadingPtLimit = DEF_JetSubleadingPt;
+    if(i_UseHadronInstadOfJet)
+    {
+        LeadingPtLimit = DEF_HadLeadingPt;
+        SubleadingPtLimit = DEF_HadSubleadingPt;
+    }
 
     //other debug variables
     TH1D* h1D_DEBUG_PhiMultiplicity = new TH1D("h1D_DEBUG_PhiMultiplicity", "h1D_DEBUG_PhiMultiplicity", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
@@ -204,7 +215,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
             {
                 if((file_entries-0) > 0)
                 {
-                    Double_t event_percent = 100.0*((Double_t)(iEvent-0))/((Double_t)(file_entries-0));
+                    Double_t event_percent = 100.0*((Double_t)(iEvent-FirstEventNo + (iRepeat-1) * (LastEventNo - FirstEventNo)))/((Double_t)((LastEventNo - FirstEventNo)*Oversampling));
                     cout << " " << iEvent << " (" << event_percent << "%) " << "\n" << "==> Processing data " << flush;
                 }
             }
@@ -259,7 +270,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                     p_y = v.Py();
                     p_z = v.Pz();
 
-                    if(i_UseHadronInstadOfJet && Pt >= DEF_SubleadingPt) HighPtParticles.push_back({Phi, Eta, Pt});
+                    if(i_UseHadronInstadOfJet && Pt >= SubleadingPtLimit) HighPtParticles.push_back({Phi, Eta, Pt});
                     else if(!i_UseHadronInstadOfJet)ParticleVector.push_back(PseudoJet(p_x, p_y, p_z, E));
 
                     //DEBUG REASONS
@@ -286,8 +297,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
             if(DEF_UsePYTHIAJetData)
             {
 
-                if (!inputPYTHIA->GetEntry( iEvent )) // take the event -> information is stored in event
+                if (!inputPYTHIA->GetEntry( iEvent ))
+                {
                     cout << "Error" << endl;
+                    continue;
+                }
 
                 //--------------------
                 // Event information
@@ -319,7 +333,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
                     ParticleMemory.push_back({phi_track, eta_track, pt_track});
 
-                    if(i_UseHadronInstadOfJet && pt_track >= DEF_SubleadingPt) HighPtParticles.push_back({phi_track, eta_track, pt_track});
+                    if(i_UseHadronInstadOfJet && pt_track >= SubleadingPtLimit) HighPtParticles.push_back({phi_track, eta_track, pt_track});
                     else if(!i_UseHadronInstadOfJet) ParticleVector.push_back(PseudoJet(px_track, py_track, pz_track, E_track));
 
 
@@ -429,7 +443,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
                 if(JetVector[0].eta() < 0) continue;
 
-                if(JetVector[0].pt() <= DEF_LeadingPt || JetVector[1].pt() <= DEF_SubleadingPt) continue;
+                if(JetVector[0].pt() <= LeadingPtLimit || JetVector[1].pt() <= SubleadingPtLimit) continue;
 
                 double PhiSeparation = abs(JetVector[0].phi_std() - JetVector[1].phi_std());
                 if(PhiSeparation > Pi) PhiSeparation -= 2*Pi;
@@ -437,7 +451,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
                 bool LargeGap = false;
                 if(JetVector[0].eta() * JetVector[1].eta() < 0) LargeGap = true;
-
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 /*
@@ -458,7 +471,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                 /
                 *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+                #if DEF_OutputEventOverviews
                 TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
+                #endif
 
                 if(LargeGap)
                 {
@@ -471,7 +486,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                         if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_LargeGap->Fill(particle[2], particle[1]);
 
                         //write particle into histogram
-                        if(DEF_OutputEventOverviews)h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        #if DEF_OutputEventOverviews
+                            h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        #endif
 
                         //normalize delta phi
                         if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
@@ -491,7 +508,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                         if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_SmallGap->Fill(particle[2], particle[1]);
 
                         //write particle into histogram
-                        if(DEF_OutputEventOverviews)h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        #if DEF_OutputEventOverviews
+                            h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        #endif
 
                         //normalize delta phi
                         if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
@@ -502,16 +521,19 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                 }
 
                 //write event results
-                EventHistos->cd();
-                h2D_phi_vs_eta->Write();
-                delete h2D_phi_vs_eta;
+                #if DEF_OutputEventOverviews
+                    EventHistos->cd();
+                    h2D_phi_vs_eta->Write();
+                    delete h2D_phi_vs_eta;
+                #endif
+
             }
 
         }
 
     }
 
-    cout << "In the end " << ((double)(SmallGapEventCounter + LargeGapEventCounter)/(double)(file_entries * Oversampling)) * 100 << " percent of events were taken into account." << endl;
+    cout << "In the end " << ((double)(SmallGapEventCounter + LargeGapEventCounter)/(double)((LastEventNo - FirstEventNo) * Oversampling)) * 100 << " percent of events were taken into account." << endl;
 
     //normalize histograms by number of events
     h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
@@ -524,6 +546,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     //rebin histograms
     h2D_eta_vs_deltaphi_LargeGap->Rebin2D(8,8);
     h2D_eta_vs_deltaphi_SmallGap->Rebin2D(8,8);
+    h2D_eta_vs_deltaphi_LargeGap->Scale(1.0/8.0);
+    h2D_eta_vs_deltaphi_SmallGap->Scale(1./8.0);
     h2D_eta_vs_deltaphi_LargeGap->Scale(1./(h2D_eta_vs_deltaphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_deltaphi_LargeGap->GetYaxis()->GetBinWidth(0)));
     h2D_eta_vs_deltaphi_SmallGap->Scale(1./(h2D_eta_vs_deltaphi_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_deltaphi_SmallGap->GetYaxis()->GetBinWidth(0)));
 
@@ -731,8 +755,16 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     return AcceptedJets;
 }
 
-//Yongzhen: I wrote the following functions myself because the root integrated function for getting weighted random numbers is 
-//slower by magnitudes, IDK why
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+/
+/                                                   FUNCTIONS FOR BACKGROUND GENERATION
+/
+/
+/
+/
+*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 float RandomFloat(float a, float b) {
     float random = ((float) rand()) / (float) RAND_MAX;
@@ -790,13 +822,13 @@ double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, doub
     }
 
     double Lim = TotalProb * (double)rand() / RAND_MAX;
-    for(int8_t i=0; i<=ACCURACY-1; i++)
+    for(int8_t i=0; i<=ACCURACY+10; i++)
     {
         if(Lim <=0) return i_LowerLim + (0.5+i)*IntervalLength + RandomFloat(-IntervalLength/2, +IntervalLength/2);
         Lim -= i_FuncPtr(i_LowerLim + (0.5+i)*IntervalLength, i_FuncParams) * (i_UpperLim - i_LowerLim)/ACCURACY;
     }
 
-    return -1;
+    return i_LowerLim + (0.5+(ACCURACY-1))*IntervalLength + RandomFloat(-IntervalLength/2, +IntervalLength/2);
 }
 
 double Function_NormGauss(double x, double params[])
