@@ -50,6 +50,8 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, TStr
 
         h2D_MergerResult->Add(h2D_MergerScrawl);
 
+        file->Close();
+
     }
 
     if(i_ScaleByNumber) h2D_MergerResult->Scale(1./double(i_NoOfHistos));

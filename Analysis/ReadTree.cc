@@ -65,7 +65,7 @@ void ReadTree(TString InputFile, TString OutputFile)
 
     // Don't open all trees but only open individual DFs and read trees from there
     Long64_t gi;
-    Long64_t colID_track, colID_event;
+    Long64_t track_CollisionID;
     int32_t trackid;
     int rn, mult, occu;
     float vertx, verty, vertz, cent, occuft0, tof;
@@ -74,9 +74,8 @@ void ReadTree(TString InputFile, TString OutputFile)
     ULong64_t p;
 
     //colChain->SetBranchAddress("fGI",&gi);
-    colChain->SetBranchAddress("fCi", &colID_event);
+    //colChain->SetBranchAddress("fCi", &colID_event);
     colChain->SetBranchAddress("fRn",&rn);
-    //colChain->SetBranchAddress("fIndexTableCols", &trackid);
     colChain->SetBranchAddress("fCent",&cent);
     colChain->SetBranchAddress("fMult",&mult);
     colChain->SetBranchAddress("fOccu",&occu);
@@ -87,8 +86,7 @@ void ReadTree(TString InputFile, TString OutputFile)
     colChain->SetBranchAddress("fPsi2",&psi2);
     colChain->SetBranchAddress("fPsi3",&psi3);
 
-    trackChain->SetBranchAddress("fCi", &colID_track);
-    //trackChain->SetBranchAddress("fIndexTableCols", &tablecolid);
+    trackChain->SetBranchAddress("fIndexTableCols", &track_CollisionID);
     trackChain->SetBranchAddress("fCharge", &charge);
     trackChain->SetBranchAddress("fP", &p);
     trackChain->SetBranchAddress("fDedx", &dedx);
