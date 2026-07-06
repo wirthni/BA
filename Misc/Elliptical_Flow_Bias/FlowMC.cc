@@ -62,7 +62,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     SetRootGraphicStyle();
 
     #define DEF_PYTHIAOversampling 20
-    #define DEF_BinningPerUnit 100
+    #define DEF_BinningPerUnit 100 //100 is okay
     #define DEF_JetRadius 0.2
     #define DEF_UsePYTHIAJetData true
     #define DEF_OutputEventOverviews false 
@@ -96,8 +96,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the large gap cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the small gap cut
     
-    TH1D* h1D_BGParticle_Eta = new TH1D("h1D_BGParticle_Eta", "h1D_BGParticle_Eta", DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
-    TH1D* h1D_PYTHIAParticle_Eta = new TH1D("h1D_PYTHIAParticle_Eta", "h1D_PYTHIAParticle_Eta", DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
+    //eta x phi x pt
+    TH2D* h2D_BeforeJetFinder = new TH2D("h2D_BeforeJetFinder","h2D_BeforeJetFinder",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
+    TH2D* h2D_AfterJetFinder = new TH2D("h2D_AfterJetFinder","h2D_AfterJetFinder",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     
 
     TRandom TR_Eta;
@@ -306,7 +307,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
                     //DEBUG REASONS
                     h1D_DEBUG_PhiMultiplicity->Fill(Phi, Pt);
-                    h1D_BGParticle_Eta->Fill(Eta);
 
                 }
             }
@@ -368,8 +368,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                     if(i_UseHadronInstadOfJet && pt_track >= SubleadingPtLimit) HighPtParticles.push_back({phi_track, eta_track, pt_track});
                     else if(!i_UseHadronInstadOfJet) ParticleVector.push_back(PseudoJet(px_track, py_track, pz_track, E_track));
 
-                    h1D_PYTHIAParticle_Eta->Fill(eta_track);
-
                 }
 
                 
@@ -390,6 +388,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
                 vector<PseudoJet> JetVector;
                 //ParticleMemory.push_back({phi_track, eta_track, pt_track});
+
+                //ONLY FOR DEBUG
+                for(Int_t i=0; i<ParticleVector.size(); i++)
+                {
+                    h2D_BeforeJetFinder->Fill(ParticleVector[i].eta(), ParticleVector[i].phi_std(), ParticleVector[i].pt());
+                }
 
                 if(i_UseHadronInstadOfJet)
                 {
@@ -449,6 +453,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                     JetVector = FindJets(ParticleVector);
                 }
 
+                if(JetVector.size() >= 1)h2D_AfterJetFinder->Fill(JetVector[0].eta(), JetVector[0].phi_std(), JetVector[0].pt());
+
                 
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -470,11 +476,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                 /
                 *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+                if(JetVector.size() >= 1)h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
 
                 if(JetVector.size() < 2 )continue;
-
-                h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
 
                 if(JetVector[0].eta() < 0) continue;
 
@@ -517,8 +521,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
                 h1D_JetPt_Subleading->Fill(JetVector[1].pt());
 
                 // Fill leading and subleading jet population
-                h1D_JetPopulation_Leading->Fill(JetVector[0].user_info<MyUserInfo>().getNoOfParticles());
-                h1D_JetPopulation_Subleading->Fill(JetVector[1].user_info<MyUserInfo>().getNoOfParticles());
+                if(!i_UseHadronInstadOfJet)
+                {
+                    h1D_JetPopulation_Leading->Fill(JetVector[0].user_info<MyUserInfo>().getNoOfParticles());
+                    h1D_JetPopulation_Subleading->Fill(JetVector[1].user_info<MyUserInfo>().getNoOfParticles());
+                }
 
                 if(LargeGap)
                 {
@@ -613,8 +620,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     h1D_JetPt_Leading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
     h1D_JetPt_Subleading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
 
-    h1D_PYTHIAParticle_Eta->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
-    h1D_BGParticle_Eta->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
+    h2D_BeforeJetFinder->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
+    h2D_AfterJetFinder->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
 
     // Rebin Histograms if necessary
     h2D_eta_vs_dphi_LargeGap->Rebin2D(8,8);
@@ -643,8 +650,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->Scale(1./(h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->GetBinWidth(0)));
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->Scale(1./(h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->GetBinWidth(0)));
 
-    h1D_PYTHIAParticle_Eta->Scale(1./(h1D_PYTHIAParticle_Eta->GetXaxis()->GetBinWidth(0)));
-    h1D_BGParticle_Eta->Scale(1./(h1D_BGParticle_Eta->GetXaxis()->GetBinWidth(0)));
+    h2D_BeforeJetFinder->Scale(1./(h2D_BeforeJetFinder->GetXaxis()->GetBinWidth(0)));
+    h2D_AfterJetFinder->Scale(1./(h2D_AfterJetFinder->GetXaxis()->GetBinWidth(0)));
 
     //write global results
     Results->cd();
@@ -663,8 +670,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->Write();
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->Write();
     h1D_DEBUG_PhiMultiplicity->Write();
-    h1D_BGParticle_Eta->Write();
-    h1D_PYTHIAParticle_Eta->Write();
+    h2D_BeforeJetFinder->Write();
+    h2D_AfterJetFinder->Write();
     OutputFile ->Close();
     
     return 1;
@@ -792,12 +799,11 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 
     // To do: define jet radius, background radius etc
     #define jet_radius 0.2
-    #define DEF_MinJetAcceptancePt 20
-
+    #define DEF_MinJetAcceptancePt 10
     // define variables 
     vector<PseudoJet> jets_fiducial;//contains the selected jets in the end
 
-    Double_t ghost_maxrap = 1.1; // Fiducial cut for background estimation
+    Double_t ghost_maxrap = 1.5; // Fiducial cut for background estimation //1.1
     Double_t eta_acceptance = 0.9;
     // choose a jet definition
     JetDefinition jet_def(antikt_algorithm, jet_radius);

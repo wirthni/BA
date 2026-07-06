@@ -1,10 +1,12 @@
 #include "./ReadTree.h"
 #include <Math/Vector4D.h>
+#include <unordered_map>
+#include <vector>
 #include "functions.h"
 #include "StJetTrackEvent.h"
 #include "StJetTrackEventLinkDef.h"
 
-void ReadTree(TString InputFile, TString OutputFile)
+Int_t ReadTree(TString InputFile, TString OutputFile)
 {
     cout << "ReadTree started" << endl;
 
@@ -22,7 +24,6 @@ void ReadTree(TString InputFile, TString OutputFile)
 
     TH2D* h1d_mult_vs_cent = new TH2D("h1d_mult_vs_cent","h1d_mult_vs_cent", 500,0,5000,80,0,40);
 
-    //Get data from tree file
     TFile* file = TFile::Open(InputFile);
 
     TChain* colChain   = new TChain("O2tablecol");
@@ -43,8 +44,8 @@ void ReadTree(TString InputFile, TString OutputFile)
             {
                 //TString treePathCol   = Form("Trees.root/%s/O2tablecol", dirName.Data());
                 //TString treePathTrack = Form("Trees.root/%s/O2tabletrack", dirName.Data());
-                TString treePathCol   = Form("Trees.root/%s/O2tablecol", dirName.Data());
-                TString treePathTrack = Form("Trees.root/%s/O2tabletrack", dirName.Data());
+                TString treePathCol   = Form(InputFile + "/%s/O2tablecol", dirName.Data());
+                TString treePathTrack = Form(InputFile + "/%s/O2tabletrack", dirName.Data());
                 colChain  ->Add(treePathCol);
                 trackChain->Add(treePathTrack);
                 cout << "Added " << treePathCol << endl;
@@ -62,10 +63,10 @@ void ReadTree(TString InputFile, TString OutputFile)
     cout <<  entries_track << " entries " << endl;
     cout << "-----------------------------------------------------------" << endl;
 
+    std::unordered_map<Long64_t, std::vector<Long64_t>> CollisionMap; //holds the Collision ID and underneath the track indices inside of the whole trackChain (0,1,2,...,2644) for example
 
-    // Don't open all trees but only open individual DFs and read trees from there
     Long64_t gi;
-    Long64_t track_CollisionID;
+    Int_t track_CollisionID;
     int32_t trackid;
     int rn, mult, occu;
     float vertx, verty, vertz, cent, occuft0, tof;
@@ -92,94 +93,28 @@ void ReadTree(TString InputFile, TString OutputFile)
     trackChain->SetBranchAddress("fDedx", &dedx);
     trackChain->SetBranchAddress("fDcaxy", &dcaxy);
     trackChain->SetBranchAddress("fDcaz", &dcaz);
-    //trackChain->SetBranchAddress("fLength", &length);
 
-    //get the first particle indices of each event and save it into FirstParticleIndex
-    vector<uint32_t> FirstParticleIndex;//holds the first particle index of the first event, second event, ... in positions (0, 1, 2, ...)
-    FirstParticleIndex.push_back(0);
-    trackChain->GetEntry(0);
-    uint64_t LastColID = colID_track;
+    Long64_t Counter = 0;
+    // Make an unordered map particle->collision
+    for(uint64_t i_Track = 0; i_Track < entries_track; i_Track ++) {
 
-    for(uint64_t i_Track = 1; i_Track < entries_track; i_Track ++)
-    {
         trackChain->GetEntry(i_Track);
-        if(colID_track != LastColID)
-        {
-            LastColID = colID_track;
-            FirstParticleIndex.push_back(i_Track);
-        }
+        CollisionMap[track_CollisionID].push_back(i_Track);
+        if(track_CollisionID == 40) Counter++;
     }
-    FirstParticleIndex.push_back(entries_track);
 
-    cout << "Have identified First Particles" << endl;
+    cout << Counter << " tracks have ID 0!" << endl;
 
-    //loop over events
-    for(uint16_t i_Event = 0; i_Event < entries_col; i_Event ++)
-    {
-        //process global event information
-        colChain -> GetEntry(i_Event);
-        //cout << "-----------------------------------------------------------" << endl;
-        cout << "------ Collision number " << i_Event << " of run " << rn << " with multiplicity " << mult << ", centrality " << cent << ", z vertex " << vertz << endl;
+    //LOOP
+    for (int j = 0; j < 120; j++) {
 
-        cout << "Collision ID event " << colID_event << endl;
+        colChain->GetEntry(j);
+        int collisionID = j;
 
-        h1d_mult_event  ->Fill(mult);
-        h1d_cent        ->Fill(cent);
-        h1d_psi2        ->Fill((float)psi2/1000);
-        h1d_occft0_event->Fill(occuft0);
-        h1d_occ_event   ->Fill(occu);
-        h1d_mult_vs_cent->Fill(mult,cent);
-
-        cout << "number of tracks in this event is " << (FirstParticleIndex[i_Event+1] - FirstParticleIndex[i_Event]) << endl;
-
-        // INSERT EVENT ANALYIS HERE
-
-
-        //loop over tracks in event i_Event
-        for(uint16_t i_Track = FirstParticleIndex[i_Event-1]; i_Track < FirstParticleIndex[i_Event]; i_Track ++)
-        {
-            //obtain particle track quantities
-            trackChain->GetEntry(i_Track);
-            Float_t px = get_px_Particle(p);
-            Float_t py = get_py_Particle(p);
-            Float_t pz = get_pz_Particle(p);
-            Float_t m = 0.1349766;
-            ROOT::Math::PxPyPzMVector vec_track(px,py,pz,m);
-
-            //INSERT PARTICLE ANALYSIS HERE
-
-            if(vec_track.Pt() > 20.0) cout << "High track " << vec_track.Pt() << " GeV/c" << endl;
-
-            h1d_pT ->Fill(vec_track.Pt());
-            h1d_eta->Fill(vec_track.Eta());
-            h1d_phi->Fill(vec_track.Phi());
-
-        }
+        cout << "centrality of event " << j << " is " << cent << " and number of particles is " << CollisionMap[j].size() << " and mult is " << mult << endl;
+    
 
     }
 
-
-    //--------- Write -----------------------------------
-    cout << "Write" << endl;
-    TFile* output_file = new TFile(OutputFile,"RECREATE");    // Save output without scaling
-    output_file->cd();
-
-    // Track properties
-    h1d_pT ->Write();
-    h1d_eta->Write();
-    h1d_phi->Write();
-    //h1d_TOF->Write();
-
-    // Event properties
-    h1d_mult_event  ->Write();
-    h1d_pTsum       ->Write();
-    h1d_cent        ->Write();
-    h1d_psi2        ->Write();
-    h1d_occft0_event->Write();
-    h1d_occ_event   ->Write();
-    h1d_mult_vs_cent->Write();
-
-    output_file->Close();
-
-    cout << "ReadTree end" << endl;
+    return 1;
 }
