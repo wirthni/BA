@@ -1,4 +1,16 @@
 
+class Particle {
+    private:
+        Data* dataPtr;
+
+    public:
+        Particle(Data* ptr) : dataPtr(ptr) {}
+        int CollisionID = 0;
+        float px = get_px_Particle(T_P_Substitute);
+
+}
+
+
 Float_t get_px_Particle(Long64_t Particle_p)
 {
     Long64_t Particle_px = 0;

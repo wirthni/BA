@@ -6,8 +6,10 @@
 #include "StJetTrackEvent.h"
 #include "StJetTrackEventLinkDef.h"
 
-Int_t ReadTree(TString InputFile, TString OutputFile)
+Int_t ReadTree(TString InputFile, TString i_OutputFile)
 {
+    #define DEF_BinningPerUnit 100
+
     cout << "ReadTree started" << endl;
 
     // Make histograms for a global event analysis
@@ -23,6 +25,15 @@ Int_t ReadTree(TString InputFile, TString OutputFile)
     TH1D* h1d_phi          = new TH1D("h1d_phi","h1d_phi", 800,-4.0,4.0);
 
     TH2D* h1d_mult_vs_cent = new TH2D("h1d_mult_vs_cent","h1d_mult_vs_cent", 500,0,5000,80,0,40);
+
+    //Generate output file
+    TString str_out =  "./" + i_OutputFile;
+    str_out += ".root";
+    TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
+    OutputFile->cd();
+    cout << "Output file is " << str_out << endl;
+    TDirectory *EventHistos = OutputFile->mkdir("Event Histos");
+    TDirectory *Results = OutputFile->mkdir("Results");
 
     //Get data from tree file
     TFile* file = TFile::Open(InputFile);
@@ -52,95 +63,102 @@ Int_t ReadTree(TString InputFile, TString OutputFile)
                 tracks = tree;
             }
         }
-    
         cout << "Processing directory " << dir->GetName() << endl;
 
-        //NOW WE HAVE BOTH TREES
+        // Get basic information from the dataframe
         Int_t entries_col   =  collisions->GetEntries();
         Int_t entries_track =  tracks->GetEntries();
-
-
         cout << "------------------------ COLLISION TABLE -----------------------------------" << endl;
         cout <<  entries_col << " entries " << endl;
         cout << "------------------------ TRACK TABLE -----------------------------------" << endl;
         cout <<  entries_track << " entries " << endl;
         cout << "-----------------------------------------------------------" << endl;
 
-
-        cout << "Read and fill Tree" << endl;
-
         std::unordered_map<int, std::vector<int>> CollisionMap; //holds the Collision ID and underneath the track indices inside of the whole trackChain (0,1,2,...,2644) for example
-
-        Long64_t gi;
-        Int_t track_CollisionID;
-        int32_t trackid;
-        int rn, mult, occu;
-        float vertx, verty, vertz, cent, occuft0, tof;
-        short psi2, psi3, charge, dcaxy, dcaz;
-        unsigned short dedx,length;
-        ULong64_t p;
-
-        //collisions->SetBranchAddress("fGI",&gi);
-        //collisions->SetBranchAddress("fCi", &colID_event);
+        Int_t T_CollisionID;
+        int E_RunNumber, E_Multiplicity, E_Occupancy;
+        float E_VertX, E_VertY, E_VertZ, E_Centrality, E_OccupancyFT0;
+        short E_psi2_Substitute, E_psi3_Substitute, T_Charge, T_DCAxy_Substitute, T_DCAz_Substitute;
+        unsigned short T_dEdX_Substitute;
+        ULong64_t T_P_Substitute;
         
-        collisions->SetBranchAddress("fRn",&rn);
-        collisions->SetBranchAddress("fCent",&cent);
-        collisions->SetBranchAddress("fMult",&mult);
-        collisions->SetBranchAddress("fOccu",&occu);
-        collisions->SetBranchAddress("fOccuft0",&occuft0);
-        collisions->SetBranchAddress("fVertexX",&vertx);
-        collisions->SetBranchAddress("fVertexY",&verty);
-        collisions->SetBranchAddress("fVertexZ",&vertz);
-        collisions->SetBranchAddress("fPsi2",&psi2);
-        collisions->SetBranchAddress("fPsi3",&psi3);
+        collisions->SetBranchAddress("fRn",&E_RunNumber);
+        collisions->SetBranchAddress("fCent",&E_Centrality);
+        collisions->SetBranchAddress("fMult",&E_Multiplicity);
+        collisions->SetBranchAddress("fOccu",&E_Occupancy);
+        collisions->SetBranchAddress("fOccuft0",&E_OccupancyFT0);
+        collisions->SetBranchAddress("fVertexX",&E_VertX);
+        collisions->SetBranchAddress("fVertexY",&E_VertY);
+        collisions->SetBranchAddress("fVertexZ",&E_VertZ);
+        collisions->SetBranchAddress("fPsi2",&E_psi2_Substitute);
+        collisions->SetBranchAddress("fPsi3",&E_psi3_Substitute);
 
-        tracks->SetBranchAddress("fIndexTableCols", &track_CollisionID);
-        tracks->SetBranchAddress("fCharge", &charge);
-        tracks->SetBranchAddress("fP", &p);
-        tracks->SetBranchAddress("fDedx", &dedx);
-        tracks->SetBranchAddress("fDcaxy", &dcaxy);
-        tracks->SetBranchAddress("fDcaz", &dcaz); 
+        tracks->SetBranchAddress("fIndexTableCols", &T_CollisionID);
+        tracks->SetBranchAddress("fCharge", &T_Charge);
+        tracks->SetBranchAddress("fP", &T_P_Substitute);
+        tracks->SetBranchAddress("fDedx", &T_dEdX_Substitute);
+        tracks->SetBranchAddress("fDcaxy", &T_DCAxy_Substitute);
+        tracks->SetBranchAddress("fDcaz", &T_DCAz_Substitute);
 
         // Make an unordered map particle->collision
-        cout << "Mapping" << endl;
         bool scrawl = false;
         for(uint64_t i_Track = 0; i_Track < entries_track; i_Track ++)
         {
             tracks->GetEntry(i_Track);
-            int collisionID = track_CollisionID;
-            CollisionMap[collisionID].push_back(i_Track);
-
-            if(collisionID == 0 && !scrawl) 
-            {
-                cout << "A particle with collision ID = 0 occurs in this DF!" << endl;
-                scrawl = true;
-            }
-
+            CollisionMap[T_CollisionID].push_back(i_Track);
         }
-
         cout << "Number of different collisions in the tracks: " << CollisionMap.size() << endl;
 
-        //LOOP
-        
-        cout << "collision loop" << endl;
         for (int j = 0; j < entries_col; j++) {
-            collisions->GetEntry(j);
-            int collisionID = j;
 
-            if(j < 50)cout << "Collision " << j << " - Multiplicity / actual Number:" << mult << "/" << CollisionMap[collisionID].size() << endl;
+            // Get event properties
+            collisions->GetEntry(j);
+            int E_CollisionID = j;
+            E_RunNumber;
+            E_Centrality;
+            E_Multiplicity;
+            E_Occupancy;
+            E_OccupancyFT0;
+            E_VertX;
+            E_VertY;
+            E_VertZ;
+            float E_Psi2 = static_cast<float>(E_psi2_Substitute)/1000.0f;
+            float E_Psi3 = static_cast<float>(E_psi3_Substitute)/1000.0f;
+        
+            
+            TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
 
             // loop over jets for this event
-            for (int k = 0; k < CollisionMap[collisionID].size(); k++)
+            for (int k = 0; k < CollisionMap[E_CollisionID].size(); k++)
             {
-                tracks->GetEntry(CollisionMap[collisionID].at(k));
-                //if(j < 5 && k < 10)cout << "Track " << k << " has P " << p << endl;
+                // Get track properties
+                tracks->GetEntry(CollisionMap[E_CollisionID].at(k));
+                T_Charge;
+                float T_px = get_px_Particle(T_P_Substitute);
+                float T_py = get_py_Particle(T_P_Substitute);
+                float T_pz = get_pz_Particle(T_P_Substitute);
+                float T_dEdX = static_cast<float>(T_dEdX_Substitute)/10.0f;
+                float T_DCAxy = static_cast<float>(T_DCAxy_Substitute)/100.0f;
+                float T_DCAz = static_cast<float>(T_DCAz_Substitute)/100.0f;
+                float T_E = sqrt(pow(T_px, 2) + pow(T_py, 2) + pow(T_pz, 2) + pow(0.1349766, 2));
+                ROOT::Math::PxPyPzEVector ParticleLV(T_px, T_py, T_pz, T_E);
+                float T_Eta = ParticleLV.Eta();
+                float T_Phi = ParticleLV.Phi();
+                float T_Pt = sqrt(pow(T_px, 2) + pow(T_py, 2));
+
+                h2D_phi_vs_eta->Fill(T_Phi, T_Eta, T_Pt);
+                
             }
+
+            EventHistos->cd();
+            h2D_phi_vs_eta->Write();
+            delete(h2D_phi_vs_eta);
 
         }
 
+        OutputFile->Close();
         
-
-        cout << endl << endl;
+        return 1;
 
     }
     return 1;

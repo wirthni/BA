@@ -74,6 +74,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
     #define DEF_CorrelationMaxPt 2.0
     #define DEF_MaxPartilclesPerJet 200
     #define DEF_MaxJetPt 150.0
+    #define DEF_AxisLabelSize 0.05
+    #define DEF_HistoTitleSize 0.1
 
     //other variables
     TH1D* h1D_JetMultiplicityInPsi = new TH1D("h1D_JetMultiplicityInPsi", "h1D_JetMultiplicityInPsi", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
@@ -636,6 +638,104 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1, b
 
     h2D_GeneratedParticles->Scale(1./(h2D_GeneratedParticles->GetXaxis()->GetBinWidth(0)));
 
+    //put axis labels on all histograms
+    h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitle("p_{t}[GeV]");
+    h2D_pt_vs_eta_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_LargeGap->GetYaxis()->SetTitle("#eta");
+    h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
+
+    h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitle("p_{t}[GeV]");
+    h2D_pt_vs_eta_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_SmallGap->GetYaxis()->SetTitle("#eta");
+    h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
+
+    h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_deta_vs_dphi_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_LargeGap->GetXaxis()->SetTitle("#Delta #eta");
+    h2D_deta_vs_dphi_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_deta_vs_dphi_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_deta_vs_dphi_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_SmallGap->GetXaxis()->SetTitle("#Delta #eta");
+    h2D_deta_vs_dphi_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_deta_vs_dphi_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_deta_vs_dphi_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h1D_JetPopulation_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPopulation_Leading->GetXaxis()->SetTitle("Leading Jet Population");
+    h1D_JetPopulation_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPopulation_Leading->GetYaxis()->SetTitle("Normalized Occurence");
+
+    h1D_JetPopulation_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPopulation_Subleading->GetXaxis()->SetTitle("Subleading Jet Population");
+    h1D_JetPopulation_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPopulation_Subleading->GetYaxis()->SetTitle("Normalized Occurence");
+
+    h1D_JetPt_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPt_Leading->GetXaxis()->SetTitle("p_{t}^{leading jet} [GeV]");
+    h1D_JetPt_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPt_Leading->GetYaxis()->SetTitle("Normalized Occurence");
+
+    h1D_JetPt_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPt_Subleading->GetXaxis()->SetTitle("p_{t}^{subleading jet} [GeV]");
+    h1D_JetPt_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_JetPt_Subleading->GetYaxis()->SetTitle("Normalized Occurence");
+
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetXaxis()->SetTitle("#eta");
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h2D_GeneratedParticles->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_GeneratedParticles->GetXaxis()->SetTitle("#eta");
+    h2D_GeneratedParticles->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_GeneratedParticles->GetYaxis()->SetTitle("#phi");
+    h2D_GeneratedParticles->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h2D_GeneratedParticles->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
     //write global results
     Results->cd();
     h2D_pt_vs_eta_LargeGap->Write();
@@ -664,7 +764,7 @@ i_PtRange: e.g. particles within (1.0, 2.0)GeV/c should be analyzed -> i_PtRange
 i_LowPtCut: e.g. particles within (1.0, 2.0)GeV/c should be analyzed ->i_LowPtCut = 1
 */
 
-Int_t FlowMC_Ana(const TString DataFile_SmallGap, const TString DataFile_LargeGap, double i_PtRange, double i_LowPtCut) {
+Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
 
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
@@ -674,18 +774,11 @@ Int_t FlowMC_Ana(const TString DataFile_SmallGap, const TString DataFile_LargeGa
     SetRootGraphicStyle();
 
     //open the root file
-    TFile *file_SmallGap = TFile::Open(DataFile_SmallGap);
+    TFile *file = TFile::Open(DataFile);
 
-    if (!file_SmallGap || file_SmallGap->IsZombie()) {
-        std::cout << "Error while opening the small gap file!" << std::endl;
+    if (!file || file->IsZombie()) {
+        std::cout << "Error while opening the file!" << std::endl;
     }
-
-    TFile *file_LargeGap = TFile::Open(DataFile_LargeGap);
-
-    if (!file_LargeGap || file_LargeGap->IsZombie()) {
-        std::cout << "Error while opening the large gap file!" << std::endl;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
@@ -699,9 +792,9 @@ Int_t FlowMC_Ana(const TString DataFile_SmallGap, const TString DataFile_LargeGa
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //load histograms from root file
-    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file_SmallGap->Get("h2D_pt_vs_eta_SmallGap");
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
     if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
-    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file_LargeGap->Get("h2D_pt_vs_eta_LargeGap");
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
     if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
     
 
@@ -759,8 +852,7 @@ Int_t FlowMC_Ana(const TString DataFile_SmallGap, const TString DataFile_LargeGa
 
 
     cout << "DONE!" << endl;
-    file_SmallGap->Close();
-    file_LargeGap->Close();
+    file->Close();
 
     return 1;
 }
