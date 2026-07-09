@@ -1,9 +1,9 @@
 #include <Math/Vector4D.h>
 #include <unordered_map>
 #include <vector>
-#include "functions.h"
-#include "StJetTrackEvent.h"
-#include "StJetTrackEventLinkDef.h"
+//#include "functions.h"
+//#include "StJetTrackEvent.h"
+//#include "StJetTrackEventLinkDef.h"
 
 Float_t get_px_Particle(Long64_t Particle_p);
 Float_t get_py_Particle(Long64_t Particle_p);
@@ -23,9 +23,9 @@ public:
         //derived variables
         static float Psi2, Psi3;
         //other variables
-        static bool initialized = false;
+        static TTree* currentTree = nullptr;
 
-        if (!initialized) {
+        if (tree != currentTree) {
             tree->SetBranchAddress("fRn",&RunNumber);
             tree->SetBranchAddress("fCent",&Centrality);
             tree->SetBranchAddress("fMult",&Multiplicity);
@@ -36,7 +36,7 @@ public:
             tree->SetBranchAddress("fVertexZ",&VertZ);
             tree->SetBranchAddress("fPsi2",&Psi2_Substitute);
             tree->SetBranchAddress("fPsi3",&Psi3_Substitute);
-            initialized = true;
+            currentTree = tree;
         }
         tree->GetEntry(entry);
 
@@ -69,16 +69,16 @@ public:
         //derived variables
         static float px, py, pz, E, dEdX, DCAxy, DCAz, Eta, Phi, Pt;
         //other variables
-        static bool initialized = false;
+        static TTree* currentTree = nullptr;
 
-        if (!initialized) {
+        if (tree != currentTree) {
             tree->SetBranchAddress("fIndexTableCols", &ColID);
             tree->SetBranchAddress("fCharge", &Charge);
             tree->SetBranchAddress("fP", &P_Substitute);
             tree->SetBranchAddress("fDedx", &dEdX_Substitute);
             tree->SetBranchAddress("fDcaxy", &DCAxy_Substitute);
             tree->SetBranchAddress("fDcaz", &DCAz_Substitute);
-            initialized = true;
+            currentTree = tree;
         }
         tree->GetEntry(entry);
 
@@ -137,4 +137,3 @@ Float_t get_pz_Particle(Long64_t Particle_p)
     if((Particle_p & ((ULong64_t) 1 <<  62)))  Particle_pz = (-1)*Particle_pz;
     return ((Float_t)Particle_pz)/6000.0;
 }
-
