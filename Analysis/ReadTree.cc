@@ -1,6 +1,6 @@
-#include "./ReadTree_Nico.h"
+#include "./ReadTree.h"
 
-Int_t ReadTree_Nico(TString InputFile, TString i_OutputFile)
+Int_t ReadTree(TString InputFile, TString i_OutputFile)
 {
     cout << "ReadTree started" << endl;
 
