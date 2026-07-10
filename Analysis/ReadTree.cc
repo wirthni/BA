@@ -161,6 +161,7 @@ Int_t ReadTree(TString InputFile, TString i_OutputFile)
             
             /*USER EVENT CODE*/
             //TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
+            TH1D* h1d_mult_phi   = new TH1D("h1d_mult_phi","h1d_mult_phi", 500,-Pi,Pi);
             /*END USER EVENT CODE*/
 
             // loop over tracks for this event
@@ -173,6 +174,7 @@ Int_t ReadTree(TString InputFile, TString i_OutputFile)
                 h1d_eta-> Fill(track.Eta);
                 h1d_phi-> Fill(track.Phi);
                 pT_sum += track.Pt;
+                h1d_mult_phi->Fill(track.Phi);
                 /*USER TRACK CODE*/
                 //h2D_phi_vs_eta->Fill(track.Phi, track.Eta, track.Pt);
                 /*END USER TRACK CODE*/
@@ -180,6 +182,9 @@ Int_t ReadTree(TString InputFile, TString i_OutputFile)
 
             h1d_pTsum ->Fill(pT_sum);
 
+            Results->cd();
+            h1d_mult_phi->Write();
+            delete(h1d_mult_phi);
 
             /*USER EVENT CODE*/
             //EventHistos->cd();
@@ -192,7 +197,7 @@ Int_t ReadTree(TString InputFile, TString i_OutputFile)
         cout << "Skipped " << N_events_skipped << "/" << entries_col << " events" << endl;
         total_skip += N_events_skipped;
         /*USER FINALIZE DF CODE*/
-
+        break;
         /*END USER FINALIZE DF CODE*/
 
     }

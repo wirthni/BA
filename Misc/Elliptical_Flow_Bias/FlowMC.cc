@@ -64,7 +64,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_PYTHIAOversampling 20
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false 
+    #define DEF_OutputEventOverviews true 
     #define DEF_JetLeadingPt 40.0
     #define DEF_JetSubleadingPt 20.0
     #define DEF_HadLeadingPt 25.0
@@ -81,17 +81,16 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     TH2D* h2D_pt_vs_eta_LargeGap = new TH2D("h2D_pt_vs_eta_LargeGap","h2D_pt_vs_eta_LargeGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
     TH2D* h2D_pt_vs_eta_SmallGap = new TH2D("h2D_pt_vs_eta_SmallGap","h2D_pt_vs_eta_SmallGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
-
     TH2D* h2D_eta_vs_dphi_LargeGap = new TH2D("h2D_eta_vs_dphi_LargeGap","h2D_eta_vs_dphi_LargeGap",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2);
     TH2D* h2D_eta_vs_dphi_SmallGap = new TH2D("h2D_eta_vs_dphi_SmallGap","h2D_eta_vs_dphi_SmallGap",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2);
-
-    //DEBUG REASONS
     TH2D* h2D_deta_vs_dphi_LargeGap = new TH2D("h2D_deta_vs_dphi_LargeGap","h2D_deta_vs_dphi_LargeGap",DEF_BinningPerUnit * 4 * 0.9, -1.8, 1.8, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2); // contains particle correlations relative to the leading jet
     TH2D* h2D_deta_vs_dphi_SmallGap = new TH2D("h2D_deta_vs_dphi_SmallGap","h2D_deta_vs_dphi_SmallGap",DEF_BinningPerUnit * 4 * 0.9, -1.8, 1.8, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2); // contains particle correlations relative to the leading jet
     TH1D* h1D_JetPopulation_Leading = new TH1D("h1D_JetPopulation_Leading", "h1D_JetPopulation_Leading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
     TH1D* h1D_JetPopulation_Subleading = new TH1D("h1D_JetPopulation_Subleading", "h1D_JetPopulation_Subleading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
     TH1D* h1D_JetPt_Leading = new TH1D("h1D_JetPt_Leading", "h1D_JetPt_Leading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
     TH1D* h1D_JetPt_Subleading = new TH1D("h1D_JetPt_Subleading", "h1D_JetPt_Subleading", DEF_MaxJetPt, 0, DEF_MaxJetPt);  
+    TH1D* h1D_EPShiftThroughSingleJet = new TH1D("h1D_EPShiftThroughSingleJet", "h1D_EPShiftThroughSingleJet", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi);
+    TH1D* h1D_EPShiftThroughDijet = new TH1D("h1D_EPShiftThroughDijet", "h1D_EPShiftThroughDijet", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi);
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_NoCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_NoCut","h2D_eta_vs_phi_JetCoordinates_Leading_NoCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut","h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the large gap cut
@@ -139,15 +138,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     if(i_UsePYTHIAData)
     {
-        /*
-        GSI:
-        TString pinputdirPYTHIA = "./PYTHIA_Data/";
-        //TString SEListPYTHIA = "/filelist_PYTHIA_pp.txt";
-        TString SEListPYTHIA = "/filelist_PYTHIA_pp_OnlyHigh.txt";
-        TString Pythia_List =  "./PYTHIA_Data";
-        */
-
-        //------------------------------------
         // Read input data pythia tree
         TString pinputdirPYTHIA = i_PathToPYTHIAFiles;
         //TString SEListPYTHIA = "filelist_PYTHIA_pp.txt";
@@ -251,6 +241,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
             vector<PseudoJet> ParticleVector;//holds all the particles in the event
                     
+            float Q_x = 0;
+            float Q_y = 0;
+            float Psi = 0;
             Int_t N = h1D_NDist->GetRandom();
             double V2_V3_Phase = TR_EventPlaneCoeffCorrelation.Uniform(-Pi, Pi);
             vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
@@ -464,7 +457,33 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if(JetVector.size() >= 1)h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
+            if(JetVector.size() < 1) continue;
+
+            h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
+
+            if(JetVector.size() == 1)
+            {
+                cout << endl << "single jet event, now calculating EP angle" << endl;
+                //single jet event EP calculation
+                Q_x = 0.0;
+                Q_y = 0.0;
+                for(const auto& particle : ParticleMemory)
+                {
+                    Q_x += cos(2*particle[0]);
+                    Q_y += sin(2*particle[0]);
+                }
+                Psi = atan(Q_y/Q_x)/2;
+                if(Psi > Pi/2) Psi -= Pi;
+                else if(Psi < -Pi/2) Psi += Pi;
+                cout << "Psi = " << Psi << endl;
+                h1D_EPShiftThroughSingleJet->Fill(Psi - 0);
+            }
+            else
+            {
+                //dijet event EP calculation farther down in paticle loop
+            }
+
+
 
             if(JetVector.size() < 2 )continue;
 
@@ -509,19 +528,22 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             h1D_JetPt_Subleading->Fill(JetVector[1].pt());
 
             // Prepare / Fill histogram on how many particles contribute to each jet
-            if(i_UseHadronInstadOfJet)
-            {
-                int LeadingJetParticleCounter = 0;
-                int SubleadingJetParticleCounter = 0;
-            }
-            else
+            int LeadingJetParticleCounter = 0;
+            int SubleadingJetParticleCounter = 0;
+
+            if(!i_UseHadronInstadOfJet)
             {
                 h1D_JetPopulation_Leading->Fill(JetVector[0].user_info<MyUserInfo>().getNoOfParticles());
                 h1D_JetPopulation_Subleading->Fill(JetVector[1].user_info<MyUserInfo>().getNoOfParticles());
             }
 
+            //for event plane angle calculation
+            Q_x = 0;
+            Q_y = 0;
+
             if(LargeGap)
             {
+                
                 for(const auto& particle : ParticleMemory)
                 {
                     // Fill analysis plot
@@ -543,11 +565,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     // Fill correlation relative to leading jet
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    h2D_deta_vs_dphi_LargeGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_LargeGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
 
                     //in case of hadron analysis, look how many particles contribute to the leading jet
                     if(i_UseHadronInstadOfJet)
                     {
+                        double DeltaEta;
                         //leading jet
                         DeltaPhi = particle[0] - JetVector[0].phi_std();
                         if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
@@ -562,6 +585,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         DeltaEta = particle[1] - JetVector[1].eta();
                         if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) SubleadingJetParticleCounter++;
                     }
+
+                    //calculate the event plane
+                    Q_x += cos(2*particle[0]);
+                    Q_y += sin(2*particle[0]);
+
 
                 }
 
@@ -593,11 +621,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     // Fill correlation relative to leading jet
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    h2D_deta_vs_dphi_SmallGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_SmallGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
 
                     //in case of hadron analysis, look how many particles contribute to the leading jet
                     if(i_UseHadronInstadOfJet)
                     {
+                        double DeltaEta;
                         //leading jet
                         DeltaPhi = particle[0] - JetVector[0].phi_std();
                         if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
@@ -613,6 +642,10 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) SubleadingJetParticleCounter++;
                     }
 
+                    //calculate the event plane
+                    Q_x += cos(2*particle[0]);
+                    Q_y += sin(2*particle[0]);
+
                 }
 
                 // Fill small gap cut jet coordinates
@@ -621,8 +654,16 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 SmallGapEventCounter++;
             }
 
-            h1D_JetPopulation_Leading->Fill(LeadingJetParticleCounter);
-            h1D_JetPopulation_Subleading->Fill(SubleadingJetParticleCounter);
+            Psi = atan(Q_y/Q_x)/2;
+            if(Psi > Pi/2) Psi -= Pi;
+            else if(Psi < -Pi/2) Psi += Pi;
+            h1D_EPShiftThroughDijet->Fill(Psi - 0);
+
+            if(i_UseHadronInstadOfJet)
+            {
+                h1D_JetPopulation_Leading->Fill(LeadingJetParticleCounter);
+                h1D_JetPopulation_Subleading->Fill(SubleadingJetParticleCounter);
+            }
 
             //write event results
             #if DEF_OutputEventOverviews
@@ -683,7 +724,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     h2D_GeneratedParticles->Scale(1./(h2D_GeneratedParticles->GetXaxis()->GetBinWidth(0)));
 
+    //normalize histograms if necessary
+    h1D_EPShiftThroughDijet->Scale(1./h1D_EPShiftThroughDijet->Integral());
+    h1D_EPShiftThroughSingleJet->Scale(1./h1D_EPShiftThroughSingleJet->Integral());
+
     //put axis labels on all histograms
+    h2D_pt_vs_eta_LargeGap->SetTitle("Near-side correlation of particles with p_{t}, large gaps");
     h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitle("p_{t}[GeV]");
     h2D_pt_vs_eta_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -691,6 +737,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
 
+    h2D_pt_vs_eta_SmallGap->SetTitle("Near-side correlation of particles with p_{t}, small gaps");
     h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitle("p_{t}[GeV]");
     h2D_pt_vs_eta_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -698,88 +745,114 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
 
+    h2D_eta_vs_dphi_LargeGap->SetTitle("Particle correlation abs. in #eta, rel. in #phi, large gaps. p_{t} #in [1,2] GeV");
     h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
     h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_eta_vs_dphi_SmallGap->SetTitle("Particle correlation abs. in #eta, rel. in #phi, small gaps. p_{t} #in [1,2] GeV");
     h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
     h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_deta_vs_dphi_LargeGap->SetTitle("Particle correlation rel. in #eta, rel. in #phi, large gaps. p_{t} #in [1,2] GeV");
     h2D_deta_vs_dphi_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_deta_vs_dphi_LargeGap->GetXaxis()->SetTitle("#Delta #eta");
     h2D_deta_vs_dphi_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_deta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_deta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
     h2D_deta_vs_dphi_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_deta_vs_dphi_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_deta_vs_dphi_SmallGap->SetTitle("Particle correlation rel. in #eta, rel. in #phi, small gaps. p_{t} #in [1,2] GeV");
     h2D_deta_vs_dphi_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_deta_vs_dphi_SmallGap->GetXaxis()->SetTitle("#Delta #eta");
     h2D_deta_vs_dphi_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_deta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi");
+    h2D_deta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
     h2D_deta_vs_dphi_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_deta_vs_dphi_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h1D_JetPopulation_Leading->SetTitle("Population of the leading jet");
     h1D_JetPopulation_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_JetPopulation_Leading->GetXaxis()->SetTitle("Leading Jet Population");
     h1D_JetPopulation_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Leading->GetYaxis()->SetTitle("Normalized Occurence");
+    h1D_JetPopulation_Leading->GetYaxis()->SetTitle("a. u.");
 
+    h1D_JetPopulation_Subleading->SetTitle("Population of the subleading jet");
     h1D_JetPopulation_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_JetPopulation_Subleading->GetXaxis()->SetTitle("Subleading Jet Population");
     h1D_JetPopulation_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Subleading->GetYaxis()->SetTitle("Normalized Occurence");
+    h1D_JetPopulation_Subleading->GetYaxis()->SetTitle("a. u.");
 
+    h1D_JetPt_Leading->SetTitle("Pt of the leading jet");
     h1D_JetPt_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_JetPt_Leading->GetXaxis()->SetTitle("p_{t}^{leading jet} [GeV]");
     h1D_JetPt_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Leading->GetYaxis()->SetTitle("Normalized Occurence");
+    h1D_JetPt_Leading->GetYaxis()->SetTitle("a. u.");
 
+    h1D_JetPt_Subleading->SetTitle("Pt of the subleading jet");
     h1D_JetPt_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_JetPt_Subleading->GetXaxis()->SetTitle("p_{t}^{subleading jet} [GeV]");
     h1D_JetPt_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Subleading->GetYaxis()->SetTitle("Normalized Occurence");
+    h1D_JetPt_Subleading->GetYaxis()->SetTitle("a. u.");
 
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->SetTitle("Fastjet-returned leading jet coordinates in Hybrid Events w/o cut");
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitle("#phi[rad]");
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->SetTitle("Fastjet-returned leading jet coordinates in Hybrid Events with #eta_{Leading} >= 0");
     h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetYaxis()->SetTitle("#phi[rad]");
     h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->SetTitle("Fastjet-returned leading jet coordinates in Hybrid Events. Large Gaps");
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetYaxis()->SetTitle("#phi[rad]");
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->SetTitle("Fastjet-returned leading jet coordinates in Hybrid Events. Small Gaps");
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetXaxis()->SetTitle("#eta");
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->SetTitle("#phi");
+    h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetYaxis()->SetTitle("#phi[rad]");
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
+    h2D_GeneratedParticles->SetTitle("Particle Correlation in Hybrid Events. #psi_{2} = 0, #psi_{3} random.");
     h2D_GeneratedParticles->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_GeneratedParticles->GetXaxis()->SetTitle("#eta");
     h2D_GeneratedParticles->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_GeneratedParticles->GetYaxis()->SetTitle("#phi");
+    h2D_GeneratedParticles->GetYaxis()->SetTitle("#phi[rad]");
     h2D_GeneratedParticles->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_GeneratedParticles->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
+
+    h1D_EPShiftThroughSingleJet->SetTitle("Shift of the EP after including PYTHIA pp jets. Single jet events.");
+    h1D_EPShiftThroughSingleJet->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_EPShiftThroughSingleJet->GetXaxis()->SetTitle("#psi_{+PYTHIA} - #psi_{0}[rad]");
+    h1D_EPShiftThroughSingleJet->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_EPShiftThroughSingleJet->GetYaxis()->SetTitle("a. u.");
+
+    h1D_EPShiftThroughDijet->SetTitle("Shift of the EP after including PYTHIA pp jets. Poly-jet events.");
+    h1D_EPShiftThroughDijet->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_EPShiftThroughDijet->GetXaxis()->SetTitle("#psi_{+PYTHIA} - #psi_{0}[rad]");
+    h1D_EPShiftThroughDijet->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_EPShiftThroughDijet->GetYaxis()->SetTitle("a. u.");
+
 
     //write global results
     Results->cd();
@@ -798,6 +871,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->Write();
     h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->Write();
     h2D_GeneratedParticles->Write();
+    h1D_EPShiftThroughSingleJet->Write();
+    h1D_EPShiftThroughDijet->Write();
+
     OutputFile ->Close();
     
     return 1;
