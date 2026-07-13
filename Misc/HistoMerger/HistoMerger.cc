@@ -15,6 +15,7 @@ i_NoOfHistos: clear
 */
 Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int i_NoOfHistos, bool i_ScaleByNumber)
 {
+    int CorruptFilesCounter = 0;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -28,7 +29,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
     cout << "Output file is " << str_out << endl;
 
     //open first root file
-    TString DataFile = "./DataToMerge/" + i_RootFileName + Form("_%d", 1) + ".root";
+    TString DataFile = i_RootFileName + Form("_%d", 1) + ".root";
     TFile *file1 = TFile::Open(DataFile);
     if (!file1 || file1->IsZombie()) {
         std::cout << "Error while opening file " << 1 << "!" << endl;
@@ -61,7 +62,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
         //append the other files 2,3,...
         for(int j=2; j<=i_NoOfHistos; j++)
         {
-            DataFile = "./DataToMerge/" + i_RootFileName + Form("_%d", j) + ".root";
+            DataFile = i_RootFileName + Form("_%d", j) + ".root";
 
             TFile *file = TFile::Open(DataFile);
 
@@ -72,13 +73,21 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
 
             TH2D* h2D_MergerScrawl = (TH2D*)file->Get(i_PathToHistosInRootFile + "/" + HistoVector[i]);
 
+            if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0)
+            {
+                CorruptFilesCounter++;
+                cout << "Skipping corrupt or empty histo in file " << j << endl;
+                file->Close();
+                continue;
+            }
+
             h2D_MergerResult->Add(h2D_MergerScrawl);
 
             file->Close();
 
         }
 
-        if(i_ScaleByNumber) h2D_MergerResult->Scale(1./double(i_NoOfHistos));
+        if(i_ScaleByNumber) h2D_MergerResult->Scale(1./double(i_NoOfHistos - CorruptFilesCounter));
 
         OutputFile->cd();
         h2D_MergerResult->Write();
