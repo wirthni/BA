@@ -15,7 +15,6 @@ i_NoOfHistos: clear
 */
 Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int i_NoOfHistos, bool i_ScaleByNumber)
 {
-    int CorruptFilesCounter = 0;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -54,10 +53,16 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
 
     for(int i=0; i<HistoVector.size(); i++)
     {
+        int CorruptFilesCounter = 0;
         cout << "Now merging " << HistoVector[i] << endl;
 
         //take general histo info from first file
         TH2D* h2D_MergerResult = (TH2D*)Directory->Get(HistoVector[i]);
+        if(!h2D_MergerResult || h2D_MergerResult->GetEntries() == 0 || h2D_MergerResult->IsZombie() || h2D_MergerResult->GetEntries() != h2D_MergerResult->GetEntries())
+        {
+             cout << "First file has corrupt data, cannot retrieve histogram!" << endl;
+             continue;
+        }
 
         //append the other files 2,3,...
         for(int j=2; j<=i_NoOfHistos; j++)
@@ -73,7 +78,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
 
             TH2D* h2D_MergerScrawl = (TH2D*)file->Get(i_PathToHistosInRootFile + "/" + HistoVector[i]);
 
-            if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0)
+            if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0 || h2D_MergerScrawl->IsZombie() || h2D_MergerScrawl->GetEntries() != h2D_MergerScrawl->GetEntries())
             {
                 CorruptFilesCounter++;
                 cout << "Skipping corrupt or empty histo in file " << j << endl;

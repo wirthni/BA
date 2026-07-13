@@ -51,10 +51,6 @@ i_AllowV3 if false V3=0 always else ...
 i_OutputFileName should be of form "NAME". File type is appended automatically
 i_InputDataDivisions number of times the input files should be separated (e.g. 10) ->only 1/10 of the input data is processed
 i_InputDataDivisionNumber 1->work off the first 1/10, 2->work off the second 1/10, ... . Goes from 1...i_InputDataDivisions
-
-Additional Info:
-
-Event Plane is always at \phi = 0
 */
 Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bool i_UsePYTHIAData = true, bool i_GenerateBackground = true, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "Default", bool i_UseHadronInstadOfJet = false, bool i_UsePYTHIAMultipleTimes = false, uint8_t i_InputDataDivisions = 1, uint16_t i_InputDataDivisionNumber = 1)
 {
@@ -104,10 +100,10 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     TRandom TR_Eta;
     TR_Eta.SetSeed(0);
-    TRandom TR_EventPlaneCoeffCorrelation;
-    TR_EventPlaneCoeffCorrelation.SetSeed(0);
-    TRandom TR_EventPlaneAngle;
-    TR_EventPlaneAngle.SetSeed(0);
+    TRandom TR_V2Angle;
+    TR_V2Angle.SetSeed(0);
+    TRandom TR_V3Angle;
+    TR_V3Angle.SetSeed(0);
     TChain              *inputPYTHIA;
     PythiaEvent         *PYTHIAEvent;
     PythiaParticle      *PYTHIAParticle;
@@ -252,7 +248,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             float DistanceToClosestV3MaximumBeforeBG;
             float DistanceToClosestV3MaximumAfterBG;
             Int_t N = h1D_NDist->GetRandom();
-            double V2_V3_Phase = TR_EventPlaneCoeffCorrelation.Uniform(-Pi, Pi);
+            double V2_Angle = TR_V2Angle.Uniform(-Pi, Pi);
+            double V3_Angle = TR_V3Angle.Uniform(-Pi, Pi);
             vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
             vector<array<double, 4>> HighPtParticles;//save for later in case of hadron analysis. All particles that have pt > DEF_SubleadingPt
 
@@ -403,12 +400,24 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 {
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
-                        DistanceToClosestV2MaximumBeforeBG = min({abs(JetVector[0].phi_std() - 0), abs(JetVector[0].phi_std() - Pi), abs(JetVector[0].phi_std() + Pi)});
+
+                        float V2Maxima[2];
+                        for(int i=0; i<=1; i++)
+                        {
+                            V2Maxima[i] = V2_Angle + i * Pi;
+                            while(abs(V2Maxima[i]) > Pi)
+                            {
+                                if(V2Maxima[i] > Pi) V2Maxima[i] -= 2*Pi;
+                                else if(V2Maxima[i] < -Pi) V2Maxima[i] += 2*Pi;
+                            }
+                            //we now have three maxima in the interval [-Pi, Pi]
+                            DistanceToClosestV2MaximumBeforeBG = min({abs(JetVector[0].phi_std() - V2Maxima[0]),abs(JetVector[0].phi_std() - V2Maxima[1])});
+                        }
 
                         float V3Maxima[3];
                         for(int i=0; i<=2; i++)
                         {
-                            V3Maxima[i] = 0 + V2_V3_Phase + i * (2*Pi/3);
+                            V3Maxima[i] = 0 + V3_Angle + i * (2*Pi/3);
                             while(abs(V3Maxima[i]) > Pi)
                             {
                                 if(V3Maxima[i] > Pi) V3Maxima[i] -= 2*Pi;
@@ -450,7 +459,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     //get elliptic flow strength from pt
                     double pseudoparams[2] = {Pt,Eta};
                     double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
-                    double FlowParamsArray[3] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_V3_Phase};
+                    double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
 
                     double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
                     if(Phi > Pi) Phi -= 2*Pi;
@@ -564,7 +573,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         float V3Maxima[3];
                         for(int i=0; i<=2; i++)
                         {
-                            V3Maxima[i] = 0 + V2_V3_Phase + i * (2*Pi/3);
+                            V3Maxima[i] = 0 + V3_Angle + i * (2*Pi/3);
                             while(abs(V3Maxima[i]) > Pi)
                             {
                                 if(V3Maxima[i] > Pi) V3Maxima[i] -= 2*Pi;
@@ -579,6 +588,50 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         h1D_LeadingJetPhiPullToClosestV3Max->Fill(DistanceToClosestV3MaximumAfterBG - DistanceToClosestV3MaximumBeforeBG);
 
                     }
+                }
+
+                if(i_UsePYTHIAData)
+                {
+
+                    if(JetVector.size() > 0)
+                    {
+                        if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
+                        {
+
+                            float V2Maxima[2];
+                            for(int i=0; i<=1; i++)
+                            {
+                                V2Maxima[i] = V2_Angle + i * Pi;
+                                while(abs(V2Maxima[i]) > Pi)
+                                {
+                                    if(V2Maxima[i] > Pi) V2Maxima[i] -= 2*Pi;
+                                    else if(V2Maxima[i] < -Pi) V2Maxima[i] += 2*Pi;
+                                }
+                                //we now have three maxima in the interval [-Pi, Pi]
+                                DistanceToClosestV2MaximumAfterBG = min({abs(JetVector[0].phi_std() - V2Maxima[0]),abs(JetVector[0].phi_std() - V2Maxima[1])});
+                            }
+
+                            float V3Maxima[3];
+                            for(int i=0; i<=2; i++)
+                            {
+                                V3Maxima[i] = 0 + V3_Angle + i * (2*Pi/3);
+                                while(abs(V3Maxima[i]) > Pi)
+                                {
+                                    if(V3Maxima[i] > Pi) V3Maxima[i] -= 2*Pi;
+                                    else if(V3Maxima[i] < -Pi) V3Maxima[i] += 2*Pi;
+                                }
+                                //we now have three maxima in the interval [-Pi, Pi]
+                                DistanceToClosestV3MaximumAfterBG = min({abs(JetVector[0].phi_std() - V3Maxima[0]),abs(JetVector[0].phi_std() - V3Maxima[1]),abs(JetVector[0].phi_std() - V3Maxima[2])});
+                            }
+
+                            m_SkipEPShiftAnalysis = false;
+                        }
+                    }
+
+                    //write analysis results
+                    h1D_LeadingJetPhiPullToClosestV2Max->Fill(DistanceToClosestV2MaximumAfterBG - DistanceToClosestV2MaximumBeforeBG);
+                    h1D_LeadingJetPhiPullToClosestV3Max->Fill(DistanceToClosestV3MaximumAfterBG - DistanceToClosestV3MaximumBeforeBG);
+
                 }
 
             }
@@ -1312,8 +1365,9 @@ double Function_PhiByFlow(double x, double params[])
 {
     double v_2 = params[0];
     double v_3 = params[1];
-    double Phase = params[2];
-    return (1/(2*pi))*(1+2*(v_2*cos(2*x) + v_3*cos(3*(x+Phase))));
+    double v2_Angle = params[2];
+    double v3_Angle = params[3];
+    return (1/(2*pi))*(1+2*(v_2*cos(2*(x+v2_Angle)) + v_3*cos(3*(x+v3_Angle))));
 }
 
 double Function_FlowByPtAndEta(double x, double params[])
