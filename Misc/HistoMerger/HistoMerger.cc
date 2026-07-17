@@ -28,7 +28,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
     cout << "Output file is " << str_out << endl;
 
     //open first root file
-    TString DataFile = i_RootFileName + Form("_%d", 1) + ".root";
+    TString DataFile = "DataToMerge/" + i_RootFileName + Form("_%d", 1) + ".root";
     TFile *file1 = TFile::Open(DataFile);
     if (!file1 || file1->IsZombie()) {
         std::cout << "Error while opening file " << 1 << "!" << endl;
@@ -67,7 +67,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
         //append the other files 2,3,...
         for(int j=2; j<=i_NoOfHistos; j++)
         {
-            DataFile = i_RootFileName + Form("_%d", j) + ".root";
+            DataFile = "DataToMerge/" + i_RootFileName + Form("_%d", j) + ".root";
 
             TFile *file = TFile::Open(DataFile);
 

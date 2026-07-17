@@ -180,24 +180,22 @@ Int_t ReadTree(TString InputFile, TString i_OutputFile)
                 /*END USER TRACK CODE*/
             }
 
+            /*USER EVENT CODE*/
+            //EventHistos->cd();
+            //h2D_phi_vs_eta->Write();
+            //delete(h2D_phi_vs_eta);
             h1d_pTsum ->Fill(pT_sum);
 
             Results->cd();
             h1d_mult_phi->Write();
             delete(h1d_mult_phi);
-
-            /*USER EVENT CODE*/
-            //EventHistos->cd();
-            //h2D_phi_vs_eta->Write();
-            //delete(h2D_phi_vs_eta);
             /*END USER EVENT CODE*/
 
         }
 
+        /*USER FINALIZE DF CODE*/
         cout << "Skipped " << N_events_skipped << "/" << entries_col << " events" << endl;
         total_skip += N_events_skipped;
-        /*USER FINALIZE DF CODE*/
-        break;
         /*END USER FINALIZE DF CODE*/
 
     }
