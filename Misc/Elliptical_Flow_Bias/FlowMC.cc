@@ -57,6 +57,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
+    long NoOfPosPulls = 0;
+    long NoOfNegPulls = 0;
+
     #define DEF_PYTHIAOversampling 20
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
@@ -404,9 +407,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             }
 
             bool m_SkipEPShiftAnalysis = true;
-            int DistToV2Before_Sign;
             float ClosestV3MaximumPhi = 0;//save for later
-            float JetCoordinatesBefore = JetVector[0].phi_std();
+            float LeadingDistClosestV2Max = 0;
+            float JetCoordinatesBefore;
             float V2Maxima[2];
             float V3Maxima[3];
             if(i_UsePYTHIAData)
@@ -414,6 +417,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
                 if(JetVector.size() > 0)
                 {
+                    JetCoordinatesBefore = JetVector[0].phi_std();
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
                         //find out distance to closest maxima
@@ -435,7 +439,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                             else if(Dist < -Pi) {Dist += 2*Pi;}
                             if(abs(Dist) <= Pi/2)
                             {
-                                DistToV2Before_Sign = sgn(Dist);
+                                LeadingDistClosestV2Max = Dist;
                                 break;
                             }
                         }
@@ -596,42 +600,17 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 {
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
-                        double Dist;
-                        Dist = JetVector[0].phi_std() - ClosestV2MaximumPhi;
-                        if(Dist > Pi) {Dist -= 2*Pi;}
-                        else if(Dist < -Pi) {Dist += 2*Pi;}
-                        DistanceToClosestV2MaximumAfterBG = Dist;
+                        float V2Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
+                        if(V2Shift > Pi) V2Shift -= 2*Pi;
+                        else if(V2Shift < -Pi) V2Shift += 2*Pi;
 
-                        Dist = JetVector[0].phi_std() - ClosestV3MaximumPhi;
-                        if(Dist > Pi) {Dist -= 2*Pi; Dist *= -1;}
-                        else if(Dist < -Pi) {Dist += 2*Pi; Dist *= -1;}
-                        DistanceToClosestV3MaximumAfterBG = Dist;
+                        //V2Shift = abs(V2Shift) * DistToV2Before_Sign;
 
-                        double V2Shift = DistanceToClosestV2MaximumAfterBG - DistanceToClosestV2MaximumBeforeBG;
-                        if(V2Shift > Pi) {V2Shift -= 2*Pi; V2Shift *= -1;}
-                        else if(V2Shift < -Pi) {V2Shift += 2*Pi; V2Shift *= -1;}
-                        float V3Shift = DistanceToClosestV3MaximumAfterBG - DistanceToClosestV3MaximumBeforeBG;
-                        if(V3Shift > Pi) {V3Shift -= 2*Pi; V3Shift *= -1;}
-                        else if(V3Shift < -Pi) {V3Shift += 2*Pi; V3Shift *= -1;}
-                        //write analysis results
-                        //constraint: the same jet cannot be pulled by more than Pi/2 or Pi/3 due to flow. Omit every other case
-                        if(abs(V2Shift) <= Pi/2) h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(DistanceToClosestV2MaximumBeforeBG, V2Shift, JetVector[0].pt());
-                        if(abs(V3Shift) <= Pi/3) h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(DistanceToClosestV3MaximumBeforeBG, V3Shift, JetVector[0].pt());
-                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////SCALING NOT RIGHT, BUT SHOULDNT MATTER
-                        if(false && abs(JetCoordinatesBefore) >= 3.0) 
-                        {
-                            //print stuff
-                            cout << "Maxima at " << V2Maxima[0] << "," << V2Maxima[1] << endl;
-                            cout << "Closest V2 maximum before at " << ClosestV2MaximumPhi << endl;
-                            cout << "Jet before at " << JetCoordinatesBefore << endl;
-                            cout << "Jet after at " << JetVector[0].phi_std() << endl;
-                            cout << "DistanceToClosestV2MaximumAfterBG " << DistanceToClosestV2MaximumAfterBG << endl;
-                            cout << "DistanceToClosestV2MaximumBeforeBG " << DistanceToClosestV2MaximumBeforeBG << endl;
-                            cout << "V2Shift " << V2Shift << endl;
-                        }
                         if(abs(V2Shift) <= Pi/2) {
+                            V2Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
                             h2D_PhiLeading_vs_Shift->Fill(JetVector[0].phi_std(), V2Shift);
                             h2D_V2Phase_vs_Shift->Fill(V2_Angle, V2Shift);
+                            h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(LeadingDistClosestV2Max, V2Shift, JetVector[0].pt());
                         }
                     }
                 }
@@ -836,6 +815,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     }
 
     cout << "In the end " << ((double)(SmallGapEventCounter + LargeGapEventCounter)/(double)((LastEventNo - FirstEventNo) * Oversampling)) * 100 << " percent of events were taken into account." << endl;
+
+    cout << "Pos/Neg pulls: " << NoOfPosPulls << "/" << NoOfNegPulls << endl;
 
     // Normalize histograms by number of events
     h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
