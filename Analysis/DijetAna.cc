@@ -17,7 +17,7 @@ i_OutputFile: Format xxx
 i_NoOfEvents: if -1, all events are processed, if x, the first x events are processed
 i_UseHadronInstead: if true, jet identification is done via hadron pt, not jet pt
 */
-Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "out.root", Int_t i_NoOfEvents = -1, bool i_UseHadronInstead = false)
+Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna.root", Int_t i_NoOfEvents = -1, bool i_UseHadronInstead = false)
 {
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -45,7 +45,7 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "out.root
     TH1D* h1D_JetPt_Leading = new TH1D("h1D_JetPt_Leading", "h1D_JetPt_Leading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
     TH1D* h1D_JetPt_Subleading = new TH1D("h1D_JetPt_Subleading", "h1D_JetPt_Subleading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_NoCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_NoCut","h2D_eta_vs_phi_JetCoordinates_Leading_NoCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
-    TH2D* h2D_GeneratedParticles = new TH2D("h2D_GeneratedParticles","h2D_GeneratedParticles",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // Contains all particles
+    TH2D* h2D_ParticleCorrelation = new TH2D("h2D_ParticleCorrelation","h2D_ParticleCorrelation",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // Contains all particles
 
     int TotalEvents = 0;
     int ProcessedEvents = 0;
@@ -277,6 +277,8 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "out.root
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            if(JetVector.size() >= 1) h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
+
             if(JetVector.size() < 2 )continue;
             
             if(JetVector[0].eta() < 0) continue;
@@ -332,6 +334,9 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "out.root
                 
                 for(const auto& particle : ParticleVector[collision.ColID])
                 {
+                    //fill particle correlation for this event
+                    h2D_ParticleCorrelation->Fill(particle.eta(), particle.phi_std());
+
                     // Fill analysis plot
                     double DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
                     if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
@@ -374,6 +379,9 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "out.root
             {
                 for(const auto& particle : ParticleVector[collision.ColID])
                 {
+                    //fill particle correlation for this event
+                    h2D_ParticleCorrelation->Fill(particle.eta(), particle.phi_std());
+                    
                     // Fill analysis plot
                     double DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
                     if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;

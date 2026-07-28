@@ -57,7 +57,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
         cout << "Now merging " << HistoVector[i] << endl;
 
         //take general histo info from first file
-        TH2D* h2D_MergerResult = (TH2D*)Directory->Get(HistoVector[i]);
+        TH3F* h2D_MergerResult = (TH3F*)Directory->Get(HistoVector[i]);
         if(!h2D_MergerResult || h2D_MergerResult->GetEntries() == 0 || h2D_MergerResult->IsZombie() || h2D_MergerResult->GetEntries() != h2D_MergerResult->GetEntries())
         {
              cout << "First file has corrupt data, cannot retrieve histogram!" << endl;
@@ -76,7 +76,7 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
                 return 0;
             }
 
-            TH2D* h2D_MergerScrawl = (TH2D*)file->Get(i_PathToHistosInRootFile + "/" + HistoVector[i]);
+            TH3F* h2D_MergerScrawl = (TH3F*)file->Get(i_PathToHistosInRootFile + "/" + HistoVector[i]);
 
             if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0 || h2D_MergerScrawl->IsZombie() || h2D_MergerScrawl->GetEntries() != h2D_MergerScrawl->GetEntries())
             {

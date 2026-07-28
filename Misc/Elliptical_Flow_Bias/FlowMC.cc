@@ -29,6 +29,7 @@ double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, doub
 double Function_NormGauss(double x, double params[]);
 double Function_PhiByFlow(double x, double params[]);
 double Function_FlowByPtAndEta(double x, double params[]);
+template <typename T> int sgn(T val);
 
 class MyUserInfo : public fastjet::PseudoJet::UserInfoBase {
 public:
@@ -60,8 +61,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
     #define DEF_OutputEventOverviews false 
-    #define DEF_JetLeadingPt 15
-    #define DEF_JetSubleadingPt 10
+    #define DEF_JetLeadingPt 40
+    #define DEF_JetSubleadingPt 20
     #define DEF_HadLeadingPt 10.0
     #define DEF_HadSubleadingPt 7.0
     #define DEF_CorrelationMinPt 1.0
@@ -72,8 +73,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_HistoTitleSize 0.1
 
     //other variables
-    TH1D* h1D_JetMultiplicityInPsi = new TH1D("h1D_JetMultiplicityInPsi", "h1D_JetMultiplicityInPsi", DEF_BinningPerUnit*2*Pi, -Pi, Pi);
-
     TH2D* h2D_pt_vs_eta_LargeGap = new TH2D("h2D_pt_vs_eta_LargeGap","h2D_pt_vs_eta_LargeGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
     TH2D* h2D_pt_vs_eta_SmallGap = new TH2D("h2D_pt_vs_eta_SmallGap","h2D_pt_vs_eta_SmallGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
     TH2D* h2D_eta_vs_dphi_LargeGap = new TH2D("h2D_eta_vs_dphi_LargeGap","h2D_eta_vs_dphi_LargeGap",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2);
@@ -83,18 +82,20 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     TH1D* h1D_JetPopulation_Leading = new TH1D("h1D_JetPopulation_Leading", "h1D_JetPopulation_Leading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
     TH1D* h1D_JetPopulation_Subleading = new TH1D("h1D_JetPopulation_Subleading", "h1D_JetPopulation_Subleading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
     TH1D* h1D_JetPt_Leading = new TH1D("h1D_JetPt_Leading", "h1D_JetPt_Leading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
-    TH1D* h1D_JetPt_Subleading = new TH1D("h1D_JetPt_Subleading", "h1D_JetPt_Subleading", DEF_MaxJetPt, 0, DEF_MaxJetPt);  
-    TH1D* h1D_EPShiftThroughSingleJet = new TH1D("h1D_EPShiftThroughSingleJet", "h1D_EPShiftThroughSingleJet", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi);
-    TH1D* h1D_EPShiftThroughDijet = new TH1D("h1D_EPShiftThroughDijet", "h1D_EPShiftThroughDijet", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi);
+    TH1D* h1D_JetPt_Subleading = new TH1D("h1D_JetPt_Subleading", "h1D_JetPt_Subleading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_NoCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_NoCut","h2D_eta_vs_phi_JetCoordinates_Leading_NoCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut","h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the large gap cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the small gap cut
     TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V2 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V2","h3D_LeadDist_vs_PhiShift_vs_Pt_V2",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/4, Pi/4, 40, 100, 30);
     TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V3 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V3","h3D_LeadDist_vs_PhiShift_vs_Pt_V3",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/4, Pi/4, 40, 100, 30);
-
-    //eta x phi x pt
     TH2D* h2D_GeneratedParticles = new TH2D("h2D_GeneratedParticles","h2D_GeneratedParticles",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
+    
+    //DEBUG
+    TH2D* h2D_PhiLeading_vs_Shift = new TH2D("h2D_PhiLeading_vs_Shift","h2D_PhiLeading_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
+    TH2D* h2D_V2Phase_vs_Shift = new TH2D("h2D_V2Phase_vs_Shift","h2D_V2Phase_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
+    
+    
 
     TRandom TR_Eta;
     TR_Eta.SetSeed(0);
@@ -249,6 +250,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             double V3_Angle = TR_V3Angle.Uniform(-Pi, Pi);
             vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
             vector<array<double, 4>> HighPtParticles;//save for later in case of hadron analysis. All particles that have pt > DEF_SubleadingPt
+            vector<PseudoJet> ParticleVector;
+    
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
@@ -289,14 +292,25 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     PYTHIAParticle = PYTHIAEvent  ->getParticle(i_Particle);
                     TLorentzVector TLV_pythia_particle = PYTHIAParticle -> get_TLV_part();
 
+                    /* faulty, working definitions below
                     Double_t pt_track  = TLV_pythia_particle.Pt();
-                    //if((fabs(pt_track) < 0.15)) continue;
+                    if((fabs(pt_track) < 0.15)) continue;
                     Double_t phi_track = TLV_pythia_particle.Phi();
                     Double_t eta_track = TLV_pythia_particle.Eta();
                     Double_t px_track  = TLV_pythia_particle.Px();
                     Double_t py_track  = TLV_pythia_particle.Py();
                     Double_t pz_track  = TLV_pythia_particle.Pz();
-                    Double_t E_track   = TLV_pythia_particle.E();
+                    Double_t E_track   = TLV_pythia_particle.E(); */
+
+                    Double_t pt_track  = TLV_pythia_particle.Pt();
+                    if((fabs(pt_track) < 0.15)) continue;
+                    Double_t phi_track = TLV_pythia_particle.Phi();
+                    Double_t eta_track = TLV_pythia_particle.Eta();
+                    Double_t px_track  = TLV_pythia_particle.Px();
+                    Double_t py_track  = TLV_pythia_particle.Py();
+                    Double_t pz_track  = TLV_pythia_particle.Pz();
+                    Double_t m_track = 0.134977;
+                    Double_t E_track = sqrt(pow(TLV_pythia_particle.P(),2) + pow(m_track, 2));
 
                     // track cuts 
                     if((fabs(pt_track) < 0.15)) continue;
@@ -390,6 +404,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             }
 
             bool m_SkipEPShiftAnalysis = true;
+            int DistToV2Before_Sign;
+            float ClosestV3MaximumPhi = 0;//save for later
+            float JetCoordinatesBefore = JetVector[0].phi_std();
+            float V2Maxima[2];
+            float V3Maxima[3];
             if(i_UsePYTHIAData)
             {
 
@@ -398,7 +417,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
                         //find out distance to closest maxima
-                        float V2Maxima[2];
                         for(int i=0; i<=1; i++)
                         {
                             V2Maxima[i] = V2_Angle + i * Pi;
@@ -407,10 +425,20 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                                 if(V2Maxima[i] > Pi) V2Maxima[i] -= 2*Pi;
                                 else if(V2Maxima[i] < -Pi) V2Maxima[i] += 2*Pi;
                             }
-                            //we now have two maxima in the interval [-Pi, Pi]
-                            if(abs(JetVector[0].phi_std() - V2Maxima[i]) <= Pi/2) DistanceToClosestV2MaximumBeforeBG = JetVector[0].phi_std() - V2Maxima[i];
+                            //we now have the maximum in the interval [-Pi, Pi]
                         }
-                        float V3Maxima[3];
+                        //cout << "Max1 = " << V2Maxima[0] << ", Max2 = " << V2Maxima[1] << ", Jet = " << JetVector[0].phi_std() << endl; 
+                        for(int i=0; i<=1; i++)
+                        {
+                            double Dist = JetVector[0].phi_std() - V2Maxima[i];
+                            if(Dist > Pi) {Dist -= 2*Pi;}
+                            else if(Dist < -Pi) {Dist += 2*Pi;}
+                            if(abs(Dist) <= Pi/2)
+                            {
+                                DistToV2Before_Sign = sgn(Dist);
+                                break;
+                            }
+                        }
                         for(int i=0; i<=2; i++)
                         {
                             V3Maxima[i] = 0 + V3_Angle + i * (2*Pi/3);
@@ -420,7 +448,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                                 else if(V3Maxima[i] < -Pi) V3Maxima[i] += 2*Pi;
                             }
                             //we now have three maxima in the interval [-Pi, Pi]
-                            if(abs(JetVector[0].phi_std() - V3Maxima[i]) <= 2*Pi/3) DistanceToClosestV3MaximumBeforeBG = JetVector[0].phi_std() - V3Maxima[i];
+                            double Dist = JetVector[0].phi_std() - V3Maxima[i];
+                            if(Dist > Pi) {Dist -= 2*Pi; Dist *= -1;}
+                            else if(Dist < -Pi) {Dist += 2*Pi; Dist *= -1;}
+                            if(abs(Dist) <= 2*Pi/3)
+                            {
+                                ClosestV3MaximumPhi = V3Maxima[i];
+                                DistanceToClosestV3MaximumBeforeBG = Dist;
+                                break;
+                            }
                         
                         }
 
@@ -451,6 +487,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 {
                     //get particle pt
                     double Pt = h1D_PtDist->GetRandom();
+                    if((fabs(Pt) < 0.15)) continue;
                     //get particle eta
                     double Eta = TR_Eta.Uniform(-0.9, 0.9);
                     //get elliptic flow strength from pt
@@ -467,17 +504,10 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     h2D_GeneratedParticles->Fill(Eta, Phi);
 
                     //feed jetfinder
-                    double p_x = Pt/(sqrt(1+pow(tan(Phi), 2)));//ONLY FOR E CALCULATION - SIGNS NOT NECESSARILY CORRECT
-                    double p_y = sqrt(pow(Pt,2) - pow(p_x,2));//ONLY FOR E CALCULATION - SIGNS NOT NECESSARILY CORRECT
-                    double p_z = (pow(p_x,2) + pow(p_y,2))/((1/pow(tanh(Eta),2))-1);//ONLY FOR E CALCULATION - SIGNS NOT NECESSARILY CORRECT
-                    double E = sqrt(pow(p_x,2) + pow(p_y,2) + pow(p_z,2) + pow(0.1349766,2));
-                    ROOT::Math::PtEtaPhiEVector v(Pt, Eta, Phi, E);
-                    p_x = v.Px();
-                    p_y = v.Py();
-                    p_z = v.Pz();
+                    ROOT::Math::PtEtaPhiMVector p4(Pt, Eta, Phi, 0.1349766); //0.1349766
 
                     if(i_UseHadronInstadOfJet && Pt >= SubleadingPtLimit) HighPtParticles.push_back({Phi, Eta, Pt});
-                    else if(!i_UseHadronInstadOfJet)ParticleVector.push_back(PseudoJet(p_x, p_y, p_z, E));
+                    else if(!i_UseHadronInstadOfJet)ParticleVector.push_back(PseudoJet(p4.Px(), p4.Py(), p4.Pz(), p4.E()));
 
                 }
             }
@@ -557,6 +587,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 JetVector = FindJets(ParticleVector);
             }
 
+            
+
             if(!m_SkipEPShiftAnalysis)
             {
 
@@ -564,37 +596,43 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 {
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
-                        //find out distance to closest maxima
-                        float V2Maxima[2];
-                        for(int i=0; i<=1; i++)
-                        {
-                            V2Maxima[i] = V2_Angle + i * Pi;
-                            while(abs(V2Maxima[i]) > Pi)
-                            {
-                                if(V2Maxima[i] > Pi) V2Maxima[i] -= 2*Pi;
-                                else if(V2Maxima[i] < -Pi) V2Maxima[i] += 2*Pi;
-                            }
-                            //we now have two maxima in the interval [-Pi, Pi]
+                        double Dist;
+                        Dist = JetVector[0].phi_std() - ClosestV2MaximumPhi;
+                        if(Dist > Pi) {Dist -= 2*Pi;}
+                        else if(Dist < -Pi) {Dist += 2*Pi;}
+                        DistanceToClosestV2MaximumAfterBG = Dist;
 
-                            if(abs(JetVector[0].phi_std() - V2Maxima[i]) <= Pi/2) DistanceToClosestV2MaximumAfterBG = JetVector[0].phi_std() - V2Maxima[i];
-                        }
-                        float V3Maxima[3];
-                        for(int i=0; i<=2; i++)
-                        {
-                            V3Maxima[i] = 0 + V3_Angle + i * (2*Pi/3);
-                            while(abs(V3Maxima[i]) > Pi)
-                            {
-                                if(V3Maxima[i] > Pi) V3Maxima[i] -= 2*Pi;
-                                else if(V3Maxima[i] < -Pi) V3Maxima[i] += 2*Pi;
-                            }
-                            //we now have three maxima in the interval [-Pi, Pi]
-                            if(abs(JetVector[0].phi_std() - V3Maxima[i]) <= 2*Pi/3) DistanceToClosestV3MaximumAfterBG = JetVector[0].phi_std() - V3Maxima[i];
-                        
-                        }
+                        Dist = JetVector[0].phi_std() - ClosestV3MaximumPhi;
+                        if(Dist > Pi) {Dist -= 2*Pi; Dist *= -1;}
+                        else if(Dist < -Pi) {Dist += 2*Pi; Dist *= -1;}
+                        DistanceToClosestV3MaximumAfterBG = Dist;
+
+                        double V2Shift = DistanceToClosestV2MaximumAfterBG - DistanceToClosestV2MaximumBeforeBG;
+                        if(V2Shift > Pi) {V2Shift -= 2*Pi; V2Shift *= -1;}
+                        else if(V2Shift < -Pi) {V2Shift += 2*Pi; V2Shift *= -1;}
+                        float V3Shift = DistanceToClosestV3MaximumAfterBG - DistanceToClosestV3MaximumBeforeBG;
+                        if(V3Shift > Pi) {V3Shift -= 2*Pi; V3Shift *= -1;}
+                        else if(V3Shift < -Pi) {V3Shift += 2*Pi; V3Shift *= -1;}
                         //write analysis results
-                        h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(DistanceToClosestV2MaximumBeforeBG, DistanceToClosestV2MaximumAfterBG - DistanceToClosestV2MaximumBeforeBG, JetVector[0].pt());
-                        h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(DistanceToClosestV3MaximumBeforeBG, DistanceToClosestV3MaximumAfterBG - DistanceToClosestV3MaximumBeforeBG, JetVector[0].pt());
-
+                        //constraint: the same jet cannot be pulled by more than Pi/2 or Pi/3 due to flow. Omit every other case
+                        if(abs(V2Shift) <= Pi/2) h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(DistanceToClosestV2MaximumBeforeBG, V2Shift, JetVector[0].pt());
+                        if(abs(V3Shift) <= Pi/3) h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(DistanceToClosestV3MaximumBeforeBG, V3Shift, JetVector[0].pt());
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////SCALING NOT RIGHT, BUT SHOULDNT MATTER
+                        if(false && abs(JetCoordinatesBefore) >= 3.0) 
+                        {
+                            //print stuff
+                            cout << "Maxima at " << V2Maxima[0] << "," << V2Maxima[1] << endl;
+                            cout << "Closest V2 maximum before at " << ClosestV2MaximumPhi << endl;
+                            cout << "Jet before at " << JetCoordinatesBefore << endl;
+                            cout << "Jet after at " << JetVector[0].phi_std() << endl;
+                            cout << "DistanceToClosestV2MaximumAfterBG " << DistanceToClosestV2MaximumAfterBG << endl;
+                            cout << "DistanceToClosestV2MaximumBeforeBG " << DistanceToClosestV2MaximumBeforeBG << endl;
+                            cout << "V2Shift " << V2Shift << endl;
+                        }
+                        if(abs(V2Shift) <= Pi/2) {
+                            h2D_PhiLeading_vs_Shift->Fill(JetVector[0].phi_std(), V2Shift);
+                            h2D_V2Phase_vs_Shift->Fill(V2_Angle, V2Shift);
+                        }
                     }
                 }
             }
@@ -1000,6 +1038,10 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Write(),
     h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Write();
 
+    //DEBUG
+    h2D_PhiLeading_vs_Shift->Write();
+    h2D_V2Phase_vs_Shift->Write();
+
     OutputFile ->Close();
     
     return 1;
@@ -1118,7 +1160,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // To do: define jet radius, background radius etc
-    #define jet_radius 0.2
+    #define jet_radius 0.2 
     // define variables 
     vector<PseudoJet> jets_fiducial;//contains the selected jets in the end
 
@@ -1127,8 +1169,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     // choose a jet definition
     JetDefinition jet_def(antikt_algorithm, jet_radius);
     // jet area definition
-    GhostedAreaSpec area_spec(ghost_maxrap);
-    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
+    AreaDefinition area_def(active_area,GhostedAreaSpec(ghost_maxrap,1,0.05));
 
     ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
     // run the clustering, extract the jets
@@ -1136,6 +1177,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
     Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius); // Fiducial cut for jets
     jets_fiducial = Fiducial_cut_selector(jets_all);
+    jets_fiducial = sorted_by_pt(jets_fiducial);
 
     // background estimation
     // Standard rho calculation with kT algorithm and N hardest jets removed
@@ -1164,7 +1206,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
         Float_t jet_eta        = jets_fiducial[i_jet].eta();
         Float_t jet_phi        = jets_fiducial[i_jet].phi();
         Float_t jet_phi_std    = jets_fiducial[i_jet].phi_std();
-        //if(jet_area < Jet_area_cut) continue;  this is a problem apparently
+        if(jet_area < Jet_area_cut) continue;
 
         // Store jet size in user information
         jets_fiducial[i_jet].set_user_info(new MyUserInfo(jets_fiducial[i_jet].constituents().size()));
@@ -1298,4 +1340,8 @@ double Function_FlowByPtAndEta(double x, double params[])
     FlowParams *= exp(-0.005*pow(Eta,2));
 
     return FlowParams;
+}
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
 }
