@@ -409,6 +409,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             bool m_SkipEPShiftAnalysis = true;
             float ClosestV3MaximumPhi = 0;//save for later
             float LeadingDistClosestV2Max = 0;
+            float LeadingDistClosestV3Max = 0;
             float JetCoordinatesBefore;
             float V2Maxima[2];
             float V3Maxima[3];
@@ -431,7 +432,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                             }
                             //we now have the maximum in the interval [-Pi, Pi]
                         }
-                        //cout << "Max1 = " << V2Maxima[0] << ", Max2 = " << V2Maxima[1] << ", Jet = " << JetVector[0].phi_std() << endl; 
                         for(int i=0; i<=1; i++)
                         {
                             double Dist = JetVector[0].phi_std() - V2Maxima[i];
@@ -453,12 +453,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                             }
                             //we now have three maxima in the interval [-Pi, Pi]
                             double Dist = JetVector[0].phi_std() - V3Maxima[i];
-                            if(Dist > Pi) {Dist -= 2*Pi; Dist *= -1;}
-                            else if(Dist < -Pi) {Dist += 2*Pi; Dist *= -1;}
-                            if(abs(Dist) <= 2*Pi/3)
+                            if(Dist > Pi) {Dist -= 2*Pi;}
+                            else if(Dist < -Pi) {Dist += 2*Pi;}
+                            if(abs(Dist) <= 2*Pi/6)
                             {
-                                ClosestV3MaximumPhi = V3Maxima[i];
-                                DistanceToClosestV3MaximumBeforeBG = Dist;
+                                LeadingDistClosestV3Max = Dist;
                                 break;
                             }
                         
@@ -604,14 +603,22 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         if(V2Shift > Pi) V2Shift -= 2*Pi;
                         else if(V2Shift < -Pi) V2Shift += 2*Pi;
 
-                        //V2Shift = abs(V2Shift) * DistToV2Before_Sign;
-
                         if(abs(V2Shift) <= Pi/2) {
                             V2Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
                             h2D_PhiLeading_vs_Shift->Fill(JetVector[0].phi_std(), V2Shift);
                             h2D_V2Phase_vs_Shift->Fill(V2_Angle, V2Shift);
                             h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(LeadingDistClosestV2Max, V2Shift, JetVector[0].pt());
                         }
+
+                        float V3Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
+                        if(V3Shift > Pi) V3Shift -= 2*Pi;
+                        else if(V3Shift < -Pi) V3Shift += 2*Pi;
+
+                        if(abs(V3Shift) <= Pi/2) {
+                            V3Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
+                            h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(LeadingDistClosestV3Max, V3Shift, JetVector[0].pt());
+                        }
+
                     }
                 }
             }
@@ -1120,6 +1127,151 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta} - #frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
     h1D_PartMult_LargeGap->DrawCopy();
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                   ANALYZE THE RECONSTRUCTED JET SHIFT DUE TO BACKGROUND FLOW 
+    /
+    /
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    #define LowPtJetFrom 40.0f //GeV
+    #define MiddlePtJetFrom 60.0f //GeV
+    #define HighPtJetFrom 80.0f //GeV
+    #define DEF_ShiftBins 30
+    #define DEF_Rebin 3
+    #define DEF_AxisLabelSize 0.05
+    #define DEF_AxisNumbersSize 0.04
+    #define DEF_LegendFontSize 0.03
+
+    //load histograms from root file
+    TH3F* h3F_ShiftV2 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
+    if(!h3F_ShiftV2){ cout << "V2 shift histogram not found!" << endl; return 0;}
+    TH3F* h3F_ShiftV3 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V3");
+    if(!h3F_ShiftV3){ cout << "V3 shift histogram not found!" << endl; return 0;}
+    
+    //V2 SHIFT
+    float ZBinWidth = h3F_ShiftV2->GetZaxis()->GetBinWidth(1);
+    
+    //project
+    TAxis *z = h3F_ShiftV2->GetZaxis();
+    h3F_ShiftV2->GetZaxis()->SetRange(z->FindBin((float)LowPtJetFrom), z->FindBin((float)MiddlePtJetFrom) - 1);
+    TH2F* h2F_LowPtJetsProjection = (TH2F*) h3F_ShiftV2->Project3D("yx");
+    h2F_LowPtJetsProjection->SetName("h2F_LowPtJetsProjection");
+    h3F_ShiftV2->GetZaxis()->SetRange(z->FindBin((float)MiddlePtJetFrom), z->FindBin((float)HighPtJetFrom) - 1);
+    TH2F* h2F_MiddlePtJetsProjection = (TH2F*) h3F_ShiftV2->Project3D("yx");
+    h2F_MiddlePtJetsProjection->SetName("h2F_MiddlePtJetsProjection");
+    h3F_ShiftV2->GetZaxis()->SetRange(z->FindBin((float)HighPtJetFrom), z->GetNbins());
+    TH2F* h2F_HighPtJetsProjection = (TH2F*) h3F_ShiftV2->Project3D("yx");
+    h2F_HighPtJetsProjection->SetName("h2F_HighPtJetsProjection");
+
+    TCanvas* can_V2Shift = new TCanvas("V2 Shift","V2 Shift",1000,1000);
+
+    TH1D* h1D_HighPtJetsShift = new TH1D("h1D_HighPtJetsShift", "h1D_HighPtJetsShift", DEF_ShiftBins, -Pi/2, +Pi/2);
+    TH1D* h1D_MiddlePtJetsShift = new TH1D("h1D_MiddlePtJetsShift", "h1D_MiddlePtJetsShift", DEF_ShiftBins, -Pi/2, +Pi/2);
+    TH1D* h1D_LowPtJetsShift = new TH1D("h1D_LowPtJetsShift", "h1D_LowPtJetsShift", DEF_ShiftBins, -Pi/2, +Pi/2);
+    
+    float XBinWidth = h2F_LowPtJetsProjection->GetXaxis()->GetBinWidth(1);
+    float BinsPerProjection = (Pi/(float)DEF_ShiftBins)/XBinWidth;
+    for(int iBin = 0; iBin < DEF_ShiftBins; iBin++)
+    {
+        //Low pt
+        TH1D* TempProjection = h2F_LowPtJetsProjection->ProjectionY("TempProjection", iBin*BinsPerProjection, (iBin+1)*BinsPerProjection);
+        h1D_LowPtJetsShift->SetBinContent(iBin+1, TempProjection->GetMean());
+        h1D_LowPtJetsShift->SetBinError(iBin+1, TempProjection->GetMeanError());
+
+        //Middle pt
+        TempProjection = h2F_MiddlePtJetsProjection->ProjectionY("TempProjection", iBin*BinsPerProjection, (iBin+1)*BinsPerProjection);
+        h1D_MiddlePtJetsShift->SetBinContent(iBin+1, TempProjection->GetMean());
+        h1D_MiddlePtJetsShift->SetBinError(iBin+1, TempProjection->GetMeanError());
+
+        //High pt
+        TempProjection = h2F_HighPtJetsProjection->ProjectionY("TempProjection", iBin*BinsPerProjection, (iBin+1)*BinsPerProjection);
+        h1D_HighPtJetsShift->SetBinContent(iBin+1, TempProjection->GetMean());
+        h1D_HighPtJetsShift->SetBinError(iBin+1, TempProjection->GetMeanError());
+
+        delete(TempProjection);
+    }
+
+
+    //markings
+    h1D_LowPtJetsShift->SetTitle("");
+    h1D_LowPtJetsShift->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_LowPtJetsShift->GetXaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_LowPtJetsShift->GetXaxis()->SetTitle("Jet distance in #phi to closest V_{2} maximum [rad]");
+    h1D_LowPtJetsShift->GetXaxis()->CenterTitle();
+    h1D_LowPtJetsShift->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_LowPtJetsShift->GetYaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_LowPtJetsShift->GetYaxis()->SetTitle("Relative jet shift in #phi [rad]");
+    h1D_LowPtJetsShift->GetYaxis()->CenterTitle();
+    h1D_LowPtJetsShift->SetMarkerStyle(kFullCircle);
+    h1D_LowPtJetsShift->SetMarkerColor(kRed);
+    h1D_LowPtJetsShift->SetLineColor(kRed);
+    h1D_LowPtJetsShift->Rebin(DEF_Rebin);
+    h1D_LowPtJetsShift->Scale(1./DEF_Rebin);
+    TH1* Low_Lgd = (TH1*)h1D_LowPtJetsShift->DrawCopy("P E1");
+
+    //h1D_MiddlePtJetsShift->SetTitle(Form("Jets with p_{t} #in [%.3f,%.3f]", MiddlePtJetFrom, HighPtJetFrom));
+    h1D_MiddlePtJetsShift->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_MiddlePtJetsShift->GetXaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_MiddlePtJetsShift->GetXaxis()->SetTitle("Jet distance in #phi to closest V_{2} maximum [rad]");
+    h1D_MiddlePtJetsShift->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_MiddlePtJetsShift->GetYaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_MiddlePtJetsShift->GetYaxis()->SetTitle("Jet shift in #phi [rad]");
+    h1D_MiddlePtJetsShift->SetMarkerStyle(kFullCircle);
+    h1D_MiddlePtJetsShift->SetMarkerColor(kGreen);
+    h1D_MiddlePtJetsShift->SetLineColor(kGreen);
+    h1D_MiddlePtJetsShift->Rebin(DEF_Rebin);
+    h1D_MiddlePtJetsShift->Scale(1./DEF_Rebin);
+    TH1* Mid_Lgd = (TH1*)h1D_MiddlePtJetsShift->DrawCopy("SAME P E1");
+
+    
+    //h1D_HighPtJetsShift->SetTitle(Form("Jets with p_{t} #in [%.3f,#infty]", HighPtJetFrom));
+    h1D_HighPtJetsShift->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_HighPtJetsShift->GetXaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_HighPtJetsShift->GetXaxis()->SetTitle("Jet distance to closest V_{2} maximum in #phi [rad]");
+    h1D_HighPtJetsShift->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_HighPtJetsShift->GetYaxis()->SetLabelSize(DEF_AxisNumbersSize);
+    h1D_HighPtJetsShift->GetYaxis()->SetTitle("Jet shift in #phi [rad]");
+    h1D_HighPtJetsShift->SetMarkerStyle(kFullCircle);
+    h1D_HighPtJetsShift->SetMarkerColor(kBlue);
+    h1D_HighPtJetsShift->SetLineColor(kBlue);
+    h1D_HighPtJetsShift->Rebin(DEF_Rebin);
+    h1D_HighPtJetsShift->Scale(1./DEF_Rebin);
+    TH1* High_Lgd = (TH1*)h1D_HighPtJetsShift->DrawCopy("SAME P E1");
+
+    TLegend *leg = new TLegend(0.7,0.7,0.85,0.85);
+    leg->AddEntry(Low_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", LowPtJetFrom, MiddlePtJetFrom),"p");
+    leg->AddEntry(Mid_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", MiddlePtJetFrom, HighPtJetFrom),"p");
+    leg->AddEntry(High_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} < #infty GeV", HighPtJetFrom),"p");
+    leg->SetLineColor(10);
+    leg->SetTextSize(DEF_LegendFontSize); 
+    leg->Draw();
+
+    TLegend *info = new TLegend(0.7,0.7,0.85,0.85);
+    info->AddEntry((TObject*)nullptr,Form("Event = PYTHIA p-p + Thermal Background (BG)"),"");
+    info->AddEntry((TObject*)nullptr,Form("BG: Randomly generated, based on ALICE 2018 Pb-Pb, 0-10%, #sqrt{s} = ...TeV"),"");
+    info->AddEntry((TObject*)nullptr,Form("Acceptance: 0.9"),"");
+    info->AddEntry((TObject*)nullptr,Form("Jet clustering by FastJet: R=0.2, Anti-k_{t}"),"");
+    info->SetLineColor(10);
+    info->SetTextSize(DEF_LegendFontSize); 
+    info->Draw();
+
+    //draw ALICE logo
+    TImage *img = TImage::Open("4_Color_Logo_CB.jpg");
+   
+    if (!img) {
+        printf("Could not create an image... exit\n");
+    }
+    TPad *l = new TPad("l","l",0.,0.,0.2,0.2);
+    //gPad->cd(0);
+    l->Draw();
+    l->cd();
+    img->Draw();
+    
 
     cout << "DONE!" << endl;
     file->Close();
@@ -1314,8 +1466,7 @@ double Function_FlowByPtAndEta(double x, double params[])
     double Eta = params[1];
     double FlowParams;
     //an approximation for pions(+), out of paper http://arxiv.org/abs/1301.2348v1
-    if(x<3.0) FlowParams =  -0.015*pow((x-3),2) + 0.14;
-    else FlowParams = 0.14;
+    FlowParams = 0.4*exp(-0.8*x)*pow(0.8*x,2);
 
     //now reduce based on eta, just an approximation
     FlowParams *= exp(-0.005*pow(Eta,2));
