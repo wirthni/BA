@@ -14,17 +14,18 @@ private:
 /* Parameters:
 i_InputFile: Format xxx.root
 i_OutputFile: Format xxx
-i_NoOfEvents: if -1, all events are processed, if x, the first x events are processed
-i_UseHadronInstead: if true, jet identification is done via hadron pt, not jet pt
 */
-Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna.root", Int_t i_NoOfEvents = -1, bool i_UseHadronInstead = false)
+Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
 {
+    //CONFIGURE
+    bool i_UseHadronInstead = false;
+
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews true 
+    #define DEF_OutputEventOverviews false 
     #define DEF_JetLeadingPt 40
     #define DEF_JetSubleadingPt 20
     #define DEF_HadLeadingPt 10.0
@@ -66,7 +67,7 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
     /*END USER VARIABLES*/
 
     //Generate output file
-    TString str_out =  "./" + i_OutputFile;
+    TString str_out = i_DFName;
     str_out += ".root";
     TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
     OutputFile->cd();
@@ -85,6 +86,8 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
     TIter next(file->GetListOfKeys());
     TKey *key;
     while ((key = (TKey *)next())) {
+        TString DFName = key->GetName();
+        if(DFName != i_DFName) continue;
         TClass *cl = gROOT->GetClass(key->GetClassName());
         if (!cl->InheritsFrom("TDirectory"))
             continue;
@@ -172,8 +175,6 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
         cout << "Start event loop" << endl;
 
         for (int i_Collision = 0; i_Collision < entries_col; i_Collision++) {
-            
-            if(ProcessedEvents > i_NoOfEvents && i_NoOfEvents != -1) break;
 
             ProcessedEvents++;
 
@@ -440,9 +441,10 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
         }
 
         cout << "Skipped because of unusual event behaviour: " << N_events_skipped << "/" << entries_col << " events" << endl;
+        cout << "In the end " << ((float)(SmallGapEventCounter + LargeGapEventCounter))/((float)entries_col) * 100 << " percent of events have been accepted!" << endl;
+        cout << "Total number of events: " << TotalEvents << ", of which skipped " << EventsSkipped << endl;
+        
         EventsSkipped += N_events_skipped;
-
-        if(ProcessedEvents >= i_NoOfEvents && i_NoOfEvents != -1) break;
 
     }
 
@@ -462,8 +464,8 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
     // Rebin Histograms if necessary
     h2D_eta_vs_dphi_LargeGap->Rebin2D(8,8);
     h2D_eta_vs_dphi_SmallGap->Rebin2D(8,8);
-    h2D_eta_vs_dphi_LargeGap->Scale(1.0/8.0);
-    h2D_eta_vs_dphi_SmallGap->Scale(1.0/8.0);
+    h2D_eta_vs_dphi_LargeGap->Scale(1.0/64.0);
+    h2D_eta_vs_dphi_SmallGap->Scale(1.0/64.0);
 
     // Divide by bin widths
     h2D_eta_vs_dphi_LargeGap->Scale(1./(h2D_eta_vs_dphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_dphi_LargeGap->GetYaxis()->GetBinWidth(0)));
@@ -548,6 +550,7 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
     h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
 
     //write global results
+    OutputFile->cd();
     Results->cd();
     h2D_pt_vs_eta_LargeGap->Write();
     h2D_pt_vs_eta_SmallGap->Write();
@@ -558,12 +561,101 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_OutputFile = "DijetAna
     h1D_JetPt_Leading->Write();
     h1D_JetPt_Subleading->Write();
 
-    cout << "In the end " << ((float)(SmallGapEventCounter + LargeGapEventCounter))/((float)i_NoOfEvents) * 100 << " percent of events have been accepted!" << endl;
 
-    cout << "Total number of events: " << TotalEvents << ", of which skipped " << EventsSkipped << endl;
     cout << "Write ..." << endl;
 
     OutputFile->Close();
+
+    return 1;
+}
+
+Int_t DijetAna_DiffWakeAna(const TString DataFile, double i_PtRange, double i_LowPtCut) {
+
+    #define DEF_AxisLabelSize 0.05
+    #define DEF_HistoTitleSize 0.1
+    #define DEF_Rebin 16
+
+    gStyle->SetOptStat(0);
+    SetRootGraphicStyle();
+
+    //open the root file
+    TFile *file = TFile::Open(DataFile);
+
+    if (!file || file->IsZombie()) {
+        std::cout << "Error while opening the file!" << std::endl;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                   ANALYZE THE DIRECT JET RECOIL SITES AND THE CORRESPONDING BACKGROUND 
+    /
+    /
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //load histograms from root file
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
+    if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
+    if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
+    
+
+    //get X(pt) binning
+    double BinsPerMomentum = h2D_pt_vs_eta_SmallGap->GetNbinsX() / h2D_pt_vs_eta_SmallGap->GetXaxis()->GetXmax();
+
+    //configure and draw canvas
+    TCanvas* can_ParticleMultiplicities = new TCanvas("ParticleMultiplicities","ParticleMultiplicities",1000,1000);
+    can_ParticleMultiplicities->Divide(3,1, 0, 0);
+
+    //SMALL GAP
+    can_ParticleMultiplicities->cd(1);
+
+    TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    cout << "Lower bin: " << i_LowPtCut*BinsPerMomentum << endl;
+    cout << "Upper bin: " << (i_LowPtCut + i_PtRange) * BinsPerMomentum << endl;
+    h1D_PartMult_SmallGap->Scale(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(1));
+    
+
+    //markings
+    h1D_PartMult_SmallGap->SetTitle("Small Gap");
+    h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_SmallGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
+    h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
+    h1D_PartMult_SmallGap->DrawCopy();
+
+    can_ParticleMultiplicities->cd(2);
+
+    TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    h1D_PartMult_LargeGap->Scale(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(1));
+   
+    
+    h1D_PartMult_LargeGap->SetTitle("Large Gap");
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
+    h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
+    h1D_PartMult_LargeGap->DrawCopy();
+
+    //draw difference
+    can_ParticleMultiplicities->cd(3);
+
+    h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
+    h1D_PartMult_LargeGap->SetTitle("Difference");
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta} - #frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_LargeGap->DrawCopy();
+
+    
 
     return 1;
 }
