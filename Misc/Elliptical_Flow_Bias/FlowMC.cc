@@ -502,10 +502,10 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     double Eta = TR_Eta.Uniform(-0.9, 0.9);
                     //get elliptic flow strength from pt
                     double pseudoparams[2] = {Pt,Eta};
-                    //double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
-                    int BinNum = TProf_v2_from_pt->FindBin(Pt);
-                    if(BinNum > TProf_v2_from_pt->GetNbinsX()) BinNum = TProf_v2_from_pt->GetNbinsX();
-                    double FlowParams = TProf_v2_from_pt->GetBinContent(BinNum);
+                    double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+                    //int BinNum = TProf_v2_from_pt->FindBin(Pt);
+                    //if(BinNum > TProf_v2_from_pt->GetNbinsX()) BinNum = TProf_v2_from_pt->GetNbinsX();
+                    //double FlowParams = TProf_v2_from_pt->GetBinContent(BinNum);
                     h2D_Pt_vs_v2->Fill(Pt, FlowParams);
                     double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
 
@@ -1525,7 +1525,7 @@ double Function_FlowByPtAndEta(double x, double params[])
     FlowParams = 0.4*exp(-0.8*x)*pow(0.8*x,2);
 
     //now reduce based on eta, just an approximation
-    FlowParams *= exp(-0.005*pow(Eta,2));
+    //FlowParams *= exp(-0.005*pow(Eta,2));
 
     return FlowParams;
 }
