@@ -90,14 +90,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut","h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the large gap cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the small gap cut
-    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V2 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V2","h3D_LeadDist_vs_PhiShift_vs_Pt_V2",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/4, Pi/4, 40, 100, 30);
-    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V3 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V3","h3D_LeadDist_vs_PhiShift_vs_Pt_V3",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/4, Pi/4, 40, 100, 30);
+    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V2 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V2","h3D_LeadDist_vs_PhiShift_vs_Pt_V2",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/2, Pi/2, 30, 40, 100);
+    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V3 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V3","h3D_LeadDist_vs_PhiShift_vs_Pt_V3",DEF_BinningPerUnit * Pi / 3, -Pi/3, Pi/3, 30*DEF_BinningPerUnit * Pi/3, -Pi/3, Pi/3, 30, 40, 100);
     TH2D* h2D_GeneratedParticles = new TH2D("h2D_GeneratedParticles","h2D_GeneratedParticles",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     
     //DEBUG
     TH2D* h2D_PhiLeading_vs_Shift = new TH2D("h2D_PhiLeading_vs_Shift","h2D_PhiLeading_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
     TH2D* h2D_V2Phase_vs_Shift = new TH2D("h2D_V2Phase_vs_Shift","h2D_V2Phase_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
-    
+    TH2D* h2D_Pt_vs_v2 = new TH2D("h1D_Pt_vs_v2", "h1D_Pt_vs_v2", 3*DEF_MaxJetPt, 0, DEF_MaxJetPt, 100, 0, 1);
+     
     
 
     TRandom TR_Eta;
@@ -123,19 +124,25 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
         SubleadingPtLimit = DEF_HadSubleadingPt;
     }
 
-    //open the root file
+    //Get N and p_t statistics
     TFile *file = TFile::Open("merge_mult_track_pT.root");
-
     if (!file || file->IsZombie()) {
         std::cout << "Error while opening the file!" << std::endl;
         return 0;
     }
-
-    //get statistics histograms from root file
     TH1D* h1D_NDist = (TH1D*)file->Get("h_mult_particles_used_SE_ME_0");
     if(!h1D_NDist){cout << "Multiplicity histogram not found!" << endl; return 0;}
     TH1D* h1D_PtDist = (TH1D*)file->Get("h_particle_pT");
     if(!h1D_PtDist){cout << "Pt histogram not found!" << endl; return 0;}
+
+    //get v_2 statistics
+    TFile *file2 = TFile::Open("Merged_9Jul_R0_posneg.root");
+    if (!file2 || file2->IsZombie()) {
+        std::cout << "Error while opening the file 2!" << std::endl;
+        return 0;
+    }
+    TProfile* TProf_v2_from_pt = (TProfile*)file2->Get("h_profile_v2_track_SE");
+    if(!TProf_v2_from_pt){cout << "v_2 statistics histogram h_mult_particles_used_SE_ME_0 not found!" << endl; return 0;}
 
     if(i_UsePYTHIAData)
     {
@@ -495,7 +502,11 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     double Eta = TR_Eta.Uniform(-0.9, 0.9);
                     //get elliptic flow strength from pt
                     double pseudoparams[2] = {Pt,Eta};
-                    double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+                    //double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+                    int BinNum = TProf_v2_from_pt->FindBin(Pt);
+                    if(BinNum > TProf_v2_from_pt->GetNbinsX()) BinNum = TProf_v2_from_pt->GetNbinsX();
+                    double FlowParams = TProf_v2_from_pt->GetBinContent(BinNum);
+                    h2D_Pt_vs_v2->Fill(Pt, FlowParams);
                     double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
 
                     double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
@@ -614,7 +625,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                         if(V3Shift > Pi) V3Shift -= 2*Pi;
                         else if(V3Shift < -Pi) V3Shift += 2*Pi;
 
-                        if(abs(V3Shift) <= Pi/2) {
+                        if(abs(V3Shift) <= Pi/3) {
                             V3Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
                             h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(LeadingDistClosestV3Max, V3Shift, JetVector[0].pt());
                         }
@@ -1029,6 +1040,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     //DEBUG
     h2D_PhiLeading_vs_Shift->Write();
     h2D_V2Phase_vs_Shift->Write();
+    h2D_Pt_vs_v2->Write();
 
     OutputFile ->Close();
     
@@ -1174,10 +1186,10 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     #define MiddlePtJetFrom 60.0f //GeV
     #define HighPtJetFrom 80.0f //GeV
     #define DEF_ShiftBins 30
-    #define DEF_Rebin 3
+    #define DEF_Rebin 2
     #define DEF_AxisLabelSize 0.05
     #define DEF_AxisNumbersSize 0.04
-    #define DEF_LegendFontSize 0.03
+    #define DEF_LegendFontSize 0.025
 
     //load histograms from root file
     TH3F* h3F_ShiftV2 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
@@ -1193,6 +1205,8 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     h3F_ShiftV2->GetZaxis()->SetRange(z->FindBin((float)LowPtJetFrom), z->FindBin((float)MiddlePtJetFrom) - 1);
     TH2F* h2F_LowPtJetsProjection = (TH2F*) h3F_ShiftV2->Project3D("yx");
     h2F_LowPtJetsProjection->SetName("h2F_LowPtJetsProjection");
+    h2F_LowPtJetsProjection->GetXaxis()->SetRangeUser(-Pi/2, Pi/2);
+    h2F_LowPtJetsProjection->GetYaxis()->SetRangeUser(-Pi/2, Pi/2);
     h3F_ShiftV2->GetZaxis()->SetRange(z->FindBin((float)MiddlePtJetFrom), z->FindBin((float)HighPtJetFrom) - 1);
     TH2F* h2F_MiddlePtJetsProjection = (TH2F*) h3F_ShiftV2->Project3D("yx");
     h2F_MiddlePtJetsProjection->SetName("h2F_MiddlePtJetsProjection");
@@ -1208,13 +1222,15 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     
     float XBinWidth = h2F_LowPtJetsProjection->GetXaxis()->GetBinWidth(1);
     float BinsPerProjection = (Pi/(float)DEF_ShiftBins)/XBinWidth;
+
+
     for(int iBin = 0; iBin < DEF_ShiftBins; iBin++)
     {
         //Low pt
-        TH1D* TempProjection = h2F_LowPtJetsProjection->ProjectionY("TempProjection", iBin*BinsPerProjection, (iBin+1)*BinsPerProjection);
+        TH1D* TempProjection = h2F_LowPtJetsProjection->ProjectionY("TempProjection", (iBin)*BinsPerProjection, (iBin+1)*BinsPerProjection);
         h1D_LowPtJetsShift->SetBinContent(iBin+1, TempProjection->GetMean());
         h1D_LowPtJetsShift->SetBinError(iBin+1, TempProjection->GetMeanError());
-
+        
         //Middle pt
         TempProjection = h2F_MiddlePtJetsProjection->ProjectionY("TempProjection", iBin*BinsPerProjection, (iBin+1)*BinsPerProjection);
         h1D_MiddlePtJetsShift->SetBinContent(iBin+1, TempProjection->GetMean());
@@ -1228,6 +1244,10 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
         delete(TempProjection);
     }
 
+    TF1  *Fctn_Sinewave_Low = new TF1("sine_low","[0]*sin(2*x)",-Pi,Pi);
+    TF1  *Fctn_Sinewave_Mid = new TF1("sine_mid","[0]*sin(2*x)",-Pi,Pi);
+    TF1  *Fctn_Sinewave_Hig = new TF1("sine_hig","[0]*sin(2*x)",-Pi,Pi);
+    float FitParams[3];//holds the sine fit param of the three jet classes [0]: Low, [1]: Middle, [2]: High
 
     //markings
     h1D_LowPtJetsShift->SetTitle("");
@@ -1244,7 +1264,10 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     h1D_LowPtJetsShift->SetLineColor(kRed);
     h1D_LowPtJetsShift->Rebin(DEF_Rebin);
     h1D_LowPtJetsShift->Scale(1./DEF_Rebin);
-    TH1* Low_Lgd = (TH1*)h1D_LowPtJetsShift->DrawCopy("P E1");
+    h1D_LowPtJetsShift->Fit("sine_low");
+    TF1 *Temp = (TF1*)h1D_LowPtJetsShift->GetListOfFunctions()->FindObject("sine_low");
+    Temp->SetLineColor(kRed);
+    FitParams[0] = Temp->GetParameter(0);
 
     //h1D_MiddlePtJetsShift->SetTitle(Form("Jets with p_{t} #in [%.3f,%.3f]", MiddlePtJetFrom, HighPtJetFrom));
     h1D_MiddlePtJetsShift->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -1258,7 +1281,10 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     h1D_MiddlePtJetsShift->SetLineColor(kGreen);
     h1D_MiddlePtJetsShift->Rebin(DEF_Rebin);
     h1D_MiddlePtJetsShift->Scale(1./DEF_Rebin);
-    TH1* Mid_Lgd = (TH1*)h1D_MiddlePtJetsShift->DrawCopy("SAME P E1");
+    h1D_MiddlePtJetsShift->Fit("sine_mid");
+    TF1 *Temp2 = (TF1*)h1D_MiddlePtJetsShift->GetListOfFunctions()->FindObject("sine_mid");
+    Temp2->SetLineColor(kGreen);
+    FitParams[1] = Temp2->GetParameter(0);
 
     
     //h1D_HighPtJetsShift->SetTitle(Form("Jets with p_{t} #in [%.3f,#infty]", HighPtJetFrom));
@@ -1273,6 +1299,13 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     h1D_HighPtJetsShift->SetLineColor(kBlue);
     h1D_HighPtJetsShift->Rebin(DEF_Rebin);
     h1D_HighPtJetsShift->Scale(1./DEF_Rebin);
+    h1D_HighPtJetsShift->Fit("sine_hig");
+    TF1 *Temp3 = (TF1*)h1D_HighPtJetsShift->GetListOfFunctions()->FindObject("sine_hig");
+    Temp3->SetLineColor(kBlue);
+    FitParams[2] = Temp3->GetParameter(0);
+
+    TH1* Low_Lgd = (TH1*)h1D_LowPtJetsShift->DrawCopy("P E1");
+    TH1* Mid_Lgd = (TH1*)h1D_MiddlePtJetsShift->DrawCopy("SAME P E1");
     TH1* High_Lgd = (TH1*)h1D_HighPtJetsShift->DrawCopy("SAME P E1");
 
     TLegend *leg = new TLegend(0.7,0.7,0.85,0.85);
@@ -1285,10 +1318,12 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
 
     TLegend *info = new TLegend(0.7,0.7,0.85,0.85);
     info->AddEntry((TObject*)nullptr,Form("Event = PYTHIA p-p + Thermal Background (BG)"),"");
-    info->AddEntry((TObject*)nullptr,Form("BG: Randomly generated, based on ALICE 2018 Pb-Pb, 0-10%, #sqrt{s} = ...TeV"),"");
+    info->AddEntry((TObject*)nullptr,Form("BG: Randomly generated, based on ALICE 2018 Pb-Pb, 0-10%, #sqrt{s} = 5.02TeV"),"");
     info->AddEntry((TObject*)nullptr,Form("|#eta^{Jet}| #leq 0.7 = 0.9 - R"),"");
     info->AddEntry((TObject*)nullptr,Form("Jet clustering by FastJet: R=0.2, Anti-k_{t}"),"");
-    info->AddEntry((TObject*)nullptr,Form("Only jets that were not shiftet by more than #frac{#pi}{2}"),"");
+    info->AddEntry((TObject*)nullptr,Form("Only jets that were not shifted by more than #pi/2"),"");
+    info->AddEntry((TObject*)nullptr,Form("Fitted function: A*sin(...) with parameter A. Fit results:"),"");
+    info->AddEntry((TObject*)nullptr,Form("A(Low p_{T}, Middle p_{T}, High p_{T}) = (%.3e, %.3e, %.3e)", FitParams[0], FitParams[1], FitParams[2]),"");
     info->SetLineColor(10);
     info->SetTextSize(DEF_LegendFontSize); 
     info->Draw();
