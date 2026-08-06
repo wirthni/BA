@@ -22,6 +22,19 @@ Float_t get_py_Particle(Long64_t Particle_p);
 Float_t get_pz_Particle(Long64_t Particle_p);
 
 vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles, float i_LowPtValue);
+void PrintProgress(int i_Event, int i_Total);
+void PrintInfo(TString i_String);
+
+class MyUserInfo : public fastjet::PseudoJet::UserInfoBase {
+public:
+    MyUserInfo(int NoOfParticles) 
+        : m_NoOfParticles(NoOfParticles){}
+
+    int getNoOfParticles() const { return m_NoOfParticles; }
+
+private:
+    int m_NoOfParticles;
+};
 
 class Collision {
 public:
