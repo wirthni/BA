@@ -673,77 +673,43 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     /
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // To do: define jet radius, background radius etc
+    //DEFINITIONS
     #define jet_radius 0.2
-    // define variables 
-    vector<PseudoJet> jets_fiducial;//contains the selected jets in the end
-
-    Double_t ghost_maxrap = 1.1; // Fiducial cut for background estimation //1.1
+    Double_t ghost_maxrap = 1.1;
     Double_t eta_acceptance = 0.9;
-    // choose a jet definition
+    double ptmin = 0.15;
     JetDefinition jet_def(antikt_algorithm, jet_radius);
-    // jet area definition
     GhostedAreaSpec area_spec(ghost_maxrap);
     AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
 
+    //CLUSTER JETS
     ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
-    // run the clustering, extract the jets
-    double ptmin = 0.15;
     vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
-    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius); // Fiducial cut for jets
-    jets_fiducial = Fiducial_cut_selector(jets_all);
+    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius);
+    vector<PseudoJet> FiducialJets = Fiducial_cut_selector(jets_all);
 
-    // background estimation
-    // Standard rho calculation with kT algorithm and N hardest jets removed
-
-    Int_t Rem_n_hardest = 2; 
+    //ESTIMATE AND SUBTRACT BACKGROUND
+    Int_t Rem_n_hardest = 2;
     double eBkg_R = 0.2;
-    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R); // <--
+    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R);
     AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest)); // <--
-
-    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd); // <--
+    ClusterSequenceArea ClustSeqBg(vec_particles, jet_def_bkgd, area_def_bkgd);
+    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest));
+    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
+    bkgd_estimator.set_cluster_sequence(ClustSeqBg);
     Subtractor subtractor(&bkgd_estimator);
-    bkgd_estimator.set_particles(vec_particles);
-    Double_t jet_rho   = bkgd_estimator.rho();
+    subtractor.set_use_rho_m(true);
+    vector<PseudoJet> SubtractedJets = subtractor(FiducialJets);
 
-    vector<PseudoJet> AcceptedJets;
-
-    // loop over jets  
+    //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
     Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(Int_t i_jet = 0; i_jet < (Int_t)jets_fiducial.size(); i_jet++)
+    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
     {
-        Float_t jet_pt         = jets_fiducial[i_jet].perp();
-        if(jet_pt <= 0.0) continue;
-        Float_t jet_area       = jets_fiducial[i_jet].area();
-        Float_t jet_pt_sub     = jets_fiducial[i_jet].perp() - jet_rho*jet_area;
-        Float_t jet_eta        = jets_fiducial[i_jet].eta();
-        Float_t jet_phi        = jets_fiducial[i_jet].phi();
-        Float_t jet_phi_std    = jets_fiducial[i_jet].phi_std();
-        //if(jet_area < Jet_area_cut) continue;  this is a problem apparently
+        if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
+        SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
 
-        // Store jet size in user information
-        jets_fiducial[i_jet].set_user_info(new MyUserInfo(jets_fiducial[i_jet].constituents().size()));
-
-        AcceptedJets.push_back(jets_fiducial[i_jet]);
-
-        /*
-        // constituent track loop
-        vector<PseudoJet> jet_constituents = AcceptedJets[i_jet].constituents();
-
-        for(Int_t i_constituent = 0; i_constituent < (Int_t)jet_constituents.size(); i_constituent++)
-        {
-            Float_t jet_const_pt  = jet_constituents[i_constituent].perp();
-            if(jet_const_pt <= 0.0) continue;
-            Float_t jet_const_phi = jet_constituents[i_constituent].phi();
-            Float_t jet_const_rap = jet_constituents[i_constituent].rap();
-            Float_t jet_const_Phi = jet_constituents[i_constituent].phi_std();
-            Float_t jet_const_eta = jet_constituents[i_constituent].eta();
-            Int_t   user_index    = jet_constituents[i_constituent].user_index();
-
-        }
-        */
     }
 
-    return sorted_by_pt(AcceptedJets);
+    return sorted_by_pt(SubtractedJets);
+
 }
