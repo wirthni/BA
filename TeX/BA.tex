@@ -141,7 +141,7 @@
 \setstretch{2}
 
 \begin{center}
-\textbf{\huge Quark Gluon Plasma Diffusion Wake Effects in ALICE RUN 2 Heavy Ion Collision Data}
+\textbf{\huge Diffusion wake signals in ALICE RUN 3 heavy ion collision data and its potential biases}
 
 
 \qquad
@@ -183,547 +183,55 @@ When heavy ion nuclei collide with extremely high energies, in the orders of TeV
 
 
 
-\section{The ALICE Experiment}
+\section{ALICE at the Large Hadron Collider}
+\subsection{The Large Hadron Collider}
+\subsection{ALICE - A Large Ion Collider Experiment}
+
+\section{Analysis of heavy ion collision data}
+\subsection{Important event properties}
+\subsection{Important particle(track) properties}
+
+\section{Jets as a Quark Gluon Plasma probe}
+\subsection{The QGP as a Quantum Chromodynamics Object}
+\subsection{Particle jets as a QGP probe}
+\subsection{Theoretical proposal: Use dijets to measure the diffusion wake}
+
+\section{Previous diffusion wake measurements}
+\subsection{Of the ALICE collaboration}
+\subsection{Of the CMS collaboration}
+\subsection{Of the ATLAS collaboration}
+
+\section{Event simulation: The outlook for potential biases}
+\subsection{How Pb-Pb events are simulated}
+\subsection{Biases in the dijet method}
+\subsection{Biases in the single jet method}
+
+\section{Simulating the shift of reconstructed jets}
+\subsection{The event plane in Pb-Pb events}
+\subsection{The anti-$k_t$ algorithm}
+\subsection{Modeling the jet shift}
+\subsection{Jet shift in simulated Pb-Pb events}
+
+\section{Measurements in ALICE RUN 3 data}
+\subsection{Data acquisition}
+\subsection{Dijet method measurements}
+\subsection{Single jet method measurements}
 
-ALICE (A Large Ion Collider Experiment) is one of the biggest experiments at the Large Hadron Collider at CERN, Geneva. Its main goal is to study quantum chromodynamics and in particular a state of deconfined quarks and gluons at very high energy densities. This state of matter was also present in the early universe, very shortly after the big bang. To achieve such high energy densities, nuclei are accelerated to extremely high energies in the LHC and brought to collision inside of the detectors. Possible collisions may involve heavy-ion nuclei (AA), only protons (pp) or protons and nuclei (pA). The latter are regarded as control measurements, because they are needed to separate the QCD-matter signals from other possible effects.\cite{collaboration_performance_2014}
 
-The ALICE detector itself has a diameter of 16m, a length of 26m and weighs about 10.000 tons. It glances with a high spatial resolution and a low transverse momentum threshold of $p_T^{min} \approx 0.15 \unit{GeV/c}$, meaning that low-momentum particles produced in the collision, can be detected reliably. Furthermore, it serves a good particle identification for particles up to $20 \unit{GeV/c}$. ALICE is composed of seventeen detector systems (see figure \ref{fig:ALICE_CAD_Overview}).\cite{collaboration_performance_2014}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.9\textwidth]{Media/Pictures/ALICE_CAD_Overview.png}
-	\caption{The ALICE experiment at CERN, LHC. The central-barrel detectors (ITS, TPC, TRD, TOF, PHOS, EMCal, and HMPID) are embedded in a solenoid with magnetic field B = 0.5 T. Image taken from \cite{collaboration_performance_2014}}
-	\label{fig:ALICE_CAD_Overview}
-\end{figure}
-
-The central-barrel detectors, specifically the Inner Tracking System (ITS), the Time Projection Chamber (TPC), the Transition Radiation Detector (TRD), the Time Of Flight Detector (TOF), the Photon Spectrometer (PHOS), the Electromagnetic Calorimeter (EMCal) and the High Momentum Particle Identification Detector (HMPID), are embedded a solenoid magnet of $B = 0.5\unit{T}$. The typical central acceptance of these detectors is $\abs{\eta} \leq 0.9$ (see chapter \ref{sec:AnalysisOfHeavyIonCollisionData}). The ITS and the TPC are the main charged-particle detectors at ALICE and the TPC in combination with the ITS is utilizable for particle identification via measurement of the specific ionization energy loss $\dif E / \dif x$.\cite{collaboration_performance_2014}
-
-\newpage
-
-\section{Analysis of Heavy Ion Collision Data}
-\label{sec:AnalysisOfHeavyIonCollisionData}
-
-To efficiently analyze the data provided by the ALICE machine, it comes packed in \textit{.root} files in which the vast amount of particle hits is already sorted into events.\newline In particle physics, an event refers to the results shortly after a fundamental interaction takes place between subatomic particles, for example when two nucleons hit each other in a collision. Typically, the incoming particles are destroyed, yet producing up to hundreds of other particles.\cite{noauthor_event_2024} \newline Each event in the \textit{.root} file holds information about event global data, for example the primary vertex position in the ALICE coordinate system ($x_{prim}, y_{prim}, z_{prim}$), the number of hits in different detector regions and many more. \newline In a collider experiment, the primary vertex is the point where the beam particles interacted with each other. Particle trajectories not coming from the primary vertex can be associated with secondary and tertiary vertices coming from decays of long lived particles.\cite{viehauser_detectors_2024} \newline It also holds an amount of information about every measured particle that could be identified with this specific event. One event may contain $N$ measured particles and therefore contains $N$ tuples of information which contain, as an example, $\{\dif E/\dif x, p_{x,track}, p_{y,track}, p_{z,track}, \dots\}$. With this set of information, many other quantities can be deduced, specifically
-
-\begin{itemize}
-	\item $p_{track}^2 = p_{x,track}^2 + p_{y,track}^2 + p_{z,track}^2$
-	\item $E_{track} = \sqrt{p_{track}^2 + 0.1349766^2}$
-	\item $p_{t,track}^2 := p_{transversal,track}^2 = p_{x,track}^2 + p_{y,track}^2$
-	\item $\phi_{track} = \atan(p_{y,track}, p_{x,track})$
-	\item $\eta_{track}$
-	\item $q$ (Charge)
-\end{itemize}
-
-In the following, the \textit{track} subscript is left out for simplicity, but if not otherwise stated, quantities like above are always referred to as track properties.
-
-Of special interest are the quantities $(\eta, \phi)$, because they can be used to visualize the spatial distribution of collision fragments, i. e. measured tracks. \newline In the ALICE coordinate system (see figure \ref{fig:EtaPhiCoordinateSystem}) $\phi$ is the azimuthal angle, which increases counter-clockwise from $x(\phi = 0)$ to $y(\phi = \pi/2)$ with the observer standing at a positive $z$ and looking in direction RB26(Gex). The polar angle $\Theta$ increases from $z(\Theta = 0)$ to $x,y$ plane $(\Theta = \pi/2)$ to $-z(\Theta = \pi)$.\cite{alice_technical_coordination_definition_2003}
-
-\begin{figure}[H]
-	\includegraphics[width=0.9\textwidth]{Media/Pictures/ALICE_COORDINATES.png}
-	\caption{The coordinate system utilized at ALICE. The $x$-axis points into the direction of the accelerator's center and the $y$-axis points upwards. The $z$-axis points in such direction that the three axes form a right-handed coordinate system. Image taken from \cite{alice_technical_coordination_definition_2003}}
-	\label{fig:EtaPhiCoordinateSystem}
-\end{figure}
-
-The pseudorapidity $\eta$ is defined as \cite{viehauser_detectors_2024}
-
-\begin{equation}
-	\eta = -\ln\left(\tan(\frac{\Theta}{2})\right)
-\end{equation}
-
-and quantifies how aligned the track is with the incident beam axis. A qualitative showcase is featured in figure \ref{fig:pseudorapidity}.
-
-\begin{figure}[H]
-	\centering
-	\begin{tikzpicture}[scale=1.5]
-		
-		% Beam-Achse (z-Achse)
-		\draw[->, thick] (-3,0) -- (2.5,0) node[right] {beam axis ($z$)};
-		
-		% Wechselwirkungspunkt
-		\filldraw[black] (0,0) circle (0.03) node[below left] {IP};
-		
-		% Teilchenspuren
-		\draw[->, thick, blue] (0,0) -- (1.5,0.2) node[right] {$\eta \rightarrow \infty $};
-		\draw[->, thick, red] (0,0) -- (1.5,0.8) node[right] {$\eta > 0$};
-		\draw[->, thick, red] (0,0) -- (1.5,-0.8) node[right] {$\eta > 0$};
-		\draw[->, thick, red] (0,0) -- (-1.5,0.8) node[left] {$\eta < 0$};
-		\draw[->, thick, green!60!black] (0,0) -- (0.0,1.2) node[right] {$\eta = 0$};
-		
-		%Detector barrel
-		\draw[gray](-1.5,0) ellipse (0.5 and 2.00);
-		\draw[thick, gray] (-1.5, 2.0) -- (1.5, 2.0) node[above] {detector barrel};
-		\draw[thick, gray] (-1.5, -2.0) -- (1.5, -2.0);
-		\draw[gray](1.5,-2) arc(-90:90:0.5 and 2);
-		
-		% Winkelmarkierung (Theta)
-		\draw (0.6,0) arc[start angle=0,end angle=25,radius=0.6];
-		\node at (0.8,0.2) {$\theta$};
-		
-	\end{tikzpicture}
-	\caption{The pseudorapidity of an outgoing particle in some possible cases, embedded into the detector barrel environment. The involved particles head towards each other along the beam axis. Scattering then takes place at the interaction point (IP). The colored arrows show each a possible trajectory of an outgoing particle.}
-	\label{fig:pseudorapidity}
-\end{figure}
-
-An important way of analyzing event data will be to draw the momentum distribution in the $\eta - \phi$ plane. As $\phi$ is the azimuthal angle and the value of $\eta$ increases monotonically with $z$, analyzing distributions in the $\eta - \phi$ plane is equivalent to 'dismantling' the detector barrel like shown in figure \ref{fig:phietamapping}.
-
-\begin{figure}[H]
-	\centering
-	\begin{tikzpicture}[scale=1.5]
-		
-		%Detector barrel
-		\draw[gray](-3,0) ellipse (0.25 and 1.0);
-		\draw[thick, gray] (-3, 1) -- (-1, 1);
-		\draw[thick, gray] (-3, -1) -- (-1, -1);
-		%\draw[gray](-1,0) ellipse (0.25 and 1.0);
-		\draw[gray](-1,-1) arc(-90:90:0.25 and 1);
-		
-		%cut line
-		\draw[dotted,thick, gray] (-3.25, 0) node[left] {cut here} -- (-2.75, 0);
-		
-		%phi labeling
-		\draw[->, thick] (-3,0) -- (-2.8, 0.7);
-		\draw[thick] (-3,0) -- (-2.75, 0.0) node[right] {$\phi = 0$};
-		\draw (-2.75,0) arc[start angle=0,end angle=43,radius=0.5] node[below] {$\phi$};
-		
-		\node at (-2,1) [above] {$\eta = 0$};
-		\node at (-1,1) [above] {$0.9$};
-		\node at (-3,1) [above] {$-0.9$};
-		
-		%arrow
-		\draw[->, thick] (0,0) -- (1, 0) node[above left] {\textit{dismantle}};
-		
-		%unfolded coordinate system
-		\draw[thick] (2,-0.5) -- (4,-0.5);%hor
-		\draw[thick] (1.5,0.5) -- (3.5,0.5);
-		\draw[thick] (2,-0.5) -- (1.5,0.5);%vert
-		\draw[thick] (4,-0.5) -- (3.5,0.5);
-		
-		\draw[thick] (2.55,0.4) -- (2.45,0.6) node[above] {$\eta = 0$};
-		\draw[thick] (3.55,0.4) -- (3.45,0.6) node[above] {$0.9$};
-		\draw[thick] (1.55,0.4) -- (1.45,0.6) node[above] {$-0.9$};
-		
-		\draw[thick] (3.7,0.0) -- (3.8,0.0) node[right] {$\phi = 0$};
-		\draw[thick] (3.45,0.5) -- (3.55,0.5) node[right] {$\pi$};
-		\draw[thick] (3.95,-0.5) -- (4.05,-0.5) node[right] {$-\pi$};
-		
-		
-		
-	\end{tikzpicture}
-	\caption{The mapping of the $\eta - \phi$ coordinate system. The left side shows the detector barrel which is dismantled to achieve a mapping to a 2D plane. The restriction $\abs{\eta} \leq 0.9$ originates from technical limitations due to the spatial arrangement of the different particle detectors in ALICE.}
-	\label{fig:phietamapping}
-\end{figure}
-
-Another important definition we will work with is a particle jet. \newline Formally, a jet is a bundle of closely spaced parallel particles resulting from the hadronisation of a parton \cite{viehauser_detectors_2024}. We are looking for high-$p_t$ jets, which we define as a high-$p_t$ particle surrounded by a lower-$p_t$ particle spray.
-
-As we can now imagine how a track with a given tuple $(\eta, \phi, p_t)$ looks like in the detector coordinate system, let us investigate a first event from ALICE data. The whole dataset consists of around $30\unit{GB}$ of data, taken in LHC RUN 2 in 2018 (Pb-Pb) with a central energy of $\sqrt{s_{NN}} = 5.02\unit{TeV}$. It had already been filtered such that events always have at least one particle that fulfills $p_t \geq 30\unit{GeV/c}$. For the primary vertice's $z$ position it must also hold that $\abs{z_{prim}} \leq 8$. For each particle in the event we also demand some constraints. The particle's transversal momentum $p_t \geq 0.15\unit{GeV/c}$ must be large enough to be relevant for our analysis. We also neglect particles that fulfill $\abs{\eta} > 0.9$ and particles whose tracking has been graded with a $\chi^2 > 300$, meaning the deviation of its constructed track does not fit the hits in the detector well.
-
-To ensure we get an interesting event we also filter our evens based on the number of high-$p_t$ particles (which we will call jet candidates) in the event. If a particle fulfills $p_t > 7\unit{GeV/c}$, it is considered a jet candidate. If, after checking all particles in one event, the list of jet candidates has at least two entries, it will be accepted for our first event image to have an event with multiple particle sprays. Although each event contains at least one particle with $p_t \geq 30\unit{GeV/c}$, the list may end up empty. This is possible because the highly energetic particle detected in the first filtering process may not fulfill our demanded constraints, e.g. $\abs{\eta} \leq 0.9$ and is therefore ignored on the outlook for high-$p_t$ particles.
-
-
-Figure \ref{fig:Dijet_2D_Example} shows an exemplary event. The highest occurring transversal momentum in the chosen event are at $p_t \approx 40\unit{GeV/c}$, the highest one occurring in the whole dataset is at $p_t \approx 220\unit{GeV/c}$.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{Media/Pictures/Dijet_2D_Example.png}
-	\caption{An example for an event with two major particle sprays. The two particles with the highest $p_t$ are surrounded by few particles with less momentum, they probably belong to the same spray. Their separation is $\Delta \phi_{Jet1, Jet2} \approx \pi $, so the two sprays are probably correlated. It is not guaranteed, because due to the limited detector acceptance ($\abs{\eta} \leq 0.9$), the corresponding spray partners could hide in the uncovered detector area at great pseudorapidities and these two are separated by $\pi$ coincidentally.}
-	\label{fig:Dijet_2D_Example}
-\end{figure}
-
-\newpage
-
-\section{Jets as a QGP Probe}
-
-Quantum Chromodynamics (QCD) is an important part of the Standard Model of particle physics, describing the strong interaction \cite{wilczek_quantum_1999}. One of its features, asymptotic freedom, leads to the interaction between quarks and gluons, the elementary particles that experience strong interaction, becoming weaker when their momentum exchange increases. As a consequence the coupling constant $\alpha_S$ depends on the momentum scale of the interaction.\cite{gross_discovery_2005} For calculations concerning low-momentum processes, the perturbative of QCD breaks down, as higher orders become dominant \cite{ioffe_quantum_2010}. This non-perturbative regime is especially interesting, because confinement can be observed \cite{greensite_introduction_2011}. This leads to quarks and gluons, elementary particles carrying the charge of the strong interaction, to never be isolated making it impossible to observe them directly \cite{goldstone_broken_1962}, \cite{koch_aspects_1997}, \cite{collaboration_determination_2010}. To study QCD condensed matter, one can analyze a many body system of quarks and gluons under the condition of a large energy density. Heating such system with a low baryon density to temperatures exceeding $150-160\unit{MeV}$ leads to the creation of the quark-gluon plasma (QGP). \cite{cabibbo_exponential_1975}, \cite{shuryak_theory_1978},\cite{bazavov_equation_2014} Nevertheless, it is also possible to create a QGP with complementary conditions, meaning a low temperature while producing a high baryon density \cite{annala_evidence_2020}. In the laboratory, a situation corresponding to [these conditions] can be obtained by colliding heavy ions in the energy range accessible to hadron colliders. The CERN Large Hadron Collider (LHC) is currently the facility where the highest collision energies are attained.\cite{evans_lhc_2008}
-
-The interaction of energetic jets with QCD matter provides unique probes of the Quark-Gluon Plasma generated in high-energy collisions of heavy nuclei \cite{majumder_theory_2010}. The opacity of the QGP to the propagation of partonic probes causes substantial energy loss for the partons that traverse the medium. This energy loss manifests itself in various experimental observables, such as suppression of high $p_t$ hadrons and jets.\cite{collaboration_observation_2026} Furthermore, an effect producing a depletion of particles in the opposite direction of the propagating jet, known as 'diffusion wake', is also expected \cite{betz_universality_2009}. Theoretical developments \cite{collaboration_evidence_2026}, \cite{pablos_jet_2020} have proposed the use of dijet events, where the two jets are back-to-back in azimuthal angle ($\phi$), but chosen to be separated in pseudorapidity ($\eta$), to effectively measure the diffusion wake signal. Specifically, the rapidity asymmetry of dijet-hadron correlations for a selection of dijets having a sizable $\eta$ separation relative to dijets without any separation is predicted to give a robust signal of the diffusion wake. 
-
-\newpage
-
-\section{Wake Field Data Analysis}
-
-\subsection{Analysis of RUN 2 Data}
-\label{sec:AnalysisOfRun2Data}
-
-To measure the diffusion wake in ALICE data of RUN 2, the direct recoil region behind a chosen jet of interest in each suitable jet event is investigated. If a jet has coordinates $(\eta_L, \phi_L)$, the direct recoil site will be defined as $(\eta_{recoil}, \phi_{recoil}) = (\eta_L, \phi_L \pm \pi)$ corresponding to the direction directly 'behind' the leading particle in the jet. Whether $\pi$ is added or subtracted to $\phi_L$ is chosen based on the normalization such that $\phi_{recoil} \in \left(-\pi, \pi \right]$. The recoil of the jet is not at $(-\eta_L, \phi_L \pm \pi)$, because the leading jet can always be boosted such that it is perpendicular to the beam axis. Then, the recoil is also perpendicular to the beam axis, separated by $\Delta \phi = \pi$. If then one boosts into the lab system again, the jet as well as the recoil area have $\eta_{recoil} = \eta_L$.
-
-An important task while choosing events we want to use in our analysis is the correct identification of jets, since one jet usually consists of more than one particle. A leading high-$p_t$ particle with a surrounding lower-$p_t$ spray of particles within a jet radius $R$ is supposed to be identified as one jet. The jet radius $R$ is a user definition, $R \in \left[0.2, 0.5\right]$ are reasonable values \cite{collaboration_measurements_2017}. The used jet algorithm to identify jets is quite basic, self-written and works like follows. The $N$ jet candidates (particles with $p_t^{(k)} > 7\unit{GeV/c}$) are sorted by size such that $p_t^{(0)} \geq p_t^{(1)} \geq \dots \geq p_t^{(N-1)} $. In each iteration, the highest-momentum particle ($k = 0$) is defined as the leading particle. Next, all jet candidates in a radius $R$ around the leading particle are erased from the list of jet candidates, since they correspond to the same jet. There is a small possibility that two jets are really close to each other and these two are therefore identified as one jet, which is wrong. But since such an occasion has not been seen in many events investigated in the $\eta - \phi$-plane and all the results are averaged over thousands of events, this possibility is neglected. The particle $k = 0$ is now shifted into the list of jets, since it is not a candidate anymore but the leading particle, i.e. the center of a jet. For example, if there have previously been $N$ particles in the jet candidate list and there were four other high-$p_t$ particles in proximity to the leading particle, there are now $N' = N - 1 - 4$ jet candidates left. This procedure is repeated until no high-$p_t$ particle is left in the jet candidate list. The number of elements in the jet list now corresponds to the real number of detected jets in the event. The effectiveness of this procedure has been tested visually in a few hundred events investigated in the $\eta - \phi$-plane like in figure \ref{fig:Dijet_2D_Example}.
-
-After all jets have been clustered, events are sorted out based on their number of jets. All events with more than one jet are left out in the analysis, which has two advantages. Firstly, the direct recoil region of the jet in the event is for sure free of any jet-like particles (particles with $p_t^{(k)} > 7\unit{GeV/c})$. That is because if there were high-$p_t$ particles on the recoil site, our jet algorithm would have detected it as another jet, since the separation to the leading jet is at least $\pi$, within some tolerance.  We also know for sure that the subleading jet (which exists somewhere for sure) has a great pseudorapidity separation - so big that the jet is completely out of the detector acceptance and does not even appear in the data. The direct recoil region of the leading jet now only consists of background (non-jet-like) particles. Figures \ref{fig:RUN2_GoodEvent} to \ref{fig:RUN2_BadEvent2} show some good and bad examples regarding event filtering.
-
-\begin{minipage}[t]{0.5\textwidth}
-	\begin{figure}[H]
-		\centering
-		\begin{tikzpicture}[scale=1]
-			
-			% Beam-Achse (z-Achse)
-			\draw[->, thick] (-3,0) -- (2.5,0) node[right] {\scriptsize beam axis ($z$)};
-			
-			% Wechselwirkungspunkt
-			\filldraw[black] (0,0) circle (0.03) node[below left] {\scriptsize IP};
-			
-			% Teilchenspuren
-			\draw[->, thick, red] (0,0) -- (1.0,2.0) node[above] {\scriptsize Leading Jet $(\eta_L, \phi_L)$};
-			\draw[->, thick, dotted, red] (0,0) -- (1.0,-2.0) node[below] {\scriptsize Direct Recoil Site $(-\eta_L, \phi_L \pm \pi)$};
-			\draw[->, thick, blue] (0,0) -- (-1,-1.0) node[right] {\scriptsize Subleading Jet};
-			
-			%Jetradii
-			\draw[fill=red] (0.6,2.0) rectangle ++(0.8,0.1);
-			\draw[fill=red] (0.6,-2.0) rectangle ++(0.8,-0.1);
-			%Detector barrel
-			
-			%Detector barrel
-			\draw[gray](-1.5,0) ellipse (0.5 and 2.00);
-			\draw[thick, gray] (-1.5, 2.0) -- (1.5, 2.0);
-			\draw[thick, gray] (-1.5, -2.0) -- (1.5, -2.0);
-			\draw[gray](1.5,-2) arc(-90:90:0.5 and 2);
-			
-		\end{tikzpicture}
-		\caption{Good Event. The leading jet and its neighborhood of radius $R$ is fully in the detector acceptance and the subleading jet is out of acceptance such that it does not influence the recoil site.}
-		\label{fig:RUN2_GoodEvent}
-	\end{figure}
-\end{minipage}
-\begin{minipage}[t]{0.5\textwidth}
-	\begin{figure}[H]
-		\centering
-		\begin{tikzpicture}[scale=1]
-			
-			% Beam-Achse (z-Achse)
-			\draw[->, thick] (-3,0) -- (2.5,0) node[right] {\scriptsize beam axis ($z$)};
-			
-			% Wechselwirkungspunkt
-			\filldraw[black] (0,0) circle (0.03) node[below left] {\scriptsize IP};
-			
-			% Teilchenspuren
-			\draw[->, thick, red] (0,0) -- (1.3,2.0) node[above] {\scriptsize L};
-			\draw[->, thick, dotted, red] (0,0) -- (1.3,-2.0) node[below left] {\scriptsize DRS};
-			\draw[->, thick, blue] (0,0) -- (-1,-1.0) node[left] {\scriptsize SL};
-			
-			%Jetradii
-			\draw[fill=red] (0.9,2.0) rectangle ++(0.8,0.1);
-			\draw[fill=red] (0.9,-2.0) rectangle ++(0.8,-0.1);
-			
-			%Detector barrel
-			\draw[gray](-1.5,0) ellipse (0.5 and 2.00);
-			\draw[thick, gray] (-1.5, 2.0) -- (1.5, 2.0);
-			\draw[thick, gray] (-1.5, -2.0) -- (1.5, -2.0);
-			\draw[gray](1.5,-2) arc(-90:90:0.5 and 2);
-			
-		\end{tikzpicture}
-		\caption{Bad Event. The leading jet and its neighborhood of radius $R$ is not fully in the detector acceptance.}
-		\label{fig:RUN2_BadEvent1}
-	\end{figure}
-\end{minipage}
-\begin{minipage}[t]{0.5\textwidth}
-	\begin{figure}[H]
-		\centering
-		\begin{tikzpicture}[scale=1]
-			
-			% Beam-Achse (z-Achse)
-			\draw[->, thick] (-3,0) -- (2.5,0) node[right] {\scriptsize beam axis ($z$)};
-			
-			% Wechselwirkungspunkt
-			\filldraw[black] (0,0) circle (0.03) node[below left] {\scriptsize IP};
-			
-			% Teilchenspuren
-			\draw[->, thick, red] (0,0) -- (1.0,2.0) node[above] {\scriptsize L};
-			\draw[->, thick, dotted, red] (0,0) -- (1.0,-2.0) node[below left] {\scriptsize DRS};
-			\draw[->, thick, blue] (0,0) -- (-0.4,-1.0) node[right] {\scriptsize SL};
-			
-			%Jetradii
-			\draw[fill=red] (0.6,2.0) rectangle ++(0.8,0.1);
-			\draw[fill=red] (0.6,-2.0) rectangle ++(0.8,-0.1);
-			
-			%Detector barrel
-			\draw[gray](-1.5,0) ellipse (0.5 and 2.00);
-			\draw[thick, gray] (-1.5, 2.0) -- (1.5, 2.0);
-			\draw[thick, gray] (-1.5, -2.0) -- (1.5, -2.0);
-			\draw[gray](1.5,-2) arc(-90:90:0.5 and 2);
-			
-		\end{tikzpicture}
-		\caption{Bad Event. The leading jet, and its neighborhood of radius $R$ is fully in the detector acceptance but the subleading jet appears as a second jet in the data.}
-		\label{fig:RUN2_BadEvent2}
-	\end{figure}
-\end{minipage}
-
-To test whether the jet algorithm correctly identifies the jet centers, we could use the knowledge about the leading jet coordinates $(\eta_L, \phi_L, p_{t,L})$ and investigate an average jet distribution relative to the leading particle. Figure \ref{fig:MultiplicityInXRelToLeading_JetSite} shows distributions in the $\eta$- and $\phi$-projection for three momentum classes of the leading particle in the jet. The leading particle was left out in the analysis to only see the surrounding particle spray. 
-
-The same distribution can be done for the direct recoil site, which is shown in figure \ref{fig:MultiplicityInXRelToLeading_RecoilSite}.
-
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1.0\textwidth]{Media/Plots/MultiplicityInXRelToLeading_JetSite.png}
-	\caption{Particle spray distribution on the jet site depending on the spatial coordinates $\Delta \eta, \Delta \phi$ relative to the leading particle in the jet with $R = 0.4$. It is also being differed between the momentum category of the leading particle in the categories: $\left\{low, middle, high \right\} = \left\{30 \dots 50, 50 \dots 80, 80 \dots \infty \right\} \unit{GeV/c}$.}
-	\label{fig:MultiplicityInXRelToLeading_JetSite}
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1.0\textwidth]{Media/Plots/MultiplicityInXRelToLeading_RecoilSite.png}
-	\caption{Particle spray distribution on the recoil site depending on the spatial coordinates $\Delta \eta, \Delta \phi$ relative to the recoil site's center with $R = 0.4$. It is also being differed between the momentum category of the leading particle in the categories: $\left\{low, middle, high \right\} = \left\{30 \dots 50, 50 \dots 80, 80 \dots \infty \right\} \unit{GeV/c}$.}
-	\label{fig:MultiplicityInXRelToLeading_RecoilSite}
-\end{figure}
-
-To extract the diffusion wake signal, meaning an absence of some particles behind the leading jet, we have to compare the measurements on the recoil site with a background measurement that is definitely uncorrelated to the jet of interest. Instead of choosing a background/reference site in the same event, the position of the recoil site is being remembered for that if another event has no jet-like particles in this particular region, a background measurement is done here. We furthermore require the jet site to be jet-free in the background measurement event. Figure \ref{fig:ReferenceMeasurementChoice} shows an event and multiple suitable and not suitable events that are not correlated with the event of interest.
-
-\begin{figure}[H]
-	\centering
-	\begin{tikzpicture}[scale=4]
-		
-		%phase spaces
-		\draw[color=black] (-1.5,1.0) rectangle ++(1.0,-2.0);
-		\node[anchor=center, below] at (-1, -1) {Event of Interest};
-		\draw (-1, 0.9) -- (-1, 1.1) node[above] {$\eta = 0$};
-		\draw (-1.5, 0.9) -- (-1.5, 1.1) node[above] {$-0.9$};
-		\draw (-0.5, 0.9) -- (-0.5, 1.1) node[above] {$0.9$};
-		\draw (-1.4, 0) -- (-1.6, 0) node[left] {$\phi = 0$};
-		\draw (-1.4, 1) -- (-1.6, 1) node[left] {$\pi$};
-		\draw (-1.4, -1) -- (-1.6, -1) node[left] {$-\pi$};
-		
-		\draw[color=black] (0.5,1.0) rectangle ++(1.0,-2.0);
-		\node[anchor=center, below] at (1.0, -1) {Possible Background events};
-		\draw (1, 0.9) -- (1, 1.1) node[above] {$\eta = 0$};
-		\draw (0.5, 0.9) -- (0.5, 1.1) node[above] {$-0.9$};
-		\draw (1.5, 0.9) -- (1.5, 1.1) node[above] {$0.9$};
-		
-		%jets and radii
-		\draw[color=blue] (-1.25,0.5) circle (0.150) node[above right=0.5cm] {Leading Jet};
-		\draw[fill=blue, color=blue] (-1.25, 0.5) circle(0.01);
-		\draw[color=blue, dotted, thick] (-1.25, -0.5) circle (0.15) node[above right=0.5cm] {Direct Recoil Site};
-		\draw[fill=blue, color=blue] (-1.25, -0.5) circle (0.01);
-		
-		%background measurements
-		\draw[color=gray] (0.75,0.5) circle (0.150);
-		\draw[fill=gray, color=gray] (0.75, 0.5) circle(0.01);
-		\draw[color=gray, dotted, thick] (0.75, -0.5) circle (0.15);
-		\draw[fill=gray, color=gray] (0.75, -0.5) circle (0.01);
-		\draw[color=green] (1.2,0.6) circle (0.150) node{OK};
-		\draw[color=green] (1.0,0.2) circle (0.150) node{OK};
-		\draw[color=red] (0.7,0.7) circle (0.150) node{NOK};
-		\draw[color=red] (0.9,0.-0.4) circle (0.150) node{NOK};
-		
-		%marking
-		\node at (-2, 1) {a)};
-		\node at (0,1) {b)};
-		
-		
-	\end{tikzpicture}
-	\caption{\textbf{a)} A possible event. There is only one jet, because the subleading jet is out of acceptance. The direct recoil site is always on the exact opposite side. \textbf{b)} One-Jet events in which the leading jets are marked with a circle. The circle is marked with an 'OK' if the event is suitable for a background measurement, marked with 'NOK' if it is not suitable. The jet site as well as the direct recoil site must be free of identified jets within a distance of $d = 2R$.}
-	\label{fig:ReferenceMeasurementChoice}
-\end{figure}
-
-In practice for event $i$ there will be searched for a suitable background-event in all of the following events in the queue. An analysis shows that on average there is more than one suitable background event for each jet event. This is because the number of unmatched events, i.e. events that has not been found a suitable background event for, stays around zero among the complete dataset.
-
-For the following procedure, the logarithmic scalilng of the histograms is dropped. Furthermore, all jets are investigated together regardless of their momentum class to have as many data as possible. After combining all three recoil site particle spray distributions corresponding to $\{low, high, middle\}-p_t$ jets we will scale this histogram by the total number of particles on the recoil site, $\left(N_{\text{recoil}}\right)^{-1} = \left(N_{\text{recoil,low}} + N_{\text{recoil,middle}} + N_{\text{recoil,high}}\right)^{-1}$, and the background histogram by the total number of particles on the background site, $\left(N_{\text{background}}\right)^{-1}$, to have comparable data. We can now decide in which particles we look for a depletion, e.g. only particles that have $p_t \in [1, 3]\unit{GeV/c}$. Visually this would be a projection of the number of entries for each $\Delta \eta$ or $\Delta \phi$ like demonstrated in figure \ref{fig:RecoilProjection}.
-
-\begin{figure}[H]
-	\centering
-	\begin{tikzpicture}[scale=4]
-		
-		%picture
-		\node at (0,0) {\includegraphics[width=0.9\textwidth]{Media/Plots/LonelyRecoilSite.png}};
-		
-		%cutout
-		\draw[fill=black, opacity=0.5] (-1.15,-0.47) rectangle ++(2.45,-0.13) node[pos=.5, color=white] {count particles in here ($p_t \in [1,3]\unit{GeV/c}$)};
-		
-	\end{tikzpicture}
-	\caption{The summed recoil distribution. The background distribution looks very similar and is not needed to be shown. The particles in the black box are counted for each $\Delta \eta$ and compared to the number resulting from the same area in the background measurement to get the difference in particle multiplicity.}
-	\label{fig:RecoilProjection}
-\end{figure}
-
-In figure \ref{fig:MultiplicityDif} the resulting particle multiplicities are shown for different transversal momentum categories of the recoil particles $p_t^{\text{recoil}}$, all with jet parameters $p_t^{\text{jet}} > 7\unit{GeV/c}, R=0.4$. We do not expect a huge depletion far away from the jet-center such that we can utilize the surrounding spray region to do the normalization. We demand that, for a jet radius of $R = 0.4$, the multiplicity $M_x(\Delta \eta)$ is the same in the spray region like expressed in equation \ref{eq:SprayNormalization}.
-
-
-\begin{equation}
-	\begin{gathered}
-		\int_{-0.4}^{-0.2} \dif \Delta \eta M_{\text{Background}}(\Delta \eta) + \int_{0.2}^{0.4} \dif \Delta \eta M_{\text{Background}}(\Delta \eta)  \\
-		\ShouldBe \int_{-0.4}^{-0.2} \dif \Delta \eta M_{\text{All jets}}(\Delta \eta) + \int_{0.2}^{0.4} \dif \Delta \eta M_{\text{All jets}}(\Delta \eta)
-	\end{gathered}
-	\label{eq:SprayNormalization}
-\end{equation}
-
-The particle distributions shown in figure \ref{fig:MultiplicityDif} are not purely gaussian. This is because the plots are projections onto the $\eta$ plane, meaning at the center of the circular region taken into account there are more particles than at the edges. The distribution therefore takes the form
-
-\begin{equation}
-	M_x(\Delta \eta) = \text{[Amplitude]*[Projection]*[Gauss]} = a \sqrt{R^2 - (\Delta \eta)^2} e^{-b (\Delta \eta)^2} \text{ with } a,b \in \mathbb{R} .
-\end{equation}
-
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1.0\textwidth]{Media/Plots/MultiplicityDiff_0-1_5.pdf}
-	\includegraphics[width=1.0\textwidth]{Media/Plots/MultiplicityDiff_1_5-3.pdf}
-	\caption{The first and third panel rows show the particle multiplicity for different $p_t^{\text{recoil}}$ bins while having constant jet parameters, i.e. the same set of jet events, across all measurements. The second and fourth panel rows show the difference $\Delta \text{Multiplicity} = \text{Multiplicity}_{\text{All jets}} - \text{Multiplicity}_{\text{Background}}$.}
-	\label{fig:MultiplicityDif}
-\end{figure}
-
-The results presented in figure \ref{fig:MultiplicityDif} show no significant depletion of particles in the center of the region directly behind the jet for all kinds of particles up to $p_t = 3.0 \unit{GeV/c}$. If there was a depletion, the center of gravity of the data points presented in the difference plots must be below zero. When fitting a constant function $f(\Delta \eta|a) = a$, there is no reliable tendency of $a < 0$ across the $p_t^{\text{recoil}}$ bins. The higher the momentum of the recoil particles is the worse the statistics get, because there are not sufficiently many particles in the recoil region with a high $p_t$. Even when combining the statistics of all particles that have $p_t \in [0,7]\unit{GeV/c}$ there is no significant depletion signal.
-
-\subsection{Previous Trial of the CMS Collaboration}
-
-In \cite{collaboration_observation_2026} the CMS collaboration claims to have observed the jet diffusion wake using dijets. They use dijet events where jets are back-to-back in azimuthal angle $\phi$, but chosen to be separated in pseudorapidity $\eta$ to have the diffusion wake separated from other effects. This is supposed to give a robust signal of the diffusion wake like predicted in \cite{pablos_jet_2020} and \cite{yang_rapidity_2025}. 
-
-'A sample of lead-lead (PbPb) collisions at a center-of-mass energy per nucleon pair of $\sqrt{s_{\text{NN}}} = 5.02\unit{TeV}$ is used for signal extraction. A reference measurement is derived from proton-proton (pp) collisions at the same energy. Data samples, corresponding to integrated luminosities of $0.66\unit{nb}^{-1}$ for PbPb collisions and $299\unit{pb}^{-1}$ for pp collisions, were collected with the CMS detector at the LHC during 2018 and 2017, respectively. Dijets are defined as the two highest $p_T$ back-to-back jets, labeled 'jet1' (leading) and 'jet2' (subleading). The back-to-back requirement is that the azimuthal angle separation of the two jets satisfies $\Delta \phi^{\text{jet}_1 , \text{jet}_2} > 5\pi / 6$. For samples requiring different $\eta$ separations between the two jets in the dijet, the distributions
-of charged particles relative to the leading jet axis direction are studied as functions of $\Delta \eta^{\text{ch,jet}_1}$ and $\Delta \phi^{\text{ch,jet}_1}$, where the 'ch' superscript denotes charged particles. To isolate the diffusion
-wake effect, the correlation distributions obtained for dijets with a small $\eta$ gap are subtracted from those with large gaps. The resulting distributions from PbPb events are compared to those measured using pp collisions. The results are presented differentially in charged-particle $p_T^{\textbf{ch}}$ and PbPb collision centrality, defined as the percentile of the total inelastic hadronic cross section (with 0\% corresponding to the most central collisions). The diffusion wake signal, seen as a depletion of the particle yield in the underlying-event (UE) distribution, is extracted and compared to theoretical models with and without medium effects.'\cite{collaboration_observation_2026}
-
-The detailed procedure can be extracted from \cite{collaboration_observation_2026}, its major principle is now being reviewed. Dijet events are sorted into two categories - events in which the two jets are back-to-back (symm), i.e. $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}} < 0.5$ and events in which the two jets have a certain separation (asymm), i.e. $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}} \in (1.0, 1.5)$. The distributions are shown in figure \ref{fig:CMSPrinciple} where the lower left histogram corresponds to symmetric PbPb collision events and the lower right one corresponds to asymmetric PbPb collisions. The upper panels show pp collisions for reference, but play a minor role for this moment. Similar to the method presented earlier in section \ref{sec:AnalysisOfRun2Data} the depletion is searched for at the direct recoil site of a jet - but behind the subleading jet in this case. The depletion zone can be seen in the lower right histogram in figure \ref{fig:CMSPrinciple} on the left of the leading jet at $(\Delta \eta^{\text{ch, jet}_2}, \Delta \varphi^{\text{ch, jet}_1}) \approx (-1.5,0)$ which is then compared to the same phase space area in the symmetric case. In the symmetric case there is no visible depletion.\cite{collaboration_observation_2026}
-
-The reader may be confused by the quantity $\Delta \eta^{\text{jet}_1, \text{jet}_2}$. If the jets are back-to-back (symmetric case), the subleading jet has $\eta_{\text{subleading}} = \eta_{\text{leading}}$, and $\Delta \eta^{\text{ch, jet}_1}_{\text{subleading}} = 0$. Then, $\Delta \eta^{\text{jet}_1, \text{jet}_2} = 0$ subsequently.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.8\textwidth]{Media/Pictures/CMS_Principle.png}
-	\caption{Distributions of charged-particle yields with $1 < p_T^{\text{ch}} < 2 \unit{GeV}$ as functions of $\Delta \eta^{\text{ch,jet}_1}$ and $\Delta \phi^{\text{ch,jet}_1}$, measured relative to the leading jet direction in pp (upper panels) and
-		0–30\% PbPb (lower panels) collisions. The left (right) column shows the results for small $(R^{\textbf{sym}} |\Delta \eta^{\text{jet}_1 , \text{jet}_2}| < 0.5)$ and large $(R^{\textbf{asym}} |\Delta \eta^{\text{jet}_1 , \text{jet}_2}| \in (1.0, 1.5))$ dijet configurations. Image and description taken from \cite{collaboration_observation_2026}}
-	\label{fig:CMSPrinciple}
-\end{figure}
-
-The results presented by the CMS group are shown in figure \ref{fig:CMSResults} and \ref{fig:CMSComparison}. The depletion becomes bigger for more central collisions and only occurs slightly in pp collisions compared to PbPb collisions. The shown PYTHIA8 data shows no depletion at all, implying that the measured depletion is a medium-induced effect. Although the presented method seems legitimate at the first glance, it should be testified in the following. To see whether the depletion really originates from physics, a simple Monte-Carlo simulation of the used event set shall be generated. Then, the analysis utilized by the CMS group should be applied.
-
-\subsubsection{Crosscheck MC Simulation}
-\label{subsec:CrosscheckMC}
-
-The easiest way of replicating the events used by \cite{collaboration_observation_2026} is by only focusing on the region around $\Delta \varphi^{\text{ch, jet}_1} \approx 0$, i.e. the top of the front 'wave' in the particle yield distribution presented in the lower histograms of figure \ref{fig:CMSPrinciple}. To fill this area with relevant data, events are generated randomly, only in the $\eta$ domain, i.e. 1-dimensional. One event contains of two gaussian-distributed jets with a finite number of particles.
-
-For each of the two jets a random number of particles $N_{1(2)}^\text{PbPb} \in \{N_{\text{min}}^\text{PbPb}, \dots, N_{\text{max}}^\text{PbPb} \}$ is chosen based on a flat distribution. Next, their separation $\Delta \eta^{\text{jet}_1, \text{jet}_2} \in [0, \Delta \eta^{\text{jet}_1, \text{jet}_2}_\text{max} ]$ is chosen based on a probability distribution. The production of jet separations is not equally distributed. To get a realistic probability distribution, one can randomly generate two jets independently of each other in a range $\eta_i \in (-\text{Acceptance}, \text{Acceptance})$ and measure, which pseudorapidity separations occur how often. A normalized distribution is shown in figure \ref{fig:JetSeparationDistribution} . It is somehow clear that jets with a small pseudorapidity separation occur more often, because the jet doublet has to fit into the detector acceptance and a compact jet doublet fits in more ways than a largely separated one does. 
-
-\begin{figure}
-	\includegraphics[width=\textwidth]{Media/Plots/JetSeparationDistribution.png};
-	\caption{The probability distribution for a specific jet separation in $\eta$. A separation of $\Delta \eta^{\text{jet}_1 , \text{jet}_2} = 0$ means the two jets are back-to-back. These jets are more probable, since a dijet pair must fit into the detector acceptance.}
-	\label{fig:JetSeparationDistribution}
-\end{figure}
-
-
-
-By definition the leading jet (jet 1) has $\Delta \eta^{\text{ch, jet}_1} = 0$. An example is given in figure \ref{fig:EasyMCSeparation}.
-
-\begin{figure}[H]
-	\centering
-	\begin{tikzpicture}
-		%coordinate system
-		\draw[->, thick] (-3,0) -- (3,0) node[right] {$\Delta \eta^{\text{ch, jet}_1}$};
-		\draw[thick] (0, 0.25) -- (0, -0.25) node[below] {0};
-		\draw[thick] (-1, 0.25) -- (-1, -0.25) node[below] {-1};
-		\draw[thick] (-2, 0.25) -- (-2, -0.25) node[below] {-2};
-		\draw[thick] (2, 0.25) -- (2, -0.25) node[below] {2};
-		\draw[thick] (1, 0.25) -- (1, -0.25) node[below] {1};
-		
-		%functions
-		\draw[thick, color=blue,samples=100,domain=-3:3]
-		plot(\x,{2/sqrt(2*pi*0.25^2) * exp(-0.5*(\x/0.25)^2)});
-		\draw[thick, color=red,samples=100,domain=-3:3]
-		plot(\x,{1.5/sqrt(2*pi*0.25^2) * exp(-0.5*((\x + 1.5)/0.25)^2)});
-		
-		%function labels
-		\draw[thick, color=blue] (0, 3.5) -- (0, 3.75) node[above, color=blue] {\scriptsize$\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_1} = 0$};
-		\draw[thick, color=red] (-1.5, 3.5) -- (-1.5, 3.75) node[above, color=red] {\scriptsize$\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_2}$};
-		\draw[<->, thick] (-1.5, 5) -- (0,5) node[right] {\scriptsize$\Delta \eta^{\text{jet}_1, \text{jet}_2}$};
-		
-	\end{tikzpicture}
-	\caption{The leading jet (blue) has coordinates $(\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_1},\Delta \varphi^{\text{ch, jet}_1}_{\text{jet}_1}) = (0,0)$ by definition. The subleading jet (red) has coordinates $(\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_2}, \Delta \varphi^{\text{ch, jet}_1}_{\text{jet}_2}) = (\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_2}, \pi)$}. 
-	\label{fig:EasyMCSeparation}
-\end{figure}
-
-Now, for each jet, $N_{1(2)}^\text{PbPb}$ particles are randomly generated around their centers \newline $\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_1}, \Delta \eta^{\text{ch, jet}_1}_{\text{jet}_2}$based on the probability distributions 
-
-\begin{equation}
-	p_{(1(2))}(\Delta \eta) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{-\frac{1}{2} \left(\frac{\Delta \eta - \Delta \eta^{\text{ch, jet}_1}_{\text{jet}_{1(2)}}}{\sigma}\right)^2}.
-\end{equation}
-
-The next crucial part is choosing generated dijet events for the analysis. Like in \cite{collaboration_observation_2026} we will define events with $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}} < 0.5$ as symmetric and events with $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}} \in (1.0, 1.5)$ as asymmetric. Since the gaussian distributed jets consist of finitely many particles, the jet finder would find out slightly off centers for each jet - we call this $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}}$.
-
-\begin{equation}
-	\Delta \eta^{\text{jet}_1, \text{jet}_2} \mapsto \Delta \eta^{\text{jet}_1, \text{jet}_2}_\text{Algo} = \Delta \eta^{\text{jet}_1, \text{jet}_2} \pm \text{Fluctuations}
-\end{equation}
-
-As an easy-to-understand example one might imagine a gaussian jet generated at position $x$ with one particle. Then it may be that the one particle gets generated at $x+\delta$, so the center of the jet would be identified as $x + \delta$. With infinitely many particles, the jet would be perfectly gaussian and both values are the same. We will now look at this event-selection process in both the symmetric and the asymmetric case. The latter is the relevant one. We will look at events that are on the edge to not being accepted, i.e. that have $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}}} \approx 0.5$ for symmetric events and $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}}} \approx 1.5 \text{ or } 1.0$ for asymmetric events. As we are only interested in the distribution on the leading jet site at $(\Delta \eta^{\text{ch, jet}_1},\Delta \varphi^{\text{ch, jet}_1}) = (\Delta \eta^{\text{ch, jet}_1},0)$
-we will concentrate on what influence the leading jet at $(\Delta \eta^{\text{ch, jet}_1}_{\text{jet}_1},\Delta \varphi^{\text{ch, jet}_1}_{\text{jet}_1}) = (0,0)$ has on the distribution.
-
-\paragraph{Symmetric Events}
-In the symmetric case, on average, there occur as many events that have $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}} \approx 0.5$ as events that have $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}} \approx -0.5$, since the probability density is equally big (see figure \ref{fig:JetSeparationDistribution}). Because of the 'wiggling' of the measured jet distance $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}}$ due to the finite number of particles in each gaussian jet, there are as many events that kicked out on the left side as on the right side, when $\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}}} \geq 0.5$. The resulting distribution of the leading jet is therefore symmetric. 
-
-\paragraph{Asymmetric Events}
-
-In the asymmetric case there occur more events that have $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}} \approx 1.0$ than events that have $\Delta \eta^{\text{jet}_1, \text{jet}_2}_{\text{Algo}} \approx 1.5$, because of the different probability density (see figure \ref{fig:JetSeparationDistribution}). Let us look at what happens to the average leading jet distribution. There are two critical situations. If the leading jet 'wiggles' to the left and the subleading jet is at $\Delta \eta^{\text{ch, jet}_1} = 1.0$, then the real separation $\Delta \eta^{\text{jet}_1, \text{jet}_2}_\text{Algo} \leq 1.0$ for sure. This event is omitted. On the other hand if the leading jet 'wiggles' to the right and the subleading jet is at $\Delta \eta^{\text{ch, jet}_1} = 1.5$, then the real separation $\Delta \eta^{\text{jet}_1, \text{jet}_2}_\text{Algo} \geq 1.0$ certainly. This event is also omitted. If both situations were equally likely, the leading jet distribution would remain symmetric, but since they are not according to figure \ref{fig:JetSeparationDistribution}, the distribution becomes asymmetric. The gaussian distribution of the leading jet (blue jet in figure \ref{fig:EasyMCSeparation}) 'leans' to the right.
-
-In the result of subtracting the symmetric distribution from the asymmetric distribution one therefore gets a depletion at $\Delta \eta^{\text{ch, jet}_1} < 0$. A MC simulation executed the presented way gives this exact result. It is shown in figure \ref{fig:MCResult}.
-
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{Media/Plots/MCResult.png}
-	\caption{$R^{\text{Symm(Asymm)}} = N_\text{Symm(Asymm)}^{-1} \frac{\dif N}{\dif \Delta \eta^{\text{ch, jet}_1}}$ are the distributions corresponding to the symmetric and the asymmetric case. The pp data differs from the pbpb data in the number of particles per jet, simulating a heavy particle spray. By reducing the number of particles in the pp jets its distribution can be suppressed even further.}
-	\label{fig:MCResult}
-\end{figure}
-
-The negative range of figure \ref{fig:MCResult} shows a depletion of the same order of magnitude like the one seen in figure \ref{fig:CMSResults}. The positive side peak is also visible in the measurements presented in figure \ref{fig:CMSResults}, especially in the top right plot showcasing the most central events.
-
-\subsubsection{Crosscheck Analysis of PYTHIA Data}
-The model utilized in section \ref{subsec:CrosscheckMC} shows some first signs that the diffusion wake presented in \cite{collaboration_observation_2026} may also have something to do with a  bias and does not necessarily only emerge from QGP medium effects. It is to mention that the presented PYTHIA8 data shows absolutely no such selection bias effects. To test whether there have been some problems in the PYTHIA8 data analysis in \cite{collaboration_observation_2026}, we will execute this exact analysis with simulated PYTHIA event data. The PYTHIA data only contain pp collisions, but a deflection in the pp data would be sufficient to support the previously stated theory.
-
-Firstly, all particles in a PYTHIA event are handed over to the Anti-$k_t$ algorithm \cite{cacciari_anti-_2008} for jet finding. The jets detected by the Anti-$k_t$ algorithm are then looped to find the highest-$p_t$ pair of correlated jets. The leading jet must fulfill $p_t^{\text{leading}} \geq 60\unit{GeV/c}$ and the subleading jet must fulfill $p_t^{\text{subleading}} \geq 30\unit{GeV/c}$ which is slightly lower than in \cite{collaboration_observation_2026} to improve event yield. Two jets are expected to be correlated, if their separation in $\Delta \phi \geq \frac{5 \pi}{6}$, i.e. they must be back-to-back in $\phi$. We also require the leading jet to have $\abs{\eta^{\text{leading}}} < 1.0$ and the subleading jet to have $\abs{\eta^{\text{subleading}}} < 2.0$.\cite{collaboration_observation_2026} For procedural simplicity, asymmetric events are only allowed if $\eta^\text{leading} \geq \eta^\text{subleading} - 0.5$, meaning the jet ordering in $\eta$ is claimed. The $\eta$ separation of the subleading jet to the direct recoil site is then used to categorize
-
-\begin{equation}
-	\begin{gathered}
-		\eta^\text{leading}_\text{recoil} = \eta^\text{leading}, \\
-		\abs{\Delta \eta^{\text{jet}_1, \text{jet}_2}} = \abs{\eta^\text{subleading} - \eta^\text{leading}_\text{recoil}} < 0.5 \Leftrightarrow \text{Symmetric Event} \\
-		\Delta \eta^{\text{jet}_1, \text{jet}_2} = \eta^\text{subleading} - \eta^\text{leading}_\text{recoil} \in (-1.5, -1.0) \Leftrightarrow \text{Asymmetric Event}
-	\end{gathered}
-\end{equation}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{Media/Plots/PYTHIA_SymmAsymmDistros.png}
-	\caption{The normalized particle multiplicity of the PYTHIA generated events for the symmetric (left) case and the asymmetric (right) case. Includes particles that fulfill $\abs{\Delta \phi^{\text{ch, jet}_1}} \leq \frac{\pi}{8}$ and $p_t \geq 0.15\unit{GeV/c}$. The leading jet is always at $\Delta \eta^{\text{jet}_1} = 0$ by definition.}
-	\label{fig:PYTHIA_Distr}
-\end{figure}
-
-Furthermore only particles that have $\abs{\Delta \phi^{\text{ch, jet}_1}} \leq \frac{\pi}{8}$ and $p_t \geq 0.15\unit{GeV/c}$ are taken into the distribution. This is done to ensure that non-correlated particles, e.g. the ones that are orthogonal to the jet axis, do not contaminate the depletion data. The two distributions are shown in figure \ref{fig:PYTHIA_Distr}.
-
-
-
-The distributions are then again subtracted from each other while counting the number of particles in a specific $p_t$ range. The result is presented in figure \ref{fig:PYTHIA_Rslt}. Although there has not been sufficient data to precisely replicate the effects presented in chapters \ref{subsec:CrosscheckMC} and \cite{collaboration_observation_2026} it has become clear that such bias raised by picking events in a certain way can lead to deflections in the same order of magnitude like medium effects. 
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{Media/Plots/PYTHIA_Depletion_Pt_0_4.png}
-	\includegraphics[width=\textwidth]{Media/Plots/PYTHIA_Depletion_Pt_4_8.png}
-	\caption{The leading jet near-side hadron multiplicity shown differentially, subtracting the symmetric case from the asymmetric case. The four histograms show different recoil particle transversal momenta in the intervals $p_t^{recoil} \in (0.1, 2.0), (2.0, 4.0), (4.0, 6.0), (6.0, 8.0) \frac{\text{GeV}}{\text{c}}$ $R^{\text{Symm(Asymm)}} = N_\text{Symm(Asymm)}^{-1} \frac{\dif N}{\dif \Delta \eta^{\text{ch, jet}_1}}$ are the hadron multiplicities to the symmetric and the asymmetric case for particles that have $\abs{\Delta \phi^{\text{ch, jet}_1}} \leq \frac{\pi}{8}$}.
-	\label{fig:PYTHIA_Rslt}
-\end{figure}
-
-\newpage
-
-\section{Conclusion}
-
-The analysis of RUN 2 ALICE Pb-Pb data has not shown any signs of particle depletion in the direct recoil region of a jet in 1-jet events. One major issue is the number of events taken into account, since the used dataset only consists of around 30GB of collision data. The usage of a much larger dataset of RUN 3 data may give better results. Slight modifications in where to look for the depletion could also contribute to a reduced data contamination by uncorrelated particles. To be precise, the depletion is expected to be strong in the jet center while reducing for greater distances to the direct recoil axis. In this analysis, a direct projection onto $\Delta \eta$ has been used. Therefore, the centers ($\Delta \eta \approx 0$) in figure \ref{fig:MultiplicityInXRelToLeading_RecoilSite} also include particles that are 'behind' and in 'in front of' the jet center (particles that have $(\Delta \eta, \Delta \phi) = (0,\Delta \phi \in (-R, R))$). An alternative could be to investigate the depletion depending on the distance $d = \sqrt{(\Delta \eta)^2 + (\Delta \phi)^2}$ from the direct recoil area's center. It is also necessary to pick the right reference event. A suitable reference event has a similar particle population, the same event plane angle and a similar vertex $z$-coordinate. 
-
-The Monte Carlo simulation of leading jet distributions with an event selection like presented in \cite{collaboration_observation_2026} showed first signs that the claimed depletion could partially originate from an event selection bias. After replicating the experiment made in \cite{collaboration_observation_2026} with PYTHIA pp data, a contradiction to the PYTHIA8 presented in \cite{collaboration_observation_2026} occurs. A deflection with the same order of magnitude like the expected wake signal can already be seen in the simulated event data without QGP physics. It is therefore not sure if the presented particle depletion is a reliable measure.
- 
 \newpage
 
 \section{Appendix}
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{Media/Pictures/CMS_Results.png}
-	\caption{The difference of the near-side charged-particle yields $R^\text{asym} - R^\text{sym}$ as a function of $\Delta \eta^{\text{ch, jet}_1}$ in pp (blue squares) and different centrality PbPb collisions (red circles), with the most central (0–30\%) shown in the right panels. Results are shown for two $p_T^{\text{ch}}$ ranges: $1 < p_T^\text{ch} < 2 \unit{GeV}$ (upper) and $2 < p_T^\text{ch} < 4 \unit{GeV}$(lower). Solid vertical lines (shaded areas) show statistical (systematic) uncertainties. Image and description taken from \cite{collaboration_observation_2026}}
-	\label{fig:CMSResults}
-	
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.6\textwidth]{Media/Pictures/CMS_Comparison.png}
-	\caption{The difference between PbPb and pp collisions for the particle yield difference observable ($R^\text{asym} - R^\text{sym}$) as a function of $\Delta \eta^{\text{ch, jet}_1}$ for central (0–30\%) collisions. Results for $1 < p_T^\text{ch} < 2 \unit{GeV}$ are shown for $R^{\textbf{asym}} |\Delta \eta^{\text{jet}_1 , \text{jet}_2}| \in (1.0, 1.5)$ (upper panel), $|\Delta \eta^{\text{jet}_1 , \text{jet}_2}| \in (1.0, 1.5)$ (upper middle panel), and $|\Delta \eta^{\text{jet}_1 , \text{jet}_2}| \in (1.0, 1.5)$(lower middle panel). The result for $2 < p_T^\text{ch} < 4 \unit{GeV}$ with $R^{\textbf{asym}} |\Delta \eta^{\text{jet}_1 , \text{jet}_2}| \in (1.0, 1.5)$ is shown in the lower panel. Predictions from the PYTHIA, HYBRID, and CoLBT-hydro models are shown as colored bands. Solid vertical lines (shaded areas) show statistical (systematic) uncertainties. For the models, only statistical uncertainties are shown. Image and description taken from \cite{collaboration_observation_2026}}
-	\label{fig:CMSComparison}
-\end{figure}
-
 \newpage
 
 \printbibliography{}
+
 \newpage
+
 \listoffigures
+
+\newpage
+
+\section{Acknowledgements}
 
 \end{document}
