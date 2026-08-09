@@ -26,9 +26,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     #define DEF_MaxJetPt 150.0
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
-    #define DEF_EventTolerance_Multiplicity 50
-    #define DEF_EventTolerance_Psi2 Pi/16
-    #define DEF_RecoilCorrelationFrameSize 0.4
+    #define DEF_EventTolerance_Multiplicity 40
+    #define DEF_EventTolerance_Psi2 Pi/8
+    #define DEF_RecoilCorrelationFrameSize 0.2
     #define DEF_MaxParticlePtInCorrelation 5.0
 
     int TotalEvents = 0;
@@ -71,6 +71,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     TH3F* h3F_dphi_vs_deta_vs_pt_CorrelationDifference = new TH3F("h3F_dphi_vs_deta_vs_pt_CorrelationDifference", "h3F_dphi_vs_deta_vs_pt_CorrelationDifference",
                 DEF_BinningPerUnit * 2*DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
                 DEF_BinningPerUnit * 2 * DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize, 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
+    TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 100, 0, 500);
+    TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 100, 0, 500);
+    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 100, -50, 50);
     int AnalyzedEventsCounter = 0;
 
     // loop over all directories and print name
@@ -229,7 +232,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            vector<PseudoJet> Jets = FindJets(ParticleVector[collision.ColID], DEF_JetLeadingPt);
+            vector<PseudoJet> Jets = FindJets(ParticleVector[collision.ColID]);
 
             CurrentEventProperties.JetCoordinates = Jets;
 
@@ -333,9 +336,13 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
                 if(iReferenceEvent == iEvent) continue;
 
-                if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
+                //if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
 
-                if(abs(EventProperties[iReferenceEvent].Psi2 - EventProperties[iEvent].Psi2) > DEF_EventTolerance_Psi2) continue;
+                float PsiDiff = EventProperties[iReferenceEvent].Psi2 - EventProperties[iEvent].Psi2;
+                if(PsiDiff > Pi) PsiDiff -= 2*Pi;
+                else if(PsiDiff < -Pi) PsiDiff += 2*Pi;
+
+                if(abs(PsiDiff) > DEF_EventTolerance_Psi2) continue;
 
                 //check that there is no jet in the reference event where the reference data is taken
                 float RecoilSiteEta = EventProperties[iEvent].JetCoordinates[0].eta();
@@ -350,6 +357,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 }
                 for(int iJet = 0; iJet < EventProperties[iReferenceEvent].JetCoordinates.size(); iJet++)
                 {
+                    //check recoil site is free
                     float EtaDistance = EventProperties[iReferenceEvent].JetCoordinates[iJet].eta() - RecoilSiteEta;
                     float PhiDistance = EventProperties[iReferenceEvent].JetCoordinates[iJet].phi_std() - RecoilSitePhi;
                     if(PhiDistance > Pi) PhiDistance -= 2*Pi;
@@ -360,6 +368,19 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                         BadReferenceEvent = true;
                         break;
                     }
+
+                    //check jet site is free
+                    EtaDistance = EventProperties[iReferenceEvent].JetCoordinates[iJet].eta() - EventProperties[iEvent].JetCoordinates[0].eta();
+                    PhiDistance = EventProperties[iReferenceEvent].JetCoordinates[iJet].phi_std() - EventProperties[iEvent].JetCoordinates[0].phi_std();
+                    if(PhiDistance > Pi) PhiDistance -= 2*Pi;
+                    else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+                    Distance = sqrt(pow(EtaDistance, 2) + pow(PhiDistance, 2));
+                    if(Distance < 2*DEF_JetRadius)
+                    {
+                        BadReferenceEvent = true;
+                        break;
+                    }
+
                 }
                 if(BadReferenceEvent) continue;
 
@@ -391,6 +412,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
         for(int iEvent = 0; iEvent < entries_col; iEvent++)
         {
+            //DEBUG
+            h1F_N_ev_minus_N_ref->Fill(EventProperties[iEvent].Multiplicity - EventProperties[EventProperties[iEvent].SuitableReferenceEvent].Multiplicity);
+
             PrintProgress(iEvent, entries_col);
 
             Collision collision = Collision::Read(collisions, iEvent);
@@ -419,6 +443,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 RecoilSitePhi = EventProperties[iEvent].JetCoordinates[0].phi_std() + Pi;
             }
 
+            int NoOfParticlesInRecoilAreaCounter = 0;
+            int NoOfParticlesInReferenceAreaCounter = 0;
+
             for(const auto& particle : ParticleVector[collision.ColID])
             {
 
@@ -429,6 +456,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
+                    NoOfParticlesInRecoilAreaCounter++;
                 }
             }
 
@@ -446,8 +474,12 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
+                    NoOfParticlesInReferenceAreaCounter++;
                 }
             }
+
+            h1F_NoOfParticlesInRecoilArea->Fill(NoOfParticlesInRecoilAreaCounter);
+            h1F_NoOfParticlesInReferenceArea->Fill(NoOfParticlesInReferenceAreaCounter);
 
             //subtract the reference from the recoil correlation
             h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Add(h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation, -1);
@@ -496,6 +528,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
     Results->cd();
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Write();
+    h1F_NoOfParticlesInRecoilArea->Write(),
+    h1F_NoOfParticlesInReferenceArea->Write();
+    h1F_N_ev_minus_N_ref->Write();
 
     OutputFile->Close();
 
@@ -559,7 +594,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 void PrintProgress(int i_Event, int i_Total)
 {
 
-    int barWidth = 50;
+    int barWidth = 100;
     int ItemsPerLine = i_Total/barWidth;
 
     if(i_Event % ItemsPerLine == 0)

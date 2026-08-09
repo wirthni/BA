@@ -7,8 +7,8 @@
 #include <cstdlib>
 #include "./PythiaEvent.h"
 #include "./PythiaEvent_LinkDef.h"
-#include "Fastjet/fastjet-3.5.1/include/fastjet/ClusterSequenceArea.hh"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/config.h"
+#include "Fastjet/fastjet-3.5.1/include/fastjet/ClusterSequenceArea.hh"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/PseudoJet.hh"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/Selector.hh"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/tools/Subtractor.hh"

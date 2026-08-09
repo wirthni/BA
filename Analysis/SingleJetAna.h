@@ -7,8 +7,8 @@
 #include "TClassRef.h"
 #include <algorithm>
 #include <cstdlib>
-#include "fastjet/ClusterSequenceArea.hh"
 #include "fastjet/config.h"
+#include "fastjet/ClusterSequenceArea.hh"
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/Selector.hh"
 #include "fastjet/tools/Subtractor.hh"
@@ -21,7 +21,7 @@ Float_t get_px_Particle(Long64_t Particle_p);
 Float_t get_py_Particle(Long64_t Particle_p);
 Float_t get_pz_Particle(Long64_t Particle_p);
 
-vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles, float i_LowPtValue);
+vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles);
 void PrintProgress(int i_Event, int i_Total);
 void PrintInfo(TString i_String);
 
