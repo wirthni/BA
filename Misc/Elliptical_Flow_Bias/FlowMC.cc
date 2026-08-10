@@ -135,13 +135,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     if(!h1D_NDist){cout << "Multiplicity histogram not found!" << endl; return 0;}
     TH1D* h1D_PtDist = (TH1D*)file->Get("h_particle_pT");
     if(!h1D_PtDist){cout << "Pt histogram not found!" << endl; return 0;}
-    TProfile* TProf_v2_from_pt = (TProfile*)file->Get("h_profile_v2_track_SE");
-    if(!TProf_v2_from_pt){cout << "v_2 statistics histogram h_mult_particles_used_SE_ME_0 not found!" << endl; return 0;}
-    TProfile* TProf_v2_from_pt_Rebin4 = (TProfile*)TProf_v2_from_pt->Clone();
-    TProf_v2_from_pt_Rebin4->Rebin(4);
-    TProfile* TProf_v2_from_pt_Rebin16 = (TProfile*)TProf_v2_from_pt->Clone();
-    TProf_v2_from_pt_Rebin16->Rebin(16);
-
 
     if(i_UsePYTHIAData)
     {
@@ -419,11 +412,13 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             float JetCoordinatesBefore;
             float V2Maxima[2];
             float V3Maxima[3];
+            float PYTHIA_Jet_Pt_Before;
             if(i_UsePYTHIAData)
             {
 
                 if(JetVector.size() > 0)
                 {
+                    PYTHIA_Jet_Pt_Before = JetVector[0].pt();
                     JetCoordinatesBefore = JetVector[0].phi_std();
                     if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
                     {
@@ -495,38 +490,17 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 for(Int_t iBGPart = 0; iBGPart < N; iBGPart++)
                 {
                     //get particle pt
-                    double Pt = h1D_PtDist->GetRandom();
-                    if((fabs(Pt) < 0.15)) continue;
+                    double Pt;
+                    do{
+                        Pt = h1D_PtDist->GetRandom();
+                    }while(fabs(Pt) < 0.15);
                     //get particle eta
                     double Eta = TR_Eta.Uniform(-0.9, 0.9);
                     //get elliptic flow strength from pt
                     double pseudoparams[2] = {Pt,Eta};
-                    //double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);//OLD
 
                     //flow parameter v_2 is generated based on RUN 2 statistics
-                    int BinNum = -1;
-                    double FlowParams;
-                    if(Pt <= 20.0)
-                    {
-                        BinNum = TProf_v2_from_pt->FindBin(Pt);
-                        if(BinNum > TProf_v2_from_pt->GetNbinsX()) {BinNum = TProf_v2_from_pt->GetNbinsX(); cout << Pt << endl;}
-                        FlowParams = TProf_v2_from_pt->GetBinContent(BinNum);
-                    }
-                    else if(Pt <= 45.0)
-                    {
-                        BinNum = TProf_v2_from_pt_Rebin4->FindBin(Pt);
-                        if(BinNum > TProf_v2_from_pt_Rebin4->GetNbinsX()) {BinNum = TProf_v2_from_pt_Rebin4->GetNbinsX(); cout << Pt << endl;}
-                        FlowParams = TProf_v2_from_pt_Rebin4->GetBinContent(BinNum);
-                    }
-                    else
-                    {
-                        BinNum = TProf_v2_from_pt_Rebin16->FindBin(Pt);
-                        if(BinNum > TProf_v2_from_pt_Rebin16->GetNbinsX()) {BinNum = TProf_v2_from_pt_Rebin16->GetNbinsX(); cout << Pt << endl;}
-                        FlowParams = TProf_v2_from_pt_Rebin16->GetBinContent(BinNum);
-                    }
-                    
-                    //reduce flow based on eta
-                    FlowParams *= exp(-0.005*pow(Eta,2));
+                    double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
 
                     h2D_Pt_vs_v2->Fill(Pt, FlowParams);
                     double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
@@ -630,29 +604,26 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
                 if(JetVector.size() > 0)
                 {
-                    if(JetVector[0].pt() >= (DEF_JetLeadingPt * !i_UseHadronInstadOfJet + DEF_HadLeadingPt * i_UseHadronInstadOfJet))
-                    {
-                        float V2Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
-                        if(V2Shift > Pi) V2Shift -= 2*Pi;
-                        else if(V2Shift < -Pi) V2Shift += 2*Pi;
+                    float V2Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
+                    if(V2Shift > Pi) V2Shift -= 2*Pi;
+                    else if(V2Shift < -Pi) V2Shift += 2*Pi;
 
-                        if(abs(V2Shift) <= Pi/2) {
-                            V2Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
-                            h2D_PhiLeading_vs_Shift->Fill(JetVector[0].phi_std(), V2Shift);
-                            h2D_V2Phase_vs_Shift->Fill(V2_Angle, V2Shift);
-                            h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(LeadingDistClosestV2Max, V2Shift, JetVector[0].pt());
-                        }
-
-                        float V3Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
-                        if(V3Shift > Pi) V3Shift -= 2*Pi;
-                        else if(V3Shift < -Pi) V3Shift += 2*Pi;
-
-                        if(abs(V3Shift) <= Pi/3) {
-                            V3Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
-                            h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(LeadingDistClosestV3Max, V3Shift, JetVector[0].pt());
-                        }
-
+                    if(abs(V2Shift) <= Pi/2) {
+                        V2Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
+                        h2D_PhiLeading_vs_Shift->Fill(JetVector[0].phi_std(), V2Shift);
+                        h2D_V2Phase_vs_Shift->Fill(V2_Angle, V2Shift);
+                        h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Fill(LeadingDistClosestV2Max, V2Shift, PYTHIA_Jet_Pt_Before);
                     }
+
+                    float V3Shift = JetVector[0].phi_std() - JetCoordinatesBefore;
+                    if(V3Shift > Pi) V3Shift -= 2*Pi;
+                    else if(V3Shift < -Pi) V3Shift += 2*Pi;
+
+                    if(abs(V3Shift) <= Pi/3) {
+                        V3Shift >= 0 ? NoOfPosPulls++ : NoOfNegPulls++;
+                        h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Fill(LeadingDistClosestV3Max, V3Shift, PYTHIA_Jet_Pt_Before);
+                    }
+
                 }
             }
 
@@ -695,7 +666,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             if(JetVector[0].eta() * JetVector[1].eta() < 0) LargeGap = true;
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            /*
+            /*Function_FlowByPtAndEta
             /
             /                                                     
             /                                           GET PARTICLE MULTIPLICITES IN THE REGIONS OF INTEREST
@@ -1538,8 +1509,8 @@ double Function_FlowByPtAndEta(double x, double params[])
     double Pt = params[0];
     double Eta = params[1];
     double FlowParams;
-    //an approximation for pions(+), out of paper http://arxiv.org/abs/1301.2348v1
-    FlowParams = 0.4*exp(-0.8*x)*pow(0.8*x,2);
+    //an approximation for pions(+) @Nadine Gruenwald
+    FlowParams = 0.063 * pow(Pt, 1.6) * exp(-0.47*Pt);
 
     //now reduce based on eta, just an approximation
     //FlowParams *= exp(-0.005*pow(Eta,2));
