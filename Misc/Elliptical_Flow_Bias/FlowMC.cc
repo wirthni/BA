@@ -1331,6 +1331,7 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     TH1* High_Lgd = (TH1*)h1D_HighPtJetsShift->DrawCopy("SAME P E1");
 
     TLegend *leg = new TLegend(0.7,0.7,0.85,0.85);
+    leg->AddEntry((TObject*)nullptr,Form("Jet p_{T} from clustering before adding background"),"");
     leg->AddEntry(Low_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", LowPtJetFrom, MiddlePtJetFrom),"p");
     leg->AddEntry(Mid_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", MiddlePtJetFrom, HighPtJetFrom),"p");
     leg->AddEntry(High_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} < #infty GeV", HighPtJetFrom),"p");

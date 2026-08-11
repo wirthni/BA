@@ -4,6 +4,23 @@
 #include "functions.h"
 #include "StJetTrackEvent.h"
 #include "StJetTrackEventLinkDef.h"
+#include "TVector3.h"
+
+// Histos that are accessed by different methods and have to be available globally
+TH2D* h2D_qx_qy_for_EP_pos_eta;
+TH2D* h2D_qx_qy_for_EP_neg_eta;
+TH2D* h2D_Psi_pos_vs_Psi_neg;
+TH1D* vec_h_psi_test[2];
+TH1D* h_Psi_SE_EP_resolution;
+TH1D* h_EP_peak[2];
+TH2D* h2D_QA_vs_QB_peak[2];
+TH2D* h2D_QA_vs_QB_tail[2];
+TH2D* h2D_Q_vec_peak;
+TH2D* h2D_Q_vec_tail;
+
+Int_t ReadTreeInit();
+Int_t ReadTreeDeInit();
+Int_t WriteQVectorCorrectionForEvent(int CollisionID, TTree* TrackTree, std::unordered_map<int, std::vector<int>> CollisionMap);
 
 Float_t get_px_Particle(Long64_t Particle_p);
 Float_t get_py_Particle(Long64_t Particle_p);

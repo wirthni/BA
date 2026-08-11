@@ -58,7 +58,7 @@
 \DefineBibliographyStrings{english}{andothers = {\textit{et al\adddot}}} %et al. kursiv
 \DeclareFieldAlias{journaltitle}{shortjournal} % Use shortjournal if available for abbreviated journal titles
 
-\addbibresource{ResearchProject.bib} %Bibliographie-Datei einbinden
+\addbibresource{BA.bib} %Bibliographie-Datei einbinden
 
 
 % ========== Sprach- & Zeitoptionen ==========
@@ -109,6 +109,7 @@
 \DeclareCaptionLabelSeparator{colon}{\space|\space} % Figurename | bei Abbildungen
 \usepackage{subcaption}             % Unterbilder (a), (b), etc.
 \usepackage{cleveref}
+\usepackage{subfiles}
 
 % ========== Benutzerdefinierte Befehle ==========
 % Kurzbefehle für häufig verwendete Notationen
@@ -184,7 +185,6 @@ SUPERVISORS
 
 Regensburg, \today
 
-
 \end{center}
 
 \newpage
@@ -197,9 +197,8 @@ Regensburg, \today
 	\textbf{ABSTRACT}
 \end{center}
 
-
+EEEEEEEEEEEEEEDIT
 When heavy ion nuclei collide with extremely high energies, in the orders of TeV, the nucleus matter gets compressed to such a high order that it disintegrates into its constituents. Furthermore, for a glimpse after the collision, a vastly interesting state of matter - the quark gluon plasma - is being produced. A hot state of matter in which quarks and gluons are not confined to baryons or mesons, but rather quasi-free. To investigate this state of matter, so called particle jets - highly energetic particles - are used to probe the QGP matter. By investigating the dispersive and dissipative effects of the QGP on these jets, elementary properties of the QGP can be deduced. In return, a direct effect of the particle jets on the QGP matter itself, so called diffusion wakes, have been proposed by theoretical calculations. This project aims  on measuring this phenomenon in existing ALICE collision data, taken in 2018 (RUN 2) during heavy ion (Pb-Pb) collisions and reviews a previous attempt of the CMS collaboration on this measurement. 
-
 
 \newpage
 
@@ -207,46 +206,33 @@ When heavy ion nuclei collide with extremely high energies, in the orders of TeV
 
 \newpage
 
+\section*{Conventions}
 
-
-\section{ALICE at the Large Hadron Collider}
-\subsection{The Large Hadron Collider}
-\subsection{ALICE - A Large Ion Collider Experiment}
-
-\section{Analysis of heavy ion collision data}
-\subsection{Important event properties}
-\subsection{Important particle(track) properties}
-
-\section{Quark gluon plasma physics at colliders}
-\subsection{The QGP as a Quantum Chromodynamics Object}
-\subsection{Particle jets as a QGP probe}
-\subsection{The diffusion wake}
-\subsection{Theoretical proposal: Use dijets to measure the diffusion wake}
-
-\section{Previous diffusion wake measurements}
-
-
-\section{Event simulation: The identification of potential biases}
-\subsection{How Pb-Pb events are simulated}
-\subsection{Biases in the dijet method}
-\subsection{Biases in the single jet method}
-
-\section{Simulating the shift of reconstructed jets}
-\subsection{The event plane in Pb-Pb events}
-\subsection{The anti-$k_t$ algorithm}
-\subsection{Modeling the jet shift}
-\subsection{Jet shift in simulated Pb-Pb events}
-
-\section{Measurements in ALICE RUN 3 data}
-\subsection{Data selection and preparation}
-\subsection{Dijet method measurements}
-\subsection{Single jet method measurements}
-
-\section{Summary and Outlook}
+Throughout this thesis, we will be using natural units, i.e. $h \equiv c \equiv 1$. As a direct consequence, [Momentum] = eV.
 
 \newpage
 
-\section{Appendix}
+\subfile{SECTION_ALICE_at_the_lhc.tex}
+
+\subfile{SECTION_Ana_of_heavy_ion_data.tex}
+
+\subfile{SECTION_QGP_physics_at_colliders.tex}
+
+\subfile{SECTION_prev_diff_measurements.tex}
+
+\subfile{SECTION_event_simulation.tex}
+
+\subfile{SECTION_simulation_of_jet_shift.tex}
+
+\subfile{SECTION_measurements_in_ALICE_data.tex}
+
+\newpage
+
+\subfile{SECTION_summary.tex}
+
+\newpage
+
+\subfile{SECTION_appendix.tex}
 
 \newpage
 
@@ -258,6 +244,10 @@ When heavy ion nuclei collide with extremely high energies, in the orders of TeV
 
 \newpage
 
-\section{Acknowledgements}
+\section*{Acknowledgements}
+
+\newpage
+
+\section*{Zusicherung}
 
 \end{document}
