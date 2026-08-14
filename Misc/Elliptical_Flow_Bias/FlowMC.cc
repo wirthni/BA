@@ -97,7 +97,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     //DEBUG
     TH2D* h2D_PhiLeading_vs_Shift = new TH2D("h2D_PhiLeading_vs_Shift","h2D_PhiLeading_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
     TH2D* h2D_V2Phase_vs_Shift = new TH2D("h2D_V2Phase_vs_Shift","h2D_V2Phase_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
-    TH2D* h2D_Pt_vs_v2 = new TH2D("h1D_Pt_vs_v2", "h1D_Pt_vs_v2", 300, 0, 100, 100, 0, 0.2);
+    TH2D* h2D_Pt_vs_v2 = new TH2D("h1D_Pt_vs_v2", "h1D_Pt_vs_v2", 300, 0, 100, 100, -0.1, 0.1);
      
     
 
@@ -1511,7 +1511,8 @@ double Function_FlowByPtAndEta(double x, double params[])
     double Eta = params[1];
     double FlowParams;
     //an approximation for pions(+) @Nadine Gruenwald
-    FlowParams = 0.063 * pow(Pt, 1.6) * exp(-0.47*Pt);
+    FlowParams = 0.063 * pow(x, 1.6) * exp(-0.47*x)
+                -0.09/(1 + exp(-(x-10)));
 
     //now reduce based on eta, just an approximation
     //FlowParams *= exp(-0.005*pow(Eta,2));

@@ -611,7 +611,7 @@ void PrintProgress(int iEvent, int i_Total)
     int barWidth = 100;
     int ItemsPerLine = i_Total/barWidth;
 
-    if(iEvent % ItemsPerLine == 0)
+    if( ItemsPerLine != 0 && iEvent % ItemsPerLine == 0)
     {
         std::cout << "[";
         int pos = iEvent/ItemsPerLine;

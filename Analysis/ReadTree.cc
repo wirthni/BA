@@ -6,18 +6,22 @@ FUNCTION NAME:
 ReadTree
 
 INFO:
-Reads in a RUN 3 AO2D.root file and writes general dataset information into an output file
+Reads in a RUN 3 AO2D.root file and writes general dataset information into an output file. 
+If executed once, the output .root file contains the Q vector correction histograms
 
 PARAMETERS:
 i_InputFile: Path and filename to the RUN 3 AO2D file
 i_OutputFile: Free-to-choose filename for the generated output file (.root)
+
+OUTPUT:
+[Run Number]_Calibration.root
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
+Int_t ReadTree(TString i_InputFile)
 {
     ReadTreeInit();
 
-    cout << "ReadTree started" << endl;
+    PrintInfo("ReadTree started");
 
     #define DEF_BinningPerUnit 100
 
@@ -26,30 +30,21 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
     int total_skip   = 0;
 
     // Make histograms for a global event analysis
-    TH1D* h1d_mult_event   = new TH1D("h1d_mult_event","h1d_mult_event", 500,0,30000);
-    TH1D* h1d_Ntrack_event = new TH1D("h1d_Ntrack_event","h1d_Ntrack_event", 2500,0,5000);
-    TH1D* h1d_occ_event    = new TH1D("h1d_occ_event","h1d_occ_event", 1000,0,10000);
-    TH1D* h1d_occft0_event = new TH1D("h1d_occft0_event","h1d_occft0_event", 100000,0,100000);
-    TH1D* h1d_pTsum        = new TH1D("h1d_pTsum","h1d_pTsum", 2000,0,8000);
-    TH1D* h1d_cent         = new TH1D("h1d_cent","h1d_cent", 15,0,15);
-    TH1D* h1d_psi2         = new TH1D("h1d_psi2","h1d_psi2", 800,-4.0,4.0);
-    TH1D* h1d_psi3         = new TH1D("h1d_psi3","h1d_psi3", 800,-4.0,4.0);
-    TH2D* h1d_mult_vs_cent = new TH2D("h1d_mult_vs_cent","h1d_mult_vs_cent", 15,0,15,500,0,30000);
+    TH1D* h1d_mult_event        = new TH1D("h1d_mult_event","h1d_mult_event", 500,0,30000);
+    TH1D* h1d_Ntrack_event      = new TH1D("h1d_Ntrack_event","h1d_Ntrack_event", 2500,0,5000);
+    TH1D* h1d_occ_event         = new TH1D("h1d_occ_event","h1d_occ_event", 1000,0,10000);
+    TH1D* h1d_occft0_event      = new TH1D("h1d_occft0_event","h1d_occft0_event", 100000,0,100000);
+    TH1D* h1d_pTsum             = new TH1D("h1d_pTsum","h1d_pTsum", 2000,0,8000);
+    TH1D* h1d_cent              = new TH1D("h1d_cent","h1d_cent", 15,0,15);
+    TH1D* h1d_psi2              = new TH1D("h1d_psi2","h1d_psi2", 800,-4.0,4.0);
+    TH1D* h1d_psi2_corrected    = new TH1D("h1d_psi2_corrected","h1d_psi2_corrected", 800,-4.0,4.0);
+    TH1D* h1d_psi3              = new TH1D("h1d_psi3","h1d_psi3", 800,-4.0,4.0);
+    TH2D* h1d_mult_vs_cent      = new TH2D("h1d_mult_vs_cent","h1d_mult_vs_cent", 15,0,15,500,0,30000);
     
     // Track histos
-    TH1D* h1d_pT           = new TH1D("h1d_pT","h1d_pT", 1000,0,200);
-    TH1D* h1d_eta          = new TH1D("h1d_eta","h1d_eta", 200,-1.0,1.0);
-    TH1D* h1d_phi          = new TH1D("h1d_phi","h1d_phi", 800,-4.0,4.0);
-
-
-    /*END USER VARIABLES*/
-
-    //Generate output file
-    TString str_out =  "./" + i_OutputFile;
-    str_out += ".root";
-    TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
-    OutputFile->cd();
-    cout << "Output file is " << str_out << endl;
+    TH1D* h1d_pT                = new TH1D("h1d_pT","h1d_pT", 1000,0,200);
+    TH1D* h1d_eta               = new TH1D("h1d_eta","h1d_eta", 200,-1.0,1.0);
+    TH1D* h1d_phi               = new TH1D("h1d_phi","h1d_phi", 800,-4.0,4.0);
 
     //Get data from tree file
     TFile* file = TFile::Open(i_InputFile);
@@ -58,7 +53,6 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
     TTree * tracks = nullptr;
 
     // loop over all directories and print name
-    cout << "Process file" << endl;
     TIter next(file->GetListOfKeys());
     TKey *key;
     while ((key = (TKey *)next())) {
@@ -143,11 +137,46 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
         }
         //----------------------- Checks done ---------------------------------------------
 
-        cout << "Start event loop" << endl;
+
+        PrintInfo("Write Q Vector correction");
+
+        for (int i_Collision = 0; i_Collision < entries_col; i_Collision++) {
+
+            PrintProgress(i_Collision, entries_col);
+
+            Collision collision = Collision::Read(collisions, i_Collision);
+            if(CollisionMap[collision.ColID].size() == 0){
+                cout << "No tracks in collision " << collision.ColID << "! Skipping." << endl;
+                continue;
+            }
+            if(!HighpTMap[collision.ColID]){
+                continue;
+            }
+
+            WriteQVectorCorrectionFile(collision.ColID, tracks , CollisionMap, true);
+
+        }
+
+        //The Q vector correction is now saved in TH2D* h2D_qx_qy_for_EP_pos_eta, TH2D* h2D_qx_qy_for_EP_neg_eta;
+
+        PrintInfo("Generate Output File");
+
+        //make output file since run number is known now
+        Collision collision = Collision::Read(collisions, 0);
+        TString RunNumberAsString;
+        RunNumberAsString.Form("%d", collision.RunNumber);
+        TString str_out =  "./" + (TString)(RunNumberAsString.Data()) + "_Calibration.root";
+        TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
+        OutputFile->cd();
+        cout << "Output file is " << str_out << endl;
+
+        PrintInfo("Loop Q vector calibrated collisions");
+
         int N_events_skipped = 0;
 
         for (int i_Collision = 0; i_Collision < entries_col; i_Collision++) {
-        //for (int i_Collision = 46; i_Collision < 50; i_Collision++) {
+
+            PrintProgress(i_Collision, entries_col);
 
             Collision collision = Collision::Read(collisions, i_Collision);
             if(CollisionMap[collision.ColID].size() == 0){
@@ -170,7 +199,9 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
             h1d_mult_vs_cent ->Fill(collision.Centrality,collision.Multiplicity);
             h1d_Ntrack_event ->Fill(CollisionMap[collision.ColID].size());
 
-            WriteQVectorCorrectionForEvent(collision.ColID, tracks, CollisionMap);
+            //is used here to write the q vector correction data into the output file of ReadTree
+            float Psi2_Corrected = GetEventPlaneInfo(collision.ColID, tracks , CollisionMap, false);
+            h1d_psi2_corrected->Fill(Psi2_Corrected);
 
             // loop over tracks for this event
             float pT_sum = 0.0;
@@ -181,9 +212,6 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
                 h1d_eta-> Fill(track.Eta);
                 h1d_phi-> Fill(track.Phi);
                 pT_sum += track.Pt;
-                /*USER TRACK CODE*/
-                //h2D_phi_vs_eta->Fill(track.Phi, track.Eta, track.Pt);
-                /*END USER TRACK CODE*/
             }
 
             h1d_pTsum ->Fill(pT_sum);
@@ -200,26 +228,35 @@ Int_t ReadTree(TString i_InputFile, TString i_OutputFile)
     /*USER FINISH CODE*/
     cout << "Total number of events: " << total_events << ", of which skipped " << total_skip << endl;
     cout << "Write ..." << endl;
+
+    //make output file since run number is known now
+    Collision collision = Collision::Read(collisions, 0);
+    TString RunNumberAsString;
+    RunNumberAsString.Form("%d", collision.RunNumber);
+    TString str_out =  "./" + (TString)(RunNumberAsString.Data()) + "_Calibration.root";
+    TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
+    OutputFile->cd();
+    cout << "Output file is " << str_out << endl;
     
     OutputFile->cd();
-    h1d_mult_event   ->Write();
-    h1d_Ntrack_event ->Write();
-    h1d_occ_event    ->Write();
-    h1d_occft0_event ->Write();
-    h1d_cent         ->Write();
-    h1d_psi2         ->Write();
-    h1d_psi3         ->Write();
-    h1d_mult_vs_cent ->Write();
-    h1d_pTsum        ->Write();
+    h1d_mult_event          ->Write();
+    h1d_Ntrack_event        ->Write();
+    h1d_occ_event           ->Write();
+    h1d_occft0_event        ->Write();
+    h1d_cent                ->Write();
+    h1d_psi2                ->Write();
+    h1d_psi2_corrected      ->Write();
+    h1d_psi3                ->Write();
+    h1d_mult_vs_cent        ->Write();
+    h1d_pTsum               ->Write();
 
-    h1d_pT           ->Write();
-    h1d_eta          ->Write();
-    h1d_phi          ->Write();
+    h1d_pT                  ->Write();
+    h1d_eta                 ->Write();
+    h1d_phi                 ->Write();
 
     ReadTreeDeInit();
 
     OutputFile->Close();
-    /*END USER FINISH CODE*/
 
     return 1;
 }
@@ -254,6 +291,10 @@ Int_t ReadTreeInit()
     h2D_Psi_pos_vs_Psi_neg = new TH2D("h2D_Psi_pos_vs_Psi_neg","h2D_Psi_pos_vs_Psi_neg",180,-90,90,180,-90,90);
     h2D_Q_vec_peak = new TH2D("h2D_Q_vec_peak","h2D_Q_vec_peak",1000,-0.5,0.5,1000,-0.5,0.5);
     h2D_Q_vec_tail = new TH2D("h2D_Q_vec_tail","h2D_Q_vec_tail",1000,-0.5,0.5,1000,-0.5,0.5);
+
+    //initialize variables
+    
+    QVectorCorrectionRetrieved = false;
     return 1;
 }
 
@@ -280,18 +321,19 @@ Int_t ReadTreeDeInit()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 FUNCTION NAME:
-GetEPInfo
+GetEventPlaneInfo
 
 INFO:
-Is called from ReadTree(), calculates the q(Q) vector to an event and writes it into overview histograms.
+Is called from the application. Returns the Q-vector corrected event plane for an event
 
 PARAMETERS:
 i_CollisionID: Collision of the to-investigate event
 i_TrackTree: Pointer to the tree of all tracks in the dataset
 i_CollisionMap: Hands over the collision map from ReadTrees()
+i_QVectorCorrectionFile: File and path to the Q vector correction file (generated by MakeQVectorCorrectionFile)
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap, TString DatasetOverviewFile)
+float GetEventPlaneInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap, TString i_QVectorCorrectionFile)
 {
     #define DEF_DCA_Cutoff 10.0
 
@@ -299,7 +341,6 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
     vector<TVector3>vec_TV3_Qvec_eta[2];
     vec_TV3_Qvec_eta[0].clear();
     vec_TV3_Qvec_eta[1].clear();
-    int AcceptedParticleCounter = 0;
 
     for(int i_Track = 0; i_Track < i_CollisionMap[i_CollisionID].size(); i_Track++)
     {
@@ -334,11 +375,7 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
             }
         }
 
-        AcceptedParticleCounter++;
     }
-
-    /////////////DESCRIBE
-
 
     float Psi_full_r  = 0.0;
     TVector3 TV3_sum_Qvec_eta[2];
@@ -349,11 +386,41 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
     Psi_pos_neg[1] = 0.0;
     Psi_pos_neg_eta[0] = 0.0;
     Psi_pos_neg_eta[1] = 0.0;
-    Double_t Qvec_correction_qx[2] = {0.0};
-    Double_t Qvec_correction_qy[2] = {0.0};
     Double_t QA_vec[2]= {0.0};
     Double_t QB_vec[2]= {0.0};
     Double_t Q_vec[2]= {0.0};
+
+    if(!QVectorCorrectionFound)
+    {
+        //open Q vector correction file
+        TFile *QVectorCorrectionFile = TFile::Open(i_QVectorCorrectionFile);
+
+        if (!QVectorCorrectionFile || QVectorCorrectionFile->IsZombie()) {
+            PrintInfo("Error while opening the Q vector correction file! Program will be halted!");
+            while(1);
+        }
+
+        h2D_qx_qy_for_EP_pos_eta = (TH2D*)QVectorCorrectionFile->Get("h2D_qx_qy_for_EP_pos_eta");
+        if(!h2D_qx_qy_for_EP_pos_eta)
+        {
+            PrintInfo("Error while opening the Q vector correction histogram! Program will be halted!");
+            while(1);
+        }
+        h2D_qx_qy_for_EP_neg_eta = (TH2D*)QVectorCorrectionFile->Get("h2D_qx_qy_for_EP_neg_eta");
+        if(!h2D_qx_qy_for_EP_neg_eta)
+        {
+            PrintInfo("Error while opening the Q vector correction histogram! Program will be halted!");
+            while(1);
+        }
+
+        Qvec_correction_qx[0] = h2D_qx_qy_for_EP_pos_eta -> GetMean(1);
+        Qvec_correction_qy[0] = h2D_qx_qy_for_EP_pos_eta -> GetMean(2);
+        Qvec_correction_qx[1] = h2D_qx_qy_for_EP_neg_eta -> GetMean(1);
+        Qvec_correction_qy[1] = h2D_qx_qy_for_EP_neg_eta -> GetMean(2);
+
+        QVectorCorrectionFound = true;
+
+    }
 
     for(Int_t i_eta_pos_neg = 0; i_eta_pos_neg <= 1; i_eta_pos_neg++)
     {
@@ -365,40 +432,37 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
         Double_t weight_inv_phi = 1.0;
         Double_t bin_content  = 0.0;
         Int_t    N_tracks = 0;
+
+
         for(Int_t i_Qvec = 0; i_Qvec < (Int_t)vec_TV3_Qvec_eta[i_eta_pos_neg].size(); i_Qvec++)
         {
             TV3_sum_Qvec_eta[i_eta_pos_neg] += vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec];
             weight    = vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec].Perp(); // pt weight
             track_phi = vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec].Phi(); // track azimuthal angle
-            
 
-            //cout << "Track phi: " << TMath::RadToDeg()*track_phi<<", bin_content: "<<bin_content<<", weight_inv_phi: "<< weight_inv_phi <<endl;
-            Psi_num += (weight_inv_phi*weight*TMath::Sin(harmonic*track_phi));
-            Psi_den += (weight_inv_phi*weight*TMath::Cos(harmonic*track_phi));
+            Psi_den += ((weight_inv_phi*weight*TMath::Sin(harmonic*track_phi)) - Qvec_correction_qy[i_eta_pos_neg]);
+            Psi_num += ((weight_inv_phi*weight*TMath::Cos(harmonic*track_phi)) - Qvec_correction_qx[i_eta_pos_neg]);
             N_tracks++;
-            //cout << N_tracks << ", Psi_num: " << Psi_num << ", Psi_den: " << Psi_den << ", weight: "<< weight <<", track_phi: " << track_phi << ", px: " << vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec][0]<< ", py: " << vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec][1] <<endl;
         }
-        //if(i_eta_pos_neg == 0) cout <<"eta positive: "<< ", N_tracks: " << N_tracks << endl;
-        //if(i_eta_pos_neg == 1) cout <<"eta negative: "<< ", N_tracks: " << N_tracks << endl;
 
         if(i_eta_pos_neg == 0)
         {
-            QA_vec[0] = Psi_den/N_tracks;
-            QB_vec[0] = Psi_num/N_tracks;
+            QA_vec[0] = Psi_num/N_tracks;
+            QB_vec[0] = Psi_den/N_tracks;
             Q_vec[0]  = TMath::Sqrt((QA_vec[0]*QA_vec[0])+(QB_vec[0]*QB_vec[0]));
-            h2D_qx_qy_for_EP_pos_eta   ->Fill(Psi_den/N_tracks,Psi_num/N_tracks);
+            h2D_qx_qy_for_EP_pos_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
         }
         else if(i_eta_pos_neg == 1)
         {
-            QA_vec[1] = Psi_den/N_tracks;
-            QB_vec[1] = Psi_num/N_tracks;
+            QA_vec[1] = Psi_num/N_tracks;
+            QB_vec[1] = Psi_den/N_tracks;
             Q_vec[1]  = TMath::Sqrt((QA_vec[1]*QA_vec[1])+(QB_vec[1]*QB_vec[1]));
-            h2D_qx_qy_for_EP_neg_eta   ->Fill(Psi_den/N_tracks,Psi_num/N_tracks);
+            h2D_qx_qy_for_EP_neg_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
         }
 
         Psi_pos_neg[i_eta_pos_neg] = TMath::RadToDeg()*TMath::ATan2(Psi_num,Psi_den)/harmonic;
-        //if(( (TMath::RadToDeg()*track_phi) > 120) && (( TMath::RadToDeg()*track_phi) < 130)) cout << "Psi_pos_neg: "<< Psi_pos_neg[i_eta_pos_neg] << ", i_eta_pos_neg: " <<i_eta_pos_neg <<", phi_track: " <<track_phi<<endl;
     }
+
 
     h2D_Psi_pos_vs_Psi_neg ->Fill(Psi_pos_neg[1],Psi_pos_neg[0]);
     vec_h_psi_test[0]->Fill(Psi_pos_neg[0]);
@@ -417,11 +481,6 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
         h_EP_peak[1]->Fill(Psi_pos_neg[1]);
     }
 
-    if(Psi_pos_neg[0] - Psi_pos_neg[1] > 90.0) Psi_pos_neg[1]  -= 180.0;
-    else
-    {
-        if(Psi_pos_neg[1] - Psi_pos_neg[0] > 90.0) Psi_pos_neg[0]  -= 180.0;
-    }
 
     for(Int_t i_eta = 0 ; i_eta < 2; i_eta++)
     {
@@ -433,26 +492,41 @@ Int_t GetEPInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, s
     if(fabs(Psi_diff > 60)) h2D_Q_vec_tail->Fill(Q_vec[0], Q_vec[1]);
 
 
-    return 1;
+    if(Psi_pos_neg[0] - Psi_pos_neg[1] > 90.0) Psi_pos_neg[1]  -= 180.0;
+    else
+    {
+        if(Psi_pos_neg[1] - Psi_pos_neg[0] > 90.0) Psi_pos_neg[0]  -= 180.0;
+    }
+
+    Psi_full_r = (Psi_pos_neg[0] + Psi_pos_neg[1])/2.0;
+
+    if(Psi_full_r > 90.0)  Psi_full_r -= 180.0;
+    else if(Psi_full_r < -90.0) Psi_full_r += 180.0;
+
+    //return average event plane
+    return 2*Pi*Psi_full_r/360.0;
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 FUNCTION NAME:
-WriteQVectorCorrectionForEvent
+WriteQVectorCorrectionFile
 
 INFO:
-Is called from ReadTree(), calculates the q(Q) vector to an event and writes it into overview histograms.
+Is called from ReadTree(), calculates the q(Q) vector to an event and writes the Q vector corrected event data
+into overview histograms
 
 PARAMETERS:
 i_CollisionID: Collision of the to-investigate event
 i_TrackTree: Pointer to the tree of all tracks in the dataset
 i_CollisionMap: Hands over the collision map from ReadTrees()
-i_
+i_MakeQVectorCorrection: if true, the Q vector correction is made. If false, the resulting EP info is Q vector corrected
+OUTPUT:
+The function returns the Q vector corrected event plane angle for the current event (currently only psi_2)
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap TString i_DatasetOverviewFile = "")
+float WriteQVectorCorrectionFile(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap, bool i_MakeQVectorCorrection)
 {
     #define DEF_DCA_Cutoff 10.0
 
@@ -460,7 +534,6 @@ Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std:
     vector<TVector3>vec_TV3_Qvec_eta[2];
     vec_TV3_Qvec_eta[0].clear();
     vec_TV3_Qvec_eta[1].clear();
-    int AcceptedParticleCounter = 0;
 
     for(int i_Track = 0; i_Track < i_CollisionMap[i_CollisionID].size(); i_Track++)
     {
@@ -495,11 +568,7 @@ Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std:
             }
         }
 
-        AcceptedParticleCounter++;
     }
-
-    /////////////DESCRIBE
-
 
     float Psi_full_r  = 0.0;
     TVector3 TV3_sum_Qvec_eta[2];
@@ -510,11 +579,32 @@ Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std:
     Psi_pos_neg[1] = 0.0;
     Psi_pos_neg_eta[0] = 0.0;
     Psi_pos_neg_eta[1] = 0.0;
-    Double_t Qvec_correction_qx[2] = {0.0};
-    Double_t Qvec_correction_qy[2] = {0.0};
     Double_t QA_vec[2]= {0.0};
     Double_t QB_vec[2]= {0.0};
     Double_t Q_vec[2]= {0.0};
+    Qvec_correction_qx[0] = 0;
+    Qvec_correction_qx[1] = 0;
+    Qvec_correction_qy[0] = 0;
+    Qvec_correction_qy[1] = 0;
+
+    //check if the Q vector correction has been done yet
+    if(!i_MakeQVectorCorrection && !QVectorCorrectionFound && h2D_qx_qy_for_EP_neg_eta->GetEntries() != 0 && h2D_qx_qy_for_EP_pos_eta->GetEntries() != 0)
+    {
+        QVectorCorrectionFound = true;
+
+        Qvec_correction_qx[0] = h2D_qx_qy_for_EP_pos_eta -> GetMean(1);
+        Qvec_correction_qy[0] = h2D_qx_qy_for_EP_pos_eta -> GetMean(2);
+        Qvec_correction_qx[1] = h2D_qx_qy_for_EP_neg_eta -> GetMean(1);
+        Qvec_correction_qy[1] = h2D_qx_qy_for_EP_neg_eta -> GetMean(2);
+
+    }
+
+    //catch Q-vector uncorrected case
+    if(!i_MakeQVectorCorrection && (h2D_qx_qy_for_EP_neg_eta->GetEntries() == 0 || h2D_qx_qy_for_EP_pos_eta->GetEntries() == 0))
+    {
+        PrintInfo("NO Q VECTOR CORRECTION FOUND. ANALYSIS WILL BE UNCALIBRATED. \n CHECK TO FIRST CALL GetEventPlaneInfo WITH Q VECTOR CORRECTION ORDER. \n PROGRAM WILL BE HALTED");
+            while(1);
+    }
 
     for(Int_t i_eta_pos_neg = 0; i_eta_pos_neg <= 1; i_eta_pos_neg++)
     {
@@ -526,56 +616,66 @@ Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std:
         Double_t weight_inv_phi = 1.0;
         Double_t bin_content  = 0.0;
         Int_t    N_tracks = 0;
+
+
         for(Int_t i_Qvec = 0; i_Qvec < (Int_t)vec_TV3_Qvec_eta[i_eta_pos_neg].size(); i_Qvec++)
         {
             TV3_sum_Qvec_eta[i_eta_pos_neg] += vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec];
             weight    = vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec].Perp(); // pt weight
             track_phi = vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec].Phi(); // track azimuthal angle
-            
 
-            //cout << "Track phi: " << TMath::RadToDeg()*track_phi<<", bin_content: "<<bin_content<<", weight_inv_phi: "<< weight_inv_phi <<endl;
-            Psi_num += (weight_inv_phi*weight*TMath::Sin(harmonic*track_phi));
-            Psi_den += (weight_inv_phi*weight*TMath::Cos(harmonic*track_phi));
+            Psi_den += ((weight_inv_phi*weight*TMath::Sin(harmonic*track_phi)) - Qvec_correction_qy[i_eta_pos_neg]);
+            Psi_num += ((weight_inv_phi*weight*TMath::Cos(harmonic*track_phi)) - Qvec_correction_qx[i_eta_pos_neg]);
             N_tracks++;
-            //cout << N_tracks << ", Psi_num: " << Psi_num << ", Psi_den: " << Psi_den << ", weight: "<< weight <<", track_phi: " << track_phi << ", px: " << vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec][0]<< ", py: " << vec_TV3_Qvec_eta[i_eta_pos_neg][i_Qvec][1] <<endl;
         }
-        //if(i_eta_pos_neg == 0) cout <<"eta positive: "<< ", N_tracks: " << N_tracks << endl;
-        //if(i_eta_pos_neg == 1) cout <<"eta negative: "<< ", N_tracks: " << N_tracks << endl;
-
-        if(i_eta_pos_neg == 0)
+        if(i_MakeQVectorCorrection)
         {
-            QA_vec[0] = Psi_den/N_tracks;
-            QB_vec[0] = Psi_num/N_tracks;
-            Q_vec[0]  = TMath::Sqrt((QA_vec[0]*QA_vec[0])+(QB_vec[0]*QB_vec[0]));
-            h2D_qx_qy_for_EP_pos_eta   ->Fill(Psi_den/N_tracks,Psi_num/N_tracks);
+            if(i_eta_pos_neg == 0)
+            {
+                QA_vec[0] = Psi_num/N_tracks;
+                QB_vec[0] = Psi_den/N_tracks;
+                Q_vec[0]  = TMath::Sqrt((QA_vec[0]*QA_vec[0])+(QB_vec[0]*QB_vec[0]));
+                h2D_qx_qy_for_EP_pos_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
+            }
+            else if(i_eta_pos_neg == 1)
+            {
+                QA_vec[1] = Psi_num/N_tracks;
+                QB_vec[1] = Psi_den/N_tracks;
+                Q_vec[1]  = TMath::Sqrt((QA_vec[1]*QA_vec[1])+(QB_vec[1]*QB_vec[1]));
+                h2D_qx_qy_for_EP_neg_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
+            }
         }
-        else if(i_eta_pos_neg == 1)
-        {
-            QA_vec[1] = Psi_den/N_tracks;
-            QB_vec[1] = Psi_num/N_tracks;
-            Q_vec[1]  = TMath::Sqrt((QA_vec[1]*QA_vec[1])+(QB_vec[1]*QB_vec[1]));
-            h2D_qx_qy_for_EP_neg_eta   ->Fill(Psi_den/N_tracks,Psi_num/N_tracks);
-        }
-
         Psi_pos_neg[i_eta_pos_neg] = TMath::RadToDeg()*TMath::ATan2(Psi_num,Psi_den)/harmonic;
-        //if(( (TMath::RadToDeg()*track_phi) > 120) && (( TMath::RadToDeg()*track_phi) < 130)) cout << "Psi_pos_neg: "<< Psi_pos_neg[i_eta_pos_neg] << ", i_eta_pos_neg: " <<i_eta_pos_neg <<", phi_track: " <<track_phi<<endl;
     }
 
-    h2D_Psi_pos_vs_Psi_neg ->Fill(Psi_pos_neg[1],Psi_pos_neg[0]);
-    vec_h_psi_test[0]->Fill(Psi_pos_neg[0]);
-    vec_h_psi_test[1]->Fill(Psi_pos_neg[1]);
-    h_Psi_SE_EP_resolution ->Fill(TMath::Cos(2*(Psi_pos_neg[1]-Psi_pos_neg[0])));
-
-
-    Psi_pos_neg_eta[0] = Psi_pos_neg[0];
-    Psi_pos_neg_eta[1] = Psi_pos_neg[1];
-    Double_t Psi_diff =  Psi_pos_neg[0] - Psi_pos_neg[1];
-    if(Psi_diff < -90.0) Psi_diff += 180.0;
-    if(Psi_diff > +90.0) Psi_diff -= 180.0;
-    if(fabs(Psi_diff < 20))
+    if(i_MakeQVectorCorrection)
     {
-        h_EP_peak[0]->Fill(Psi_pos_neg[0]);
-        h_EP_peak[1]->Fill(Psi_pos_neg[1]);
+        h2D_Psi_pos_vs_Psi_neg ->Fill(Psi_pos_neg[1],Psi_pos_neg[0]);
+        vec_h_psi_test[0]->Fill(Psi_pos_neg[0]);
+        vec_h_psi_test[1]->Fill(Psi_pos_neg[1]);
+        h_Psi_SE_EP_resolution ->Fill(TMath::Cos(2*(Psi_pos_neg[1]-Psi_pos_neg[0])));
+
+
+        Psi_pos_neg_eta[0] = Psi_pos_neg[0];
+        Psi_pos_neg_eta[1] = Psi_pos_neg[1];
+        Double_t Psi_diff =  Psi_pos_neg[0] - Psi_pos_neg[1];
+        if(Psi_diff < -90.0) Psi_diff += 180.0;
+        if(Psi_diff > +90.0) Psi_diff -= 180.0;
+        if(fabs(Psi_diff < 20))
+        {
+            h_EP_peak[0]->Fill(Psi_pos_neg[0]);
+            h_EP_peak[1]->Fill(Psi_pos_neg[1]);
+        }
+
+
+        for(Int_t i_eta = 0 ; i_eta < 2; i_eta++)
+        {
+            if(fabs(Psi_diff < 20))  h2D_QA_vs_QB_peak[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
+            if(fabs(Psi_diff > 60))  h2D_QA_vs_QB_tail[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
+        }
+        
+        if(fabs(Psi_diff < 20)) h2D_Q_vec_peak->Fill(Q_vec[0], Q_vec[1]);
+        if(fabs(Psi_diff > 60)) h2D_Q_vec_tail->Fill(Q_vec[0], Q_vec[1]);
     }
 
     if(Psi_pos_neg[0] - Psi_pos_neg[1] > 90.0) Psi_pos_neg[1]  -= 180.0;
@@ -584,15 +684,42 @@ Int_t WriteQVectorCorrectionForEvent(int i_CollisionID, TTree* i_TrackTree, std:
         if(Psi_pos_neg[1] - Psi_pos_neg[0] > 90.0) Psi_pos_neg[0]  -= 180.0;
     }
 
-    for(Int_t i_eta = 0 ; i_eta < 2; i_eta++)
+    Psi_full_r = (Psi_pos_neg[0] + Psi_pos_neg[1])/2.0;
+
+    if(Psi_full_r > 90.0)  Psi_full_r -= 180.0;
+    else if(Psi_full_r < -90.0) Psi_full_r += 180.0;
+
+    //return average event plane
+    return 2*Pi*Psi_full_r/360.0;
+}
+
+void PrintProgress(int i_Iteration, int i_Total)
+{
+
+    int barWidth = 100;
+    int ItemsPerLine = i_Total/barWidth;
+
+    if( ItemsPerLine != 0 && i_Iteration % ItemsPerLine == 0)
     {
-        if(fabs(Psi_diff < 20))  h2D_QA_vs_QB_peak[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
-        if(fabs(Psi_diff > 60))  h2D_QA_vs_QB_tail[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
+        std::cout << "[";
+        int pos = i_Iteration/ItemsPerLine;
+        for (int i = 0; i < barWidth; ++i) {
+            if (i < pos) std::cout << "=";
+            else if (i == pos) std::cout << ">";
+            else std::cout << " ";
+        }
+        cout << "] " << int((float)i_Iteration/(float)i_Total * 100.0) << " %\r";
+        std::cout.flush();
+
+        std::cout << std::endl;
     }
-    
-    if(fabs(Psi_diff < 20)) h2D_Q_vec_peak->Fill(Q_vec[0], Q_vec[1]);
-    if(fabs(Psi_diff > 60)) h2D_Q_vec_tail->Fill(Q_vec[0], Q_vec[1]);
 
+}
 
-    return 1;
+void PrintInfo(TString i_String)
+{
+    cout << endl;
+    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+    cout << i_String << endl;
+    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 }

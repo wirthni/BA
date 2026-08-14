@@ -18,10 +18,17 @@ TH2D* h2D_QA_vs_QB_tail[2];
 TH2D* h2D_Q_vec_peak;
 TH2D* h2D_Q_vec_tail;
 
+//Variables that are accessed by different methods and have to be available globally
+Double_t Qvec_correction_qx[2] = {0.0};
+Double_t Qvec_correction_qy[2] = {0.0};
+bool QVectorCorrectionRetrieved;
+
 Int_t ReadTreeInit();
 Int_t ReadTreeDeInit();
-Int_t WriteQVectorCorrectionForEvent(int CollisionID, TTree* TrackTree, std::unordered_map<int, std::vector<int>> CollisionMap);
-
+void PrintProgress(int iEvent, int i_Total);
+void PrintInfo(TString i_String);
+float WriteQVectorCorrectionFile(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap, bool i_MakeQVectorCorrection);
+float GetEventPlaneInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap, TString i_QVectorCorrectionFile);
 Float_t get_px_Particle(Long64_t Particle_p);
 Float_t get_py_Particle(Long64_t Particle_p);
 Float_t get_pz_Particle(Long64_t Particle_p);
