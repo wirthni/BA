@@ -25,7 +25,6 @@ bool FillQVectorCorrectionHistos_QVectorCorrectionRetrieved;
 bool GetEventPlaneInfo_QVectorCorrectionRetrieved;
 
 Int_t ReadTreeInit();
-Int_t ReadTreeDeInit();
 void PrintProgress(int iEvent, int i_Total);
 void PrintInfo(TString i_String);
 float FillQVectorCorrectionHistos(int i_CollisionID, TTree* i_TrackTree, std::unordered_map<int, std::vector<int>> i_CollisionMap);
