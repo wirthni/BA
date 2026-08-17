@@ -1,10 +1,21 @@
+#ifndef METHODS_H
+#define METHODS_H
 #include <Math/Vector4D.h>
 #include <unordered_map>
 #include <vector>
 #include "functions.h"
 #include "StJetTrackEvent.h"
 #include "StJetTrackEventLinkDef.h"
-#include "TVector3.h"
+#include "TClassRef.h"
+#include <algorithm>
+#include <cstdlib>
+#include "fastjet/config.h"
+#include "fastjet/ClusterSequenceArea.hh"
+#include "fastjet/PseudoJet.hh"
+#include "fastjet/Selector.hh"
+#include "fastjet/tools/Subtractor.hh"
+#include "fastjet/tools/JetMedianBackgroundEstimator.hh"
+#endif
 
 // Histos that are accessed by different methods and have to be available globally
 TH2D* h2D_qx_qy_for_EP_pos_eta;

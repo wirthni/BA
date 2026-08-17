@@ -60,7 +60,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     long NoOfPosPulls = 0;
     long NoOfNegPulls = 0;
 
-    #define DEF_PYTHIAOversampling 20
+    #define DEF_PYTHIAOversampling 100
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
     #define DEF_OutputEventOverviews false 
@@ -98,7 +98,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     TH2D* h2D_PhiLeading_vs_Shift = new TH2D("h2D_PhiLeading_vs_Shift","h2D_PhiLeading_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
     TH2D* h2D_V2Phase_vs_Shift = new TH2D("h2D_V2Phase_vs_Shift","h2D_V2Phase_vs_Shift",DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * Pi, -Pi/2, Pi/2);
     TH2D* h2D_Pt_vs_v2 = new TH2D("h1D_Pt_vs_v2", "h1D_Pt_vs_v2", 300, 0, 100, 100, -0.1, 0.1);
-     
+    TH1D* h1D_AllJetsEta_PYTHIA = new TH1D("h1D_AllJetsEta_PYTHIA", "h1D_AllJetsEta_PYTHIA", 20, -0.9, 0.9);
+    TH1D* h1D_AllJetsEta_HYBRID = new TH1D("h1D_AllJetsEta_HYBRID", "h1D_AllJetsEta_HYBRID", 20, -0.9, 0.9);
+    
     
 
     TRandom TR_Eta;
@@ -405,6 +407,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 JetVector = FindJets(ParticleVector);
             }
 
+            if(JetVector.size() > 0)
+            {
+                //log where jets have been found in eta
+                for(int iJet = 0; iJet < JetVector.size(); iJet++)
+                {
+                    h1D_AllJetsEta_PYTHIA->Fill(JetVector[iJet].eta());
+                }
+            }
+
             bool m_SkipEPShiftAnalysis = true;
             float ClosestV3MaximumPhi = 0;//save for later
             float LeadingDistClosestV2Max = 0;
@@ -597,6 +608,14 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 JetVector = FindJets(ParticleVector);
             }
 
+            if(JetVector.size() > 0)
+            {
+                //log where jets have been found in eta
+                for(int iJet = 0; iJet < JetVector.size(); iJet++)
+                {
+                    h1D_AllJetsEta_HYBRID->Fill(JetVector[iJet].eta());
+                }
+            }
             
 
             if(!m_SkipEPShiftAnalysis)
@@ -879,6 +898,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h3D_LeadDist_vs_PhiShift_vs_Pt_V2->Scale(1./(h3D_LeadDist_vs_PhiShift_vs_Pt_V2->GetXaxis()->GetBinWidth(0) * h3D_LeadDist_vs_PhiShift_vs_Pt_V2->GetYaxis()->GetBinWidth(0) * h3D_LeadDist_vs_PhiShift_vs_Pt_V2->GetZaxis()->GetBinWidth(0)));
     h3D_LeadDist_vs_PhiShift_vs_Pt_V3->Scale(1./(h3D_LeadDist_vs_PhiShift_vs_Pt_V3->GetXaxis()->GetBinWidth(0) * h3D_LeadDist_vs_PhiShift_vs_Pt_V3->GetYaxis()->GetBinWidth(0) * h3D_LeadDist_vs_PhiShift_vs_Pt_V3->GetZaxis()->GetBinWidth(0)));
 
+    h1D_AllJetsEta_PYTHIA->Scale(1./h1D_AllJetsEta_PYTHIA->GetXaxis()->GetBinWidth(1));
+    h1D_AllJetsEta_HYBRID->Scale(1./h1D_AllJetsEta_HYBRID->GetXaxis()->GetBinWidth(1));
+
     //normalize histograms if necessary
 
     //put axis labels on all histograms
@@ -1010,6 +1032,18 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h3D_LeadDist_vs_PhiShift_vs_Pt_V3->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h3D_LeadDist_vs_PhiShift_vs_Pt_V3->GetZaxis()->SetTitle("p_t^{Leading}[GeV]");
 
+    h1D_AllJetsEta_PYTHIA->SetTitle("Pseudorapidity of all PYTHIA jets");
+    h1D_AllJetsEta_PYTHIA->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_AllJetsEta_PYTHIA->GetXaxis()->SetTitle("#eta");
+    h1D_AllJetsEta_PYTHIA->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_AllJetsEta_PYTHIA->GetYaxis()->SetTitle("counts");
+
+    h1D_AllJetsEta_HYBRID->SetTitle("Pseudorapidity of all HYBRID jets");
+    h1D_AllJetsEta_HYBRID->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_AllJetsEta_HYBRID->GetXaxis()->SetTitle("#eta");
+    h1D_AllJetsEta_HYBRID->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_AllJetsEta_HYBRID->GetYaxis()->SetTitle("counts");
+
     //write global results
     Results->cd();
     h2D_pt_vs_eta_LargeGap->Write();
@@ -1034,6 +1068,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     h2D_PhiLeading_vs_Shift->Write();
     h2D_V2Phase_vs_Shift->Write();
     h2D_Pt_vs_v2->Write();
+    h1D_AllJetsEta_PYTHIA->Write();
+    h1D_AllJetsEta_HYBRID->Write();
 
     OutputFile ->Close();
     
@@ -1511,11 +1547,10 @@ double Function_FlowByPtAndEta(double x, double params[])
     double Eta = params[1];
     double FlowParams;
     //an approximation for pions(+) @Nadine Gruenwald
-    FlowParams = 0.063 * pow(x, 1.6) * exp(-0.47*x)
-                -0.09/(1 + exp(-(x-10)));
+    FlowParams = 0.063 * pow(x, 1.6) * exp(-0.47*x);
 
-    //now reduce based on eta, just an approximation
-    //FlowParams *= exp(-0.005*pow(Eta,2));
+    //now reduce based on eta, a fit to https://www.hepdata.net/record/ins1456145 from -1.25 <= x <= 1.25
+    FlowParams *= (1.0 - 0.105*pow(Eta, 2));
 
     return FlowParams;
 }

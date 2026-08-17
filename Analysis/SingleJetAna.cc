@@ -1,15 +1,19 @@
-#include "./SingleJetAna.h"
+#include "./ReadTree.cc"
+
+using namespace fastjet;
+using namespace std;
+
+vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles);
 
 /* Parameters:
 i_InputFile: Format xxx.root
-i_OutputFile: Format xxx
-i_NoOfEvents: if not -1, the analysis only goes over the first i_NoOfEvents events
 */
-Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx", int i_NoOfEvents = -1)
+Int_t SingleJetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
+    bool i_MakeCrosscheckAnalysis = false;
     bool i_UseHadronInstead = false;
-    bool i_UseAllDFs = false;
+    int i_NoOfEvents = -1;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -20,7 +24,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     #define DEF_JetLeadingPt 30
     #define DEF_HadLeadingPt 30
     #define DEF_BackgroundLimit 7.0 //GeV
-    #define DEF_CorrelationMinPt 1.0
+    #define DEF_CorrelationMinPt 0.0
     #define DEF_CorrelationMaxPt 2.0
     #define DEF_MaxPartilclesPerJet 200
     #define DEF_MaxJetPt 150.0
@@ -35,6 +39,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     int TotalEvents = 0;
     int ProcessedEvents = 0;
     int EventsSkipped   = 0;
+    int RunNumber = -1;
 
     //set jet/had pt limit
     double LeadingPtLimit = DEF_JetLeadingPt;
@@ -47,15 +52,6 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     Long64_t SmallGapEventCounter = 0;
 
     /*END USER VARIABLES*/
-
-    //Generate output file
-    TString str_out = i_DFName;
-    str_out += ".root";
-    TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
-    OutputFile->cd();
-    cout << "Output file is " << str_out << endl;
-    TDirectory *EventHistos = OutputFile->mkdir("Event Histos");
-    TDirectory *Results = OutputFile->mkdir("Results");
 
     //Get data from tree file
     TFile* file = TFile::Open(i_InputFile);
@@ -73,9 +69,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 DEF_BinningPerUnit * 2*DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
                 DEF_BinningPerUnit * 2 * DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize, 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
     TH1F* h1F_RadialCorrelationDifference = new TH1F("h1F_RadialCorrelationDifference", "h1F_RadialCorrelationDifference", 100, 0, DEF_RecoilCorrelationFrameSize);
-    TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 100, 0, 500);
-    TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 100, 0, 500);
-    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 100, -50, 50);
+    TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 100, 0, 300);
+    TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 100, 0, 300);
+    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 1000, -500, 500);
     TH1F* h1F_NoOfHighPtParticles = new TH1F("h1F_NoOfHighPtParticles", "h1F_NoOfHighPtParticles", 50, 0, 50);
     int AnalyzedEventsCounter = 0;
 
@@ -85,7 +81,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     TKey *key;
     while ((key = (TKey *)next())) {
         TString DFName = key->GetName();
-        if(DFName != i_DFName && !i_UseAllDFs) continue;
+        //if(DFName != i_DFName) continue;
         TClass *cl = gROOT->GetClass(key->GetClassName());
         if (!cl->InheritsFrom("TDirectory"))
             continue;
@@ -187,6 +183,23 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
         int HighPtEventCounter = 0;
         int PairedEventsCounter = 0;
 
+        //get run number to retrieve event plane correction file
+        Collision collision = Collision::Read(collisions, 0);
+        RunNumber = collision.RunNumber;
+        TString RunNumberAsString;
+        RunNumberAsString.Form("%d", RunNumber);
+
+        //differ between the LHC passes
+        TString QVectorCorrectionFileName;
+        if(i_InputFile.Contains("LHC23"))
+        {
+            QVectorCorrectionFileName =  "./RUN3_Data/QVecCalibRoots/LHC23_PbPb_pass5/" + (TString)RunNumberAsString.Data() + "_Calibration.root";
+        }
+        else if(i_InputFile.Contains("LHC25"))
+        {
+            QVectorCorrectionFileName =  "./RUN3_Data/QVecCalibRoots/LHC25_PbPb_pass1/" + (TString)RunNumberAsString.Data() + "_Calibration.root";
+        }
+        
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
@@ -222,38 +235,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
             if(EventProperties[iEvent].HighPtParticles.size() >= 1)EventProperties[iEvent].HighPtParticles = sorted_by_pt(EventProperties[iEvent].HighPtParticles);
 
             EventProperties[iEvent].Multiplicity = CollisionMap[collision.ColID].size();
-            EventProperties[iEvent].Psi2 = collision.Psi2;
 
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            /*
-            /
-            /                                                     
-            /                                           Output event overviews  
-            /                                                     
-            /                                                     
-            /                                                     
-            /
-            /                                                    
-            /
-            /
-            /
-            *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            //output event overviews for debug reasons
-            if(DEF_OutputEventOverviews)
-            {
-                TH2D* h2D_eta_vs_phi = new TH2D("h2D_eta_vs_phi","h2D_eta_vs_phi",DEF_BinningPerUnit * 1.8,-0.9,0.9,DEF_BinningPerUnit * 2 * Pi,-Pi,Pi);//temporarily filled
-
-                for(int iParticle = 0; iParticle < ParticleVector[collision.ColID].size(); iParticle++)
-                {
-                    h2D_eta_vs_phi->Fill(ParticleVector[collision.ColID][iParticle].eta(), ParticleVector[collision.ColID][iParticle].phi_std(), ParticleVector[collision.ColID][iParticle].pt());
-                }
-
-                EventHistos->cd();
-                h2D_eta_vs_phi->Write();
-                delete(h2D_eta_vs_phi);
-
-            }
+            //event plane correction
+            EventProperties[iEvent].Psi2 = GetEventPlaneInfo(collision.ColID, tracks, CollisionMap, QVectorCorrectionFileName);
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
@@ -278,6 +262,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
             //check that there is no jet close to the direct recoil site
             float RecoilSiteEta = EventProperties[iEvent].HighPtParticles[0].eta();
+            if(i_MakeCrosscheckAnalysis) RecoilSiteEta*= -1;
+
             float RecoilSitePhi;
             if(EventProperties[iEvent].HighPtParticles[0].phi_std() >= 0)
             {
@@ -335,7 +321,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
                 if(iReferenceEvent == iEvent) continue;
 
-                if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
+                //if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
 
                 float PsiDiff = EventProperties[iReferenceEvent].Psi2 - EventProperties[iEvent].Psi2;
                 if(PsiDiff > Pi) PsiDiff -= 2*Pi;
@@ -345,6 +331,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
 
                 //check that there is no jet in the reference event where the reference data is taken
                 float RecoilSiteEta = EventProperties[iEvent].HighPtParticles[0].eta();
+                if(i_MakeCrosscheckAnalysis) RecoilSiteEta*= -1;
+
                 float RecoilSitePhi;
                 if(EventProperties[iEvent].HighPtParticles[0].phi_std() >= 0)
                 {
@@ -412,8 +400,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
         for(int iEvent = 0; iEvent < entries_col; iEvent++)
         {
             //DEBUG
-            h1F_N_ev_minus_N_ref->Fill(EventProperties[iEvent].Multiplicity - EventProperties[EventProperties[iEvent].SuitableReferenceEvent].Multiplicity);
-
+            
             PrintProgress(iEvent, entries_col);
 
             Collision collision = Collision::Read(collisions, iEvent);
@@ -434,6 +421,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
             TH1F* h1F_RadialCorrelationRecoil = new TH1F("h1F_RadialCorrelationRecoil", "h1F_RadialCorrelationRecoil", 100, 0, DEF_RecoilCorrelationFrameSize);
     
             float RecoilSiteEta = EventProperties[iEvent].HighPtParticles[0].eta();
+            if(i_MakeCrosscheckAnalysis) RecoilSiteEta*= -1;
+
             float RecoilSitePhi;
             if(EventProperties[iEvent].HighPtParticles[0].phi_std() >= 0)
             {
@@ -447,6 +436,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
             int NoOfParticlesInRecoilAreaCounter = 0;
             int NoOfParticlesInReferenceAreaCounter = 0;
 
+            h1F_N_ev_minus_N_ref->Fill(EventProperties[iEvent].Multiplicity - EventProperties[EventProperties[iEvent].SuitableReferenceEvent].Multiplicity);
+
             for(const auto& particle : ParticleVector[collision.ColID])
             {
 
@@ -454,12 +445,15 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 float PhiDistance = particle.phi_std() - RecoilSitePhi;
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
-                float Distance = sqrt(pow(EtaDistance, 2) + pow(PhiDistance,2));
-                if(Distance <= DEF_RecoilCorrelationFrameSize)
+                float Distance = sqrt(powf(EtaDistance, 2) + powf(PhiDistance, 2));
+                if(EtaDistance <= DEF_RecoilCorrelationFrameSize && PhiDistance <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt) h1F_RadialCorrelationRecoil->Fill(Distance, 1.0/Distance);
-                    NoOfParticlesInRecoilAreaCounter++;
+                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
+                    {
+                        NoOfParticlesInRecoilAreaCounter++;
+                        if(Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon) h1F_RadialCorrelationRecoil->Fill(Distance, 1.0/(2*Pi*Distance));
+                    }
                 }
             }
 
@@ -475,12 +469,15 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
                 float PhiDistance = particle.phi_std() - RecoilSitePhi;
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
-                float Distance = sqrt(pow(EtaDistance, 2) + pow(PhiDistance,2));
-                if(Distance <= DEF_RecoilCorrelationFrameSize)
+                float Distance = sqrt(powf(EtaDistance, 2) + powf(PhiDistance, 2));
+                if(EtaDistance <= DEF_RecoilCorrelationFrameSize && PhiDistance <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt) h1F_RadialCorrelationReference->Fill(Distance, 1.0/Distance);
-                    NoOfParticlesInReferenceAreaCounter++;
+                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
+                    {
+                        NoOfParticlesInReferenceAreaCounter++;
+                        if(Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon) h1F_RadialCorrelationReference->Fill(Distance, 1.0/(2*Pi*Distance));
+                    } 
                 }
             }
 
@@ -538,100 +535,61 @@ Int_t SingleJetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx",
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetZaxis()->SetTitle("p_T^{Track}[GeV]");
 
-    Results->cd();
-    h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Write();
-    h1F_NoOfParticlesInRecoilArea->Write(),
-    h1F_NoOfParticlesInReferenceArea->Write();
-    h1F_N_ev_minus_N_ref->Write();
-    h1F_NoOfHighPtParticles->Write();
-    h1F_RadialCorrelationDifference->Write();
+    //Generate output file
+    TString RunNumberAsString;
+    RunNumberAsString.Form("%d", RunNumber);
+    TString str_out =  "./" + (TString)RunNumberAsString.Data() + "_SingleJetAna.root";
 
-    OutputFile->Close();
+    TFile* OutputFile = TFile::Open(str_out);
+    if(!OutputFile)
+    {
+        OutputFile = new TFile(str_out.Data(),"RECREATE");
+        OutputFile->cd();
+        cout << "Output file is " << str_out << endl;
+        h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Write();
+        h1F_NoOfParticlesInRecoilArea->Write(),
+        h1F_NoOfParticlesInReferenceArea->Write();
+        h1F_N_ev_minus_N_ref->Write();
+        h1F_NoOfHighPtParticles->Write();
+        h1F_RadialCorrelationDifference->Write();
+
+        OutputFile->Close();
+    }
+    else
+    {
+        cout << "ADD TO EXISTING OUTPUT FILE" << endl;
+        OutputFile->cd();
+
+        TH3F* Summed_h3F_dphi_vs_deta_vs_pt_CorrelationDifference = (TH3F*) OutputFile->Get("h3F_dphi_vs_deta_vs_pt_CorrelationDifference");
+        Summed_h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Add(h3F_dphi_vs_deta_vs_pt_CorrelationDifference);
+
+        TH1F* Summed_h1F_NoOfParticlesInRecoilArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInRecoilArea");
+        Summed_h1F_NoOfParticlesInRecoilArea->Add(h1F_NoOfParticlesInRecoilArea);
+
+        TH1F* Summed_h1F_NoOfParticlesInReferenceArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInReferenceArea");
+        Summed_h1F_NoOfParticlesInReferenceArea->Add(h1F_NoOfParticlesInReferenceArea);
+
+        TH1F* Summed_h1F_N_ev_minus_N_ref = (TH1F*) OutputFile->Get("h1F_N_ev_minus_N_ref");
+        Summed_h1F_N_ev_minus_N_ref->Add(h1F_N_ev_minus_N_ref);
+
+        TH1F* Summed_h1F_NoOfHighPtParticles = (TH1F*) OutputFile->Get("h1F_NoOfHighPtParticles");
+        Summed_h1F_NoOfHighPtParticles->Add(h1F_NoOfHighPtParticles);
+
+        TH1F* Summed_h1F_RadialCorrelationDifference = (TH1F*) OutputFile->Get("h1F_RadialCorrelationDifference");
+        Summed_h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationDifference);
+
+
+        OutputFile = new TFile(str_out.Data(),"RECREATE");
+        Summed_h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Write();
+        Summed_h1F_NoOfParticlesInRecoilArea->Write();
+        Summed_h1F_NoOfParticlesInReferenceArea->Write();
+        Summed_h1F_N_ev_minus_N_ref->Write();
+        Summed_h1F_NoOfHighPtParticles->Write();
+        Summed_h1F_RadialCorrelationDifference->Write();
+
+        OutputFile->Close();
+
+    }
 
     return 1;
-}
-
-vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
-{
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-    /
-    /                                                           JET FINDER CODE 
-    /
-    /
-    /
-    /
-    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //DEFINITIONS
-    #define jet_radius 0.2
-    Double_t ghost_maxrap = 1.1;
-    Double_t eta_acceptance = 0.9;
-    double ptmin = 0.15;
-    JetDefinition jet_def(antikt_algorithm, jet_radius);
-    GhostedAreaSpec area_spec(ghost_maxrap);
-    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-
-    //CLUSTER JETS
-    ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
-    vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
-    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius);
-    vector<PseudoJet> FiducialJets = Fiducial_cut_selector(jets_all);
-
-    //ESTIMATE AND SUBTRACT BACKGROUND
-    Int_t Rem_n_hardest = 2;
-    double eBkg_R = 0.2;
-    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R);
-    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-    ClusterSequenceArea ClustSeqBg(vec_particles, jet_def_bkgd, area_def_bkgd);
-    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest));
-    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
-    bkgd_estimator.set_cluster_sequence(ClustSeqBg);
-    Subtractor subtractor(&bkgd_estimator);
-    subtractor.set_use_rho_m(true);
-    vector<PseudoJet> SubtractedJets = subtractor(FiducialJets);
-
-    //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
-    Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
-    {
-        if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
-        SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
-
-    }
-
-    return sorted_by_pt(SubtractedJets);
-
-}
-
-void PrintProgress(int iEvent, int i_Total)
-{
-
-    int barWidth = 100;
-    int ItemsPerLine = i_Total/barWidth;
-
-    if( ItemsPerLine != 0 && iEvent % ItemsPerLine == 0)
-    {
-        std::cout << "[";
-        int pos = iEvent/ItemsPerLine;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
-        }
-        cout << "] " << int((float)iEvent/(float)i_Total * 100.0) << " %\r";
-        std::cout.flush();
-
-        std::cout << std::endl;
-    }
-
-}
-
-void PrintInfo(TString i_String)
-{
-    cout << endl;
-    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
-    cout << i_String << endl;
-    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 }
