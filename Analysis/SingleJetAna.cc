@@ -321,7 +321,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
                 if(iReferenceEvent == iEvent) continue;
 
-                //if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
+                if(abs(EventProperties[iReferenceEvent].Multiplicity - EventProperties[iEvent].Multiplicity) > DEF_EventTolerance_Multiplicity) continue;
 
                 float PsiDiff = EventProperties[iReferenceEvent].Psi2 - EventProperties[iEvent].Psi2;
                 if(PsiDiff > Pi) PsiDiff -= 2*Pi;

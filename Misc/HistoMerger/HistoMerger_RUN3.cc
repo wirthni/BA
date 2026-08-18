@@ -78,23 +78,19 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
             {
                 continue;
             }
-            else
-            {
-                TFile *file = TFile::Open(DataFile);
-                if (!file || file->IsZombie())
-                {
-                    delete(file);
-                    continue;
-                }
-            }
-
+            
             TFile *file = TFile::Open(DataFile);
-
+            if (!file || file->IsZombie())
+            {
+                cout << "Skipping corrupt file!" << endl;
+                delete(file);
+                continue;
+            }
             
 
             TH3F* h2D_MergerScrawl = (TH3F*)file->Get( HistoVector[i]);
 
-            if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0 || h2D_MergerScrawl->IsZombie() || h2D_MergerScrawl->GetEntries() != h2D_MergerScrawl->GetEntries())
+            if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0 || h2D_MergerScrawl->IsZombie() || h2D_MergerScrawl->GetEntries() != h2D_MergerScrawl->GetEntries() || h2D_MergerScrawl->GetMean(1) != h2D_MergerScrawl->GetMean(1) )
             {
                 CorruptFilesCounter++;
                 cout << "Skipping corrupt or empty histo in file " << j << endl;
@@ -106,6 +102,7 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
             NoOfCombinedFiles++;
 
             file->Close();
+            delete(file);
 
         }
 
