@@ -30,8 +30,8 @@ TH2D* h2D_Q_vec_peak;
 TH2D* h2D_Q_vec_tail;
 
 //Variables that are accessed by different methods and have to be available globally
-Double_t Qvec_correction_qx[2] = {0.0};
-Double_t Qvec_correction_qy[2] = {0.0};
+Double_t Qvec_correction_qx[2];// = {0.0};
+Double_t Qvec_correction_qy[2];// = {0.0};
 bool FillQVectorCorrectionHistos_QVectorCorrectionRetrieved;
 bool GetEventPlaneInfo_QVectorCorrectionRetrieved;
 

@@ -693,52 +693,8 @@ float GetEventPlaneInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_ma
             N_tracks++;
         }
 
-        if(i_eta_pos_neg == 0)
-        {
-            QA_vec[0] = Psi_num/N_tracks;
-            QB_vec[0] = Psi_den/N_tracks;
-            Q_vec[0]  = TMath::Sqrt((QA_vec[0]*QA_vec[0])+(QB_vec[0]*QB_vec[0]));
-            h2D_qx_qy_for_EP_pos_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
-        }
-        else if(i_eta_pos_neg == 1)
-        {
-            QA_vec[1] = Psi_num/N_tracks;
-            QB_vec[1] = Psi_den/N_tracks;
-            Q_vec[1]  = TMath::Sqrt((QA_vec[1]*QA_vec[1])+(QB_vec[1]*QB_vec[1]));
-            h2D_qx_qy_for_EP_neg_eta   ->Fill(Psi_num/N_tracks,Psi_den/N_tracks);
-        }
-
         Psi_pos_neg[i_eta_pos_neg] = TMath::RadToDeg()*TMath::ATan2(Psi_num,Psi_den)/harmonic;
     }
-
-
-    h2D_Psi_pos_vs_Psi_neg ->Fill(Psi_pos_neg[1],Psi_pos_neg[0]);
-    vec_h_psi_test[0]->Fill(Psi_pos_neg[0]);
-    vec_h_psi_test[1]->Fill(Psi_pos_neg[1]);
-    h_Psi_SE_EP_resolution ->Fill(TMath::Cos(2*(Psi_pos_neg[1]-Psi_pos_neg[0])));
-
-
-    Psi_pos_neg_eta[0] = Psi_pos_neg[0];
-    Psi_pos_neg_eta[1] = Psi_pos_neg[1];
-    Double_t Psi_diff =  Psi_pos_neg[0] - Psi_pos_neg[1];
-    if(Psi_diff < -90.0) Psi_diff += 180.0;
-    if(Psi_diff > +90.0) Psi_diff -= 180.0;
-    if(fabs(Psi_diff < 20))
-    {
-        h_EP_peak[0]->Fill(Psi_pos_neg[0]);
-        h_EP_peak[1]->Fill(Psi_pos_neg[1]);
-    }
-
-
-    for(Int_t i_eta = 0 ; i_eta < 2; i_eta++)
-    {
-        if(fabs(Psi_diff < 20))  h2D_QA_vs_QB_peak[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
-        if(fabs(Psi_diff > 60))  h2D_QA_vs_QB_tail[i_eta]->Fill(QA_vec[i_eta], QB_vec[i_eta]);
-    }
-    
-    if(fabs(Psi_diff < 20)) h2D_Q_vec_peak->Fill(Q_vec[0], Q_vec[1]);
-    if(fabs(Psi_diff > 60)) h2D_Q_vec_tail->Fill(Q_vec[0], Q_vec[1]);
-
 
     if(Psi_pos_neg[0] - Psi_pos_neg[1] > 90.0) Psi_pos_neg[1]  -= 180.0;
     else
@@ -750,7 +706,7 @@ float GetEventPlaneInfo(int i_CollisionID, TTree* i_TrackTree, std::unordered_ma
 
     if(Psi_full_r > 90.0)  Psi_full_r -= 180.0;
     else if(Psi_full_r < -90.0) Psi_full_r += 180.0;
-
+    
     //return average event plane
     return 2*Pi*Psi_full_r/360.0;
 }

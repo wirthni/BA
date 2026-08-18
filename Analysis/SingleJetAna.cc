@@ -11,6 +11,7 @@ i_InputFile: Format xxx.root
 Int_t SingleJetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
+    bool i_LocalDebugRun = true;
     bool i_MakeCrosscheckAnalysis = false;
     bool i_UseHadronInstead = false;
     int i_NoOfEvents = -1;
@@ -199,6 +200,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         {
             QVectorCorrectionFileName =  "./RUN3_Data/QVecCalibRoots/LHC25_PbPb_pass1/" + (TString)RunNumberAsString.Data() + "_Calibration.root";
         }
+
+        cout << "Q vector correction file is " << QVectorCorrectionFileName << endl;
         
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +449,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
                 float Distance = sqrt(powf(EtaDistance, 2) + powf(PhiDistance, 2));
-                if(EtaDistance <= DEF_RecoilCorrelationFrameSize && PhiDistance <= DEF_RecoilCorrelationFrameSize)
+                if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
                     if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
@@ -470,7 +473,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
                 float Distance = sqrt(powf(EtaDistance, 2) + powf(PhiDistance, 2));
-                if(EtaDistance <= DEF_RecoilCorrelationFrameSize && PhiDistance <= DEF_RecoilCorrelationFrameSize)
+                if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
                     if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
@@ -488,7 +491,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
             h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Add(h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation, -1);
             h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Add(h3F_dphi_vs_deta_vs_pt_RecoilCorrelation);
 
-            h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationRecoil);
+            h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationRecoil, +1);
+            h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationReference, -1);
 
             delete(h3F_dphi_vs_deta_vs_pt_RecoilCorrelation);
             delete(h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation);
@@ -519,13 +523,13 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         
         EventsSkipped += N_events_skipped;
 
+        if(i_LocalDebugRun) break;
     }
 
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Scale(1./(float)AnalyzedEventsCounter);
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Scale(1./(h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetXaxis()->GetBinWidth(1) * h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetYaxis()->GetBinWidth(1)));
     h1F_RadialCorrelationDifference->Scale(1./(float)AnalyzedEventsCounter);
     h1F_RadialCorrelationDifference->Scale(1./h1F_RadialCorrelationDifference->GetXaxis()->GetBinWidth(1));
-
 
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->SetTitle("Correlation Difference at the Recoil Site");
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
