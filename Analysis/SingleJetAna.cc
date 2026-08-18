@@ -21,9 +21,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false 
-    #define DEF_JetLeadingPt 30
-    #define DEF_HadLeadingPt 30
+    #define DEF_OutputEventOverviews false
+    #define DEF_HadLeadingPt 20.0
     #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_CorrelationMinPt 0.0
     #define DEF_CorrelationMaxPt 2.0
@@ -33,21 +32,14 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     #define DEF_HistoTitleSize 0.1
     #define DEF_EventTolerance_Multiplicity 10
     #define DEF_EventTolerance_Psi2 Pi/8
-    #define DEF_RecoilCorrelationFrameSize 0.2
+    #define DEF_RecoilCorrelationFrameSize 0.5
     #define DEF_MaxParticlePtInCorrelation 5.0
     #define DEF_Epsilon 0.001
 
     int TotalEvents = 0;
     int ProcessedEvents = 0;
     int EventsSkipped   = 0;
-    int RunNumber = -1;
-
-    //set jet/had pt limit
-    double LeadingPtLimit = DEF_JetLeadingPt;
-    if(i_UseHadronInstead)
-    {
-        LeadingPtLimit = DEF_HadLeadingPt;
-    }
+    int RunNumber = -1;    
 
     Long64_t LargeGapEventCounter = 0;
     Long64_t SmallGapEventCounter = 0;
@@ -67,12 +59,13 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
     //APPLICATION VARIABLES
     TH3F* h3F_dphi_vs_deta_vs_pt_CorrelationDifference = new TH3F("h3F_dphi_vs_deta_vs_pt_CorrelationDifference", "h3F_dphi_vs_deta_vs_pt_CorrelationDifference",
-                DEF_BinningPerUnit * 2*DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
-                DEF_BinningPerUnit * 2 * DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize, 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
-    TH1F* h1F_RadialCorrelationDifference = new TH1F("h1F_RadialCorrelationDifference", "h1F_RadialCorrelationDifference", 100, 0, DEF_RecoilCorrelationFrameSize);
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
+    TH2F* h2F_RadialCorrelationDifference = new TH2F("h2F_RadialCorrelationDifference", "h2F_RadialCorrelationDifference", 25, 0, DEF_RecoilCorrelationFrameSize, 30, 0, 3);
     TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 100, 0, 300);
     TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 100, 0, 300);
-    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 1000, -500, 500);
+    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 20, -10, 10);
     TH1F* h1F_NoOfHighPtParticles = new TH1F("h1F_NoOfHighPtParticles", "h1F_NoOfHighPtParticles", 50, 0, 50);
     int AnalyzedEventsCounter = 0;
 
@@ -261,7 +254,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
             if(EventProperties[iEvent].HighPtParticles[0].pt() < DEF_HadLeadingPt) continue;
 
-            if(abs(EventProperties[iEvent].HighPtParticles[0].eta()) > 0.7) continue;
+            if(abs(EventProperties[iEvent].HighPtParticles[0].eta()) > 0.9 - DEF_RecoilCorrelationFrameSize) continue;
 
             //check that there is no jet close to the direct recoil site
             float RecoilSiteEta = EventProperties[iEvent].HighPtParticles[0].eta();
@@ -418,10 +411,11 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
             //Fill correlation histogram
             TH3F* h3F_dphi_vs_deta_vs_pt_RecoilCorrelation = new TH3F("h3F_dphi_vs_deta_vs_pt_RecoilCorrelation", "h3F_dphi_vs_deta_vs_pt_RecoilCorrelation",
-                DEF_BinningPerUnit * 2*DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
-                DEF_BinningPerUnit * 2 * DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize, 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);
             
-            TH1F* h1F_RadialCorrelationRecoil = new TH1F("h1F_RadialCorrelationRecoil", "h1F_RadialCorrelationRecoil", 100, 0, DEF_RecoilCorrelationFrameSize);
+            TH2F* h2F_RadialCorrelationRecoil = new TH2F("h2F_RadialCorrelationRecoil", "h2F_RadialCorrelationRecoil", 25, 0, DEF_RecoilCorrelationFrameSize, 30, 0, 3);
     
             float RecoilSiteEta = EventProperties[iEvent].HighPtParticles[0].eta();
             if(i_MakeCrosscheckAnalysis) RecoilSiteEta*= -1;
@@ -452,19 +446,20 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
+                    if(particle.pt() <= 3.0 && Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon)
                     {
                         NoOfParticlesInRecoilAreaCounter++;
-                        if(Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon) h1F_RadialCorrelationRecoil->Fill(Distance, 1.0/(2*Pi*Distance));
+                        h2F_RadialCorrelationRecoil->Fill(Distance, particle.pt(), 1.0/(2*Pi*Distance));
                     }
                 }
             }
 
             //Fill reference correlation histogram
             TH3F* h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation = new TH3F("h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation", "h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation",
-                DEF_BinningPerUnit * 2*DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
-                DEF_BinningPerUnit * 2 * DEF_RecoilCorrelationFrameSize, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize, 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);//temporarily filled
-            TH1F* h1F_RadialCorrelationReference = new TH1F("h1F_RadialCorrelationReference", "h1F_RadialCorrelationReference", 100, 0, DEF_RecoilCorrelationFrameSize);
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                DEF_BinningPerUnit * DEF_RecoilCorrelationFrameSize / 2, -DEF_RecoilCorrelationFrameSize, DEF_RecoilCorrelationFrameSize,
+                 0.1 * DEF_BinningPerUnit * DEF_MaxParticlePtInCorrelation, 0, DEF_MaxParticlePtInCorrelation);
+            TH2F* h2F_RadialCorrelationReference = new TH2F("h2F_RadialCorrelationReference", "h2F_RadialCorrelationReference", 25, 0, DEF_RecoilCorrelationFrameSize, 30, 0, 3);
 
             for(const auto& particle : ParticleVector[EventProperties[iEvent].SuitableReferenceEvent])
             {
@@ -476,10 +471,10 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 if(abs(EtaDistance) <= DEF_RecoilCorrelationFrameSize && abs(PhiDistance) <= DEF_RecoilCorrelationFrameSize)
                 {
                     h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation->Fill(PhiDistance, EtaDistance, particle.pt());
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)
+                    if(particle.pt() <= 3.0 && Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon)
                     {
                         NoOfParticlesInReferenceAreaCounter++;
-                        if(Distance <= DEF_RecoilCorrelationFrameSize && Distance > DEF_Epsilon) h1F_RadialCorrelationReference->Fill(Distance, 1.0/(2*Pi*Distance));
+                        h2F_RadialCorrelationReference->Fill(Distance, particle.pt(), 1.0/(2*Pi*Distance));
                     } 
                 }
             }
@@ -491,13 +486,13 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
             h3F_dphi_vs_deta_vs_pt_RecoilCorrelation->Add(h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation, -1);
             h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Add(h3F_dphi_vs_deta_vs_pt_RecoilCorrelation);
 
-            h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationRecoil, +1);
-            h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationReference, -1);
+            h2F_RadialCorrelationDifference->Add(h2F_RadialCorrelationRecoil, +1);
+            h2F_RadialCorrelationDifference->Add(h2F_RadialCorrelationReference, -1);
 
             delete(h3F_dphi_vs_deta_vs_pt_RecoilCorrelation);
             delete(h3F_dphi_vs_deta_vs_pt_ReferenceCorrelation);
-            delete(h1F_RadialCorrelationRecoil);
-            delete(h1F_RadialCorrelationReference);
+            delete(h2F_RadialCorrelationRecoil);
+            delete(h2F_RadialCorrelationReference);
 
             AnalyzedEventsCounter++;
         }
@@ -528,8 +523,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Scale(1./(float)AnalyzedEventsCounter);
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->Scale(1./(h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetXaxis()->GetBinWidth(1) * h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetYaxis()->GetBinWidth(1)));
-    h1F_RadialCorrelationDifference->Scale(1./(float)AnalyzedEventsCounter);
-    h1F_RadialCorrelationDifference->Scale(1./h1F_RadialCorrelationDifference->GetXaxis()->GetBinWidth(1));
+    h2F_RadialCorrelationDifference->Scale(1./(float)AnalyzedEventsCounter);
+    h2F_RadialCorrelationDifference->Scale(1./(h2F_RadialCorrelationDifference->GetXaxis()->GetBinWidth(1) * h2F_RadialCorrelationDifference->GetYaxis()->GetBinWidth(1)));
 
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->SetTitle("Correlation Difference at the Recoil Site");
     h3F_dphi_vs_deta_vs_pt_CorrelationDifference->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -555,7 +550,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         h1F_NoOfParticlesInReferenceArea->Write();
         h1F_N_ev_minus_N_ref->Write();
         h1F_NoOfHighPtParticles->Write();
-        h1F_RadialCorrelationDifference->Write();
+        h2F_RadialCorrelationDifference->Write();
 
         OutputFile->Close();
     }
@@ -579,8 +574,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         TH1F* Summed_h1F_NoOfHighPtParticles = (TH1F*) OutputFile->Get("h1F_NoOfHighPtParticles");
         Summed_h1F_NoOfHighPtParticles->Add(h1F_NoOfHighPtParticles);
 
-        TH1F* Summed_h1F_RadialCorrelationDifference = (TH1F*) OutputFile->Get("h1F_RadialCorrelationDifference");
-        Summed_h1F_RadialCorrelationDifference->Add(h1F_RadialCorrelationDifference);
+        TH1F* Summed_h2F_RadialCorrelationDifference = (TH1F*) OutputFile->Get("h2F_RadialCorrelationDifference");
+        Summed_h2F_RadialCorrelationDifference->Add(h2F_RadialCorrelationDifference);
 
 
         OutputFile = new TFile(str_out.Data(),"RECREATE");
@@ -589,7 +584,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         Summed_h1F_NoOfParticlesInReferenceArea->Write();
         Summed_h1F_N_ev_minus_N_ref->Write();
         Summed_h1F_NoOfHighPtParticles->Write();
-        Summed_h1F_RadialCorrelationDifference->Write();
+        Summed_h2F_RadialCorrelationDifference->Write();
 
         OutputFile->Close();
 
