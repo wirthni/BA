@@ -30,8 +30,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     #define DEF_MaxJetPt 150.0
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
-    #define DEF_EventTolerance_Multiplicity 60
-    #define DEF_EventTolerance_Psi2 Pi/6
+    #define DEF_EventTolerance_Multiplicity 20
+    #define DEF_EventTolerance_Psi2 Pi/8
     #define DEF_RecoilCorrelationFrameSize 0.5
     #define DEF_MaxParticlePtInCorrelation 5.0
     #define DEF_MaxCorrelationDeltaPhi Pi/4
@@ -59,9 +59,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
     //APPLICATION VARIABLES
     TH2F* h2F_CorrelationDifference_eta_vs_pT = new TH2F("h2F_CorrelationDifference_eta_vs_pT", "h2F_CorrelationDifference_eta_vs_pT", 50, -0.9, 0.9, 30, 0, 3);
-    TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 100, 0, 300);
-    TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 100, 0, 300);
-    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 20, -10, 10);
+    TH1F* h1F_NoOfParticlesInRecoilArea = new TH1F("h1F_NoOfParticlesInRecoilArea", "h1F_NoOfParticlesInRecoilArea", 150, 0, 1500);
+    TH1F* h1F_NoOfParticlesInReferenceArea = new TH1F("h1F_NoOfParticlesInReferenceArea", "h1F_NoOfParticlesInReferenceArea", 150, 0, 1500);
+    TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 100, -50, 50);
     TH1F* h1F_NoOfHighPtParticles = new TH1F("h1F_NoOfHighPtParticles", "h1F_NoOfHighPtParticles", 50, 0, 50);
     int AnalyzedEventsCounter = 0;
 
@@ -335,7 +335,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                     float PhiDistance = EventProperties[iReferenceEvent].HighPtParticles[iJet].phi_std() - RecoilSitePhi;
                     if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                     else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
-                    if(PhiDistance < DEF_MaxCorrelationDeltaPhi)
+                    if(abs(PhiDistance) < DEF_MaxCorrelationDeltaPhi)
                     {
                         BadReferenceEvent = true;
                         break;
@@ -345,7 +345,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                     PhiDistance = EventProperties[iReferenceEvent].HighPtParticles[iJet].phi_std() - EventProperties[iEvent].HighPtParticles[0].phi_std();
                     if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                     else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
-                    if(PhiDistance < DEF_MaxCorrelationDeltaPhi)
+                    if(abs(PhiDistance) < DEF_MaxCorrelationDeltaPhi)
                     {
                         BadReferenceEvent = true;
                         break;
@@ -453,6 +453,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
             h1F_NoOfParticlesInRecoilArea->Fill(NoOfParticlesInRecoilAreaCounter);
             h1F_NoOfParticlesInReferenceArea->Fill(NoOfParticlesInReferenceAreaCounter);
 
+            cout << "Difference now has entries " << h2F_CorrelationDifference_eta_vs_pT->GetEntries() << " and gets entries " << h2F_CorrelationRecoil_eta_vs_pT->GetEntries() + h2F_CorrelationReference_eta_vs_pT->GetEntries() << endl;
+
             h2F_CorrelationDifference_eta_vs_pT->Add(h2F_CorrelationRecoil_eta_vs_pT, +1);
             h2F_CorrelationDifference_eta_vs_pT->Add(h2F_CorrelationReference_eta_vs_pT, -1);
 
@@ -494,13 +496,13 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     RunNumberAsString.Form("%d", RunNumber);
     TString str_out =  "./" + (TString)RunNumberAsString.Data() + "_SingleJetAna.root";
 
-    TFile* OutputFile = TFile::Open(str_out);
-    if(!OutputFile)
+    TFile* OutputFile;
+    if(gSystem->AccessPathName(str_out) || i_LocalDebugRun)
     {
-        OutputFile = new TFile(str_out.Data(),"RECREATE");
+        OutputFile = new TFile(str_out,"RECREATE");
         OutputFile->cd();
         cout << "Output file is " << str_out << endl;
-        h1F_NoOfParticlesInRecoilArea->Write(),
+        h1F_NoOfParticlesInRecoilArea->Write();
         h1F_NoOfParticlesInReferenceArea->Write();
         h1F_N_ev_minus_N_ref->Write();
         h1F_NoOfHighPtParticles->Write();
@@ -510,6 +512,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     }
     else
     {
+        OutputFile = TFile::Open(str_out.Data());
         cout << "ADD TO EXISTING OUTPUT FILE" << endl;
         OutputFile->cd();
 

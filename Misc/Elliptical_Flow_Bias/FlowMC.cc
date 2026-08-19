@@ -64,8 +64,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
     #define DEF_OutputEventOverviews false 
-    #define DEF_JetLeadingPt 40
-    #define DEF_JetSubleadingPt 20
+    #define DEF_JetLeadingPt 10.0
+    #define DEF_JetSubleadingPt 7.0
     #define DEF_HadLeadingPt 10.0
     #define DEF_HadSubleadingPt 7.0
     #define DEF_CorrelationMinPt 1.0
@@ -90,8 +90,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut","h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the large gap cut
     TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut","h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates after applying the small gap cut
-    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V2 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V2","h3D_LeadDist_vs_PhiShift_vs_Pt_V2",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/2, Pi/2, 30, 40, 100);
-    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V3 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V3","h3D_LeadDist_vs_PhiShift_vs_Pt_V3",DEF_BinningPerUnit * Pi / 3, -Pi/3, Pi/3, 30*DEF_BinningPerUnit * Pi/3, -Pi/3, Pi/3, 30, 40, 100);
+    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V2 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V2","h3D_LeadDist_vs_PhiShift_vs_Pt_V2",DEF_BinningPerUnit * Pi / 2, -Pi/2, Pi/2, 30*DEF_BinningPerUnit * Pi/2, -Pi/2, Pi/2, 30, 10, 100);
+    TH3F* h3D_LeadDist_vs_PhiShift_vs_Pt_V3 = new TH3F("h3D_LeadDist_vs_PhiShift_vs_Pt_V3","h3D_LeadDist_vs_PhiShift_vs_Pt_V3",DEF_BinningPerUnit * Pi / 3, -Pi/3, Pi/3, 30*DEF_BinningPerUnit * Pi/3, -Pi/3, Pi/3, 30, 10, 100);
     TH2D* h2D_GeneratedParticles = new TH2D("h2D_GeneratedParticles","h2D_GeneratedParticles",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
     
     //DEBUG
@@ -1171,9 +1171,9 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //load histograms from root file
-    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_SmallGap");
     if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
-    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_LargeGap");
     if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
     
 
@@ -1240,8 +1240,8 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     /
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    #define LowPtJetFrom 40.0f //GeV
-    #define MiddlePtJetFrom 60.0f //GeV
+    #define LowPtJetFrom 20.0f //GeV
+    #define MiddlePtJetFrom 50.0f //GeV
     #define HighPtJetFrom 80.0f //GeV
     #define DEF_ShiftBins 60
     #define DEF_Rebin 3
@@ -1250,9 +1250,9 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     #define DEF_LegendFontSize 0.025
 
     //load histograms from root file
-    TH3F* h3F_ShiftV2 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
+    TH3F* h3F_ShiftV2 = (TH3F*)file->Get("Results/h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
     if(!h3F_ShiftV2){ cout << "V2 shift histogram not found!" << endl; return 0;}
-    TH3F* h3F_ShiftV3 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V3");
+    TH3F* h3F_ShiftV3 = (TH3F*)file->Get("Results/h3D_LeadDist_vs_PhiShift_vs_Pt_V3");
     if(!h3F_ShiftV3){ cout << "V3 shift histogram not found!" << endl; return 0;}
     
     //V2 SHIFT

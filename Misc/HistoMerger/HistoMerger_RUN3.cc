@@ -21,7 +21,6 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
     //other analysis variables
     vector<TString> HistoVector;
-    int NoOfCombinedFiles = 1;
 
     //name output file
     TString str_out = "./M_" + i_Suffix + ".root";
@@ -55,7 +54,7 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
     for(int i=0; i<HistoVector.size(); i++)
     {
-        int CorruptFilesCounter = 0;
+        int NoOfCombinedFiles = 1;
         cout << "Now merging " << HistoVector[i] << endl;
 
         //take general histo info from first file
@@ -92,11 +91,12 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
             if(!h2D_MergerScrawl || h2D_MergerScrawl->GetEntries() == 0 || h2D_MergerScrawl->IsZombie() || h2D_MergerScrawl->GetEntries() != h2D_MergerScrawl->GetEntries() || h2D_MergerScrawl->GetMean(1) != h2D_MergerScrawl->GetMean(1) )
             {
-                CorruptFilesCounter++;
                 cout << "Skipping corrupt or empty histo in file " << j << endl;
                 file->Close();
                 continue;
             }
+
+            cout << "Adding " << h2D_MergerScrawl->GetEntries() << " to entries " << h2D_MergerResult->GetEntries() << endl;
 
             h2D_MergerResult->Add(h2D_MergerScrawl);
             NoOfCombinedFiles++;
@@ -106,7 +106,9 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
         }
 
-        h2D_MergerResult->Scale(1./(double)(NoOfCombinedFiles));
+        cout << NoOfCombinedFiles << endl;
+
+        //h2D_MergerResult->Scale(1./(double)(NoOfCombinedFiles));
 
         OutputFile->cd();
         h2D_MergerResult->Write();

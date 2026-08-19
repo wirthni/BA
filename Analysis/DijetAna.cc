@@ -1,85 +1,84 @@
-#include "./DijetAna.h"
+#include "./ReadTree.cc"
 
-class MyUserInfo : public fastjet::PseudoJet::UserInfoBase {
-public:
-    MyUserInfo(int NoOfParticles) 
-        : m_NoOfParticles(NoOfParticles){}
-
-    int getNoOfParticles() const { return m_NoOfParticles; }
-
-private:
-    int m_NoOfParticles;
-};
+using namespace fastjet;
+using namespace std;
 
 /* Parameters:
 i_InputFile: Format xxx.root
-i_OutputFile: Format xxx
 */
-Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
+Int_t DijetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
+    bool i_LocalDebugRun = true;
     bool i_UseHadronInstead = false;
+    int i_NoOfEvents = -1;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false 
-    #define DEF_JetLeadingPt 40
-    #define DEF_JetSubleadingPt 20
-    #define DEF_HadLeadingPt 10.0
-    #define DEF_HadSubleadingPt 7.0
-    #define DEF_CorrelationMinPt 1.0
-    #define DEF_CorrelationMaxPt 2.0
+    #define DEF_OutputEventOverviews false
+    #define DEF_HadLeadingPt 15.0
+    #define DEF_HadSubleadingPt 10.0
+    #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_MaxPartilclesPerJet 200
     #define DEF_MaxJetPt 150.0
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
-
-    TH2D* h2D_pt_vs_eta_LargeGap = new TH2D("h2D_pt_vs_eta_LargeGap","h2D_pt_vs_eta_LargeGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
-    TH2D* h2D_pt_vs_eta_SmallGap = new TH2D("h2D_pt_vs_eta_SmallGap","h2D_pt_vs_eta_SmallGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
-    TH2D* h2D_eta_vs_dphi_LargeGap = new TH2D("h2D_eta_vs_dphi_LargeGap","h2D_eta_vs_dphi_LargeGap",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2);
-    TH2D* h2D_eta_vs_dphi_SmallGap = new TH2D("h2D_eta_vs_dphi_SmallGap","h2D_eta_vs_dphi_SmallGap",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2);
-    TH1D* h1D_JetPopulation_Leading = new TH1D("h1D_JetPopulation_Leading", "h1D_JetPopulation_Leading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
-    TH1D* h1D_JetPopulation_Subleading = new TH1D("h1D_JetPopulation_Subleading", "h1D_JetPopulation_Subleading", DEF_MaxPartilclesPerJet, 0, DEF_MaxPartilclesPerJet);
-    TH1D* h1D_JetPt_Leading = new TH1D("h1D_JetPt_Leading", "h1D_JetPt_Leading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
-    TH1D* h1D_JetPt_Subleading = new TH1D("h1D_JetPt_Subleading", "h1D_JetPt_Subleading", DEF_MaxJetPt, 0, DEF_MaxJetPt);
-    TH2D* h2D_eta_vs_phi_JetCoordinates_Leading_NoCut = new TH2D("h2D_eta_vs_phi_JetCoordinates_Leading_NoCut","h2D_eta_vs_phi_JetCoordinates_Leading_NoCut",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // contains only the jet coordinates before applying the cut
-    TH2D* h2D_ParticleCorrelation = new TH2D("h2D_ParticleCorrelation","h2D_ParticleCorrelation",DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi); // Contains all particles
+    #define DEF_DijetMinPhiSeparation Pi/2.0
 
     int TotalEvents = 0;
     int ProcessedEvents = 0;
     int EventsSkipped   = 0;
-
-    //set jet/had pt limit
-    double LeadingPtLimit = DEF_JetLeadingPt;
-    double SubleadingPtLimit = DEF_JetSubleadingPt;
-    if(i_UseHadronInstead)
-    {
-        LeadingPtLimit = DEF_HadLeadingPt;
-        SubleadingPtLimit = DEF_HadSubleadingPt;
-    }
+    int RunNumber = -1;    
 
     Long64_t LargeGapEventCounter = 0;
     Long64_t SmallGapEventCounter = 0;
 
     /*END USER VARIABLES*/
 
-    //Generate output file
-    TString str_out = i_DFName;
-    str_out += ".root";
-    TFile* OutputFile = new TFile(str_out.Data(),"RECREATE");
-    OutputFile->cd();
-    cout << "Output file is " << str_out << endl;
-    TDirectory *EventHistos = OutputFile->mkdir("Event Histos");
-    TDirectory *Results = OutputFile->mkdir("Results");
-
     //Get data from tree file
     TFile* file = TFile::Open(i_InputFile);
+    if(!file || file->IsZombie())
+    {
+        cout << "Input File could not be opened. Wrong path?" << endl;
+        return 0;
+    }
 
     TTree * collisions = nullptr;
     TTree * tracks = nullptr;
+
+    //APPLICATION VARIABLES
+    TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1[2];//[0]: SmallGap, [1]: LargeGap
+    TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2[2];
+    TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4[2];
+    TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6[2];
+    TH1F* h1F_1DCorrelation_eta_pT_0_1[2];
+    TH1F* h1F_1DCorrelation_eta_pT_1_2[2];
+    TH1F* h1F_1DCorrelation_eta_pT_2_4[2];
+    TH1F* h1F_1DCorrelation_eta_pT_4_6[2];
+    
+    h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_2_4[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_4_6[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h1F_1DCorrelation_eta_pT_0_1[0] = new TH1F("h1F_1DCorrelation_eta_pT_0_1_SmallGap", "h1F_1DCorrelation_eta_pT_0_1_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_1_2[0] = new TH1F("h1F_1DCorrelation_eta_pT_1_2_SmallGap", "h1F_1DCorrelation_eta_pT_1_2_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_2_4[0] = new TH1F("h1F_1DCorrelation_eta_pT_2_4_SmallGap", "h1F_1DCorrelation_eta_pT_2_4_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_4_6[0] = new TH1F("h1F_1DCorrelation_eta_pT_4_6_SmallGap", "h1F_1DCorrelation_eta_pT_4_6_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    
+    h2F_2DCorrelation_eta_vs_dphi_pT_0_1[1] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap", "h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_1_2[1] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap", "h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_2_4[1] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap", "h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h2F_2DCorrelation_eta_vs_dphi_pT_4_6[1] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap", "h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
+    h1F_1DCorrelation_eta_pT_0_1[1] = new TH1F("h1F_1DCorrelation_eta_pT_0_1_LargeGap", "h1F_1DCorrelation_eta_pT_0_1_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_1_2[1] = new TH1F("h1F_1DCorrelation_eta_pT_1_2_LargeGap", "h1F_1DCorrelation_eta_pT_1_2_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_2_4[1] = new TH1F("h1F_1DCorrelation_eta_pT_2_4_LargeGap", "h1F_1DCorrelation_eta_pT_2_4_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelation_eta_pT_4_6[1] = new TH1F("h1F_1DCorrelation_eta_pT_4_6_LargeGap", "h1F_1DCorrelation_eta_pT_4_6_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    
+
+    int AnalyzedEventsCounter = 0;
 
     // loop over all directories and print name
     cout << "Process file" << endl;
@@ -87,7 +86,7 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
     TKey *key;
     while ((key = (TKey *)next())) {
         TString DFName = key->GetName();
-        if(DFName != i_DFName) continue;
+        //if(DFName != i_DFName) continue;
         TClass *cl = gROOT->GetClass(key->GetClassName());
         if (!cl->InheritsFrom("TDirectory"))
             continue;
@@ -127,17 +126,22 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
         int N_events_skipped = 0;
 
         //Dijet ana variables
-        vector<PseudoJet> ParticleVector[entries_col];//holds particles j = 0,1,2,...,N for event i at position [i][j]
+        vector<PseudoJet> HighPtParticles[entries_col];
+        vector<PseudoJet> Jets[entries_col];
+        int LargeGapEventCounter = 0;
+        int SmallGapEventCounter = 0;
 
         // Make an unordered map particle -> collision
         for(uint64_t i_Track = 0; i_Track < entries_track; i_Track ++)
         {
             Particle track = Particle::Read(tracks, i_Track);
-            //cout << "track " << i_Track << ", col ID " << track.ColID << endl;
             CollisionMap[track.ColID].push_back(i_Track);
             //prepare particles for jetfinder
             ParticleVector[track.ColID].push_back(PseudoJet(track.px, track.py, track.pz, track.E));
-
+            if(track.Pt > DEF_BackgroundLimit)
+            {
+                HighPtParticles[track.ColID].push_back(PseudoJet(track.px, track.py, track.pz, track.E));
+            }
             if(track.ColID > max_ID) max_ID = track.ColID;
 
             //------ this checks whether tracks are grouped -------
@@ -158,6 +162,7 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
             }
             //---------------------------------------------------
         }
+
         cout << "Have mapped the particles to the collisions.\nNumber of different collisions in the tracks: " << CollisionMap.size() << endl;
         cout << "Grouped = " << (grouped ? "YES" : "NO") << endl;
 
@@ -172,24 +177,44 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
         }
         //----------------------- Checks done ---------------------------------------------
 
-        cout << "Start event loop" << endl;
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*
+        /
+        /                                                     
+        /                                                           ANALYSIS LOOP 
+        /                                                     
+        /                                                     
+        /                                                     
+        /
+        /                                                    
+        /
+        /
+        /
+        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        for (int i_Collision = 0; i_Collision < entries_col; i_Collision++) {
+        PrintInfo("Start Diffusion Wake Analysis");
 
-            ProcessedEvents++;
+        for(int iEvent = 0; iEvent < entries_col; iEvent++)
+        {
+            
+            PrintProgress(iEvent, entries_col);
 
-            Collision collision = Collision::Read(collisions, i_Collision);
+            Collision collision = Collision::Read(collisions, iEvent);
             if(CollisionMap[collision.ColID].size() == 0 || ParticleVector[collision.ColID].size() == 0){
                 cout << "No tracks in collision " << collision.ColID << "! Skipping." << endl;
                 N_events_skipped++;
                 continue;
             }
 
+            //event specific variables
+            bool m_MirrorEvent = false;
+            bool m_LargeGapEvent = false;
+
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
             /
             /                                                     
-            /                                           FIND JETS WITH THE ANTI-KT ALGORITHM OR FIND HIGH PT HADRONS   
+            /                                             CLUSTER JETS BY FINDING HIGH PT PARTICLES 
             /                                                     
             /                                                     
             /                                                     
@@ -200,75 +225,64 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            vector<PseudoJet> JetVector;
+            if(HighPtParticles[collision.ColID].size() == 0) continue;
 
-            if(i_UseHadronInstead)
-            {
-                vector<PseudoJet> ParticleVectorCopy = ParticleVector[collision.ColID];
-                int NoOfFoundJets = 0;
-                do{
+            do{
 
-                    Int_t HighestPtIndex = 0;
+                Int_t HighestPtIndex = 0;
 
-                    //search for highest momentum and choose corresponding particle as a primary vertex
-                    for(Int_t i=0; i<ParticleVectorCopy.size(); i++)
+                //search for highest momentum and choose corresponding particle as a primary vertex
+                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                {
+                    if(HighPtParticles[i][2] > HighPtParticles[HighestPtIndex][2])
                     {
-                        if(ParticleVectorCopy[i].pt() > ParticleVectorCopy[HighestPtIndex].pt())
-                        {
-                            HighestPtIndex = i;
-                        }
+                        HighestPtIndex = i;
                     }
+                }
 
-                    //push particle into jet vector
-                    JetVector.push_back(ParticleVectorCopy[HighestPtIndex]);
+                //push particle into jet vector 
+                Jets[collision.ColID].push_back(HighPtParticles[collision.ColID][HighestPtIndex]);
 
-                    //pop jet particle
-                    ParticleVectorCopy.erase(ParticleVectorCopy.begin() + HighestPtIndex);
+                //pop jet particle
+                HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin() + HighestPtIndex);
 
-                    //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
-                    for(Int_t i=0; i<ParticleVectorCopy.size(); i++)
+                //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
+                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                {
+
+                    double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
+                    double DeltaPhi = Jets[collision.ColID].back().phi_std() - HighPtParticles[collision.ColID].phi_std();
+
+                    //normalize
+                    if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+                    else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+
+                    double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
+
+                    if(DeltaR <= DEF_JetRadius)
                     {
-
-                        double DeltaEta = abs(JetVector.back().eta() - ParticleVectorCopy[i].eta());
-                        double DeltaPhi = abs(JetVector.back().phi_std() - ParticleVectorCopy[i].phi_std());
-
-                        //since a jet at pi and another one at -pi are equivalent, normalize
-                        if(DeltaPhi > Pi) DeltaPhi -= 2* Pi;
-
-                        double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
-
-                        if(DeltaR <= DEF_JetRadius)
-                        {
-                            //pop candidate
-                            ParticleVectorCopy.erase(ParticleVectorCopy.begin()+i);
-                            i = -1;//start again for safe
-                        }
+                        //pop candidate
+                        HighPtParticles[collision.ColID].erase(HighPtParticles.begin()+i);
+                        i = -1;//start again for safety
                     }
+                }
 
-                }while(ParticleVectorCopy.size() > 0 && NoOfFoundJets < 2);
+            }while(HighPtParticles.size() > 0);
 
-                //sort high pt hadrons by size to have same structure as FindJets return type
-                JetVector = sorted_by_pt(JetVector);
-                //make eta cut
-                Selector Fiducial_cut_selector = SelectorAbsEtaMax(0.9 - DEF_JetRadius); // Fiducial cut for jets
-                JetVector = Fiducial_cut_selector(JetVector);
+            //sort high pt hadrons by size to have same structure as FindJets return type
+            Jets[collision.ColID] = sorted_by_pt(Jets[collision.ColID]);
+            cout << "Found jets: " << Jets[collision.ColID].size() << endl;
+            //make eta cut
+            //Selector Fiducial_cut_selector = SelectorAbsEtaMax(0.9 - DEF_JetRadius); // Fiducial cut for jets
+            //JetVector = Fiducial_cut_selector(JetVector);
 
-            }
-            else
-            {
-                JetVector = FindJets(ParticleVector[collision.ColID]);
-            }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
             /
             /                                                     
-            /                                           FILTER EVENTS BASED ON THE CONSTRAINTS AND DIFFER BETW. SMALL/LARGE GAP
-            /                       -DIJET EVENT
-            /                       -LEADING JET PT > DEF_LeadingPt, SUBLEADING JET PT > DEF_SubleadingPt
-            /                       -Eta_Jet1 > 0
-            /                       -Delta Phi(Jet1, Jet2) > pi/2
-            /                       -(LARGE GAP / SMALL GAP) Eta_Jet1 * Eta_Jet2 (</>) 0        
+            /                                                      SORT EVENTS INTO THE TWO CATEGORIES
+            /                                                     
             /                                                     
             /                                                     
             /
@@ -278,438 +292,139 @@ Int_t DijetAna(TString i_InputFile = "in.root", TString i_DFName = "DF_xxx")
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if(JetVector.size() >= 1) h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
+            if(Jets[collision.ColID].size() < 2) continue;
 
-            if(JetVector.size() < 2 )continue;
-            
-            if(JetVector[0].eta() < 0) continue;
-            
-            if(JetVector[0].pt() <= LeadingPtLimit || JetVector[1].pt() <= SubleadingPtLimit) continue;
-            
-            double PhiSeparation = abs(JetVector[0].phi_std() - JetVector[1].phi_std());
+            if(Jets[collision.ColID][0].pt() < DEF_HadLeadingPt) continue;
+
+            if(Jets[collision.ColId][1].pt() < DEF_HadSubleadingPt) continue;
+
+            if(abs(Jets[collision.ColID][0].eta()) > 0.9 - DEF_JetRadius) continue;
+
+            if(abs(Jets[collision.ColID][1].eta()) > 0.9 - DEF_JetRadius) continue;
+
+            float PhiSeparation = Jets[collision.ColID][0].phi_std() - Jets[collision.ColID][1].phi_std();
             if(PhiSeparation > Pi) PhiSeparation -= 2*Pi;
-            if(abs(PhiSeparation) < Pi/2) continue;
+            else if(PhiSeparation < -Pi) PhiSeparation += 2*Pi;
 
-            bool LargeGap = false;
-            if(JetVector[0].eta() * JetVector[1].eta() < 0) LargeGap = true;
+            if(abs(PhiSeparation) < DEF_DijetMinPhiSeparation) continue;
 
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            /*
-            /
-            /                                                     
-            /                                           GET PARTICLE MULTIPLICITES IN THE REGIONS OF INTEREST
-            /                       
-            /                       
-            /                       
-            /                       
-            /                             
-            /                                                     
-            /                                                     
-            /
-            /                                                    
-            /
-            /
-            /
-            *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-            #if DEF_OutputEventOverviews
-            TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
-            #endif
+            if(Jets[collision.ColID][0].eta() < 0) m_MirrorEvent = true;
 
-            // Fill leading and subleading jet pt
-            h1D_JetPt_Leading->Fill(JetVector[0].pt());
-            h1D_JetPt_Subleading->Fill(JetVector[1].pt());
+            if(Jets[collision.ColID][0].eta() * Jets[collision.ColID][1].eta() < 0) m_LargeGapEvent = true;
 
-            // Prepare / Fill histogram on how many particles contribute to each jet
-            int LeadingJetParticleCounter = 0;
-            int SubleadingJetParticleCounter = 0;
 
-            if(!i_UseHadronInstead)
+
+            for(const auto& particle : ParticleVector[collision.ColID])
             {
-                h1D_JetPopulation_Leading->Fill(JetVector[0].user_info<MyUserInfo>().getNoOfParticles());
-                h1D_JetPopulation_Subleading->Fill(JetVector[1].user_info<MyUserInfo>().getNoOfParticles());
-            }
 
-            if(LargeGap)
-            {
-                
-                for(const auto& particle : ParticleVector[collision.ColID])
+                //float EtaDistance = particle.eta() - RecoilSiteEta;
+                float PhiDistance = particle.phi_std() - RecoilSitePhi;
+                if(PhiDistance > Pi) PhiDistance -= 2*Pi;
+                else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+
+                if(abs(PhiDistance) <= DEF_MaxCorrelationDeltaPhi)
                 {
-                    //fill particle correlation for this event
-                    h2D_ParticleCorrelation->Fill(particle.eta(), particle.phi_std());
-
-                    // Fill analysis plot
-                    double DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
-                    if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                    else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_LargeGap->Fill(particle.pt(), particle.eta());
-
-                    // Fill event overview
-                    #if DEF_OutputEventOverviews
-                        h2D_phi_vs_eta->Fill(particle.phi_std(), particle.eta(), particle.pt());
-                    #endif
-
-                    // Fill correlation relative to leading jet in phi
-                    if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
-                    else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_LargeGap->Fill(particle.eta(), DeltaPhi);
-
-                    //in case of hadron analysis, look how many particles contribute to the leading jet
-                    if(i_UseHadronInstead)
-                    {
-                        double DeltaEta;
-                        //leading jet
-                        DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
-                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                        DeltaEta = particle.eta() - JetVector[0].eta();
-                        if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) LeadingJetParticleCounter++;
-
-                        //subleading jet
-                        DeltaPhi = particle.phi_std() - JetVector[1].phi_std();
-                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                        DeltaEta = particle.eta() - JetVector[1].eta();
-                        if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) SubleadingJetParticleCounter++;
-                    }
-
+                    NoOfParticlesInRecoilAreaCounter++;
+                    h2F_CorrelationRecoil_eta_vs_pT->Fill(particle.eta(), particle.pt());
                 }
-                LargeGapEventCounter++;
             }
-            else
+
+            //Fill reference correlation histogram
+            TH2F* h2F_CorrelationReference_eta_vs_pT = new TH2F("h2F_CorrelationReference_eta_vs_pT", "h2F_CorrelationReference_eta_vs_pT", 50, -0.9, 0.9, 30, 0, 3);
+
+            for(const auto& particle : ParticleVector[EventProperties[iEvent].SuitableReferenceEvent])
             {
-                for(const auto& particle : ParticleVector[collision.ColID])
+                //float EtaDistance = particle.eta() - RecoilSiteEta;
+                float PhiDistance = particle.phi_std() - RecoilSitePhi;
+                if(PhiDistance > Pi) PhiDistance -= 2*Pi;
+                else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+
+                if(abs(PhiDistance) <= DEF_MaxCorrelationDeltaPhi)
                 {
-                    //fill particle correlation for this event
-                    h2D_ParticleCorrelation->Fill(particle.eta(), particle.phi_std());
-                    
-                    // Fill analysis plot
-                    double DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
-                    if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                    else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_SmallGap->Fill(particle.pt(), particle.eta());
-
-                    // Fill event overview
-                    #if DEF_OutputEventOverviews
-                        h2D_phi_vs_eta->Fill(particle.phi_std(), particle.eta(), particle.pt());
-                    #endif
-
-                    // Fill correlation relative to leading jet in phi
-                    if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
-                    else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle.pt() >= DEF_CorrelationMinPt && particle.pt() <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_SmallGap->Fill(particle.eta(), DeltaPhi);
-
-                    //in case of hadron analysis, look how many particles contribute to the leading jet
-                    if(i_UseHadronInstead)
-                    {
-                        double DeltaEta;
-                        //leading jet
-                        DeltaPhi = particle.phi_std() - JetVector[0].phi_std();
-                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                        DeltaEta = particle.eta() - JetVector[0].eta();
-                        if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) LeadingJetParticleCounter++;
-
-                        //subleading jet
-                        DeltaPhi = particle.phi_std() - JetVector[1].phi_std();
-                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                        DeltaEta = particle.eta() - JetVector[1].eta();
-                        if(sqrt(pow(DeltaPhi, 2) + pow(DeltaEta, 2)) <= DEF_JetRadius) SubleadingJetParticleCounter++;
-                    }
-
+                    NoOfParticlesInReferenceAreaCounter++;
+                    h2F_CorrelationReference_eta_vs_pT->Fill(particle.eta(), particle.pt());
                 }
-                SmallGapEventCounter++;
             }
-
-            if(i_UseHadronInstead)
-            {
-                h1D_JetPopulation_Leading->Fill(LeadingJetParticleCounter);
-                h1D_JetPopulation_Subleading->Fill(SubleadingJetParticleCounter);
-            }
-
-            //write event results
-            #if DEF_OutputEventOverviews
-                EventHistos->cd();
-                h2D_phi_vs_eta->Write();
-                delete h2D_phi_vs_eta;
-            #endif
-
-
-            ////////////////////////////////////////////////////////////////////////////
-
         }
 
-        cout << "Skipped because of unusual event behaviour: " << N_events_skipped << "/" << entries_col << " events" << endl;
-        cout << "In the end " << ((float)(SmallGapEventCounter + LargeGapEventCounter))/((float)entries_col) * 100 << " percent of events have been accepted!" << endl;
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*
+        /
+        /                                                     
+        /                                 print overall information on the past analysis  
+        /                                                     
+        /                                                     
+        /                                                     
+        /
+        /                                                    
+        /
+        /
+        /
+        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        cout << "OVERALL ANALYSIS STATS" << endl;
         cout << "Total number of events: " << TotalEvents << ", of which skipped " << EventsSkipped << endl;
         
         EventsSkipped += N_events_skipped;
 
+        if(i_LocalDebugRun) break;
     }
 
-    // Normalize histograms by number of events
-    h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
-    h2D_pt_vs_eta_SmallGap->Scale(1./(double)SmallGapEventCounter);
+    h2F_CorrelationDifference_eta_vs_pT->Scale(1./(float)AnalyzedEventsCounter);
+    h2F_CorrelationDifference_eta_vs_pT->Scale(1./(h2F_CorrelationDifference_eta_vs_pT->GetXaxis()->GetBinWidth(1) * h2F_CorrelationDifference_eta_vs_pT->GetYaxis()->GetBinWidth(1)));
 
-    h2D_eta_vs_dphi_LargeGap->Scale(1./(double)LargeGapEventCounter);
-    h2D_eta_vs_dphi_SmallGap->Scale(1./(double)SmallGapEventCounter);
+    //Generate output file
+    TString RunNumberAsString;
+    RunNumberAsString.Form("%d", RunNumber);
+    TString str_out =  "./" + (TString)RunNumberAsString.Data() + "_SingleJetAna.root";
 
-    h1D_JetPopulation_Leading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
-    h1D_JetPopulation_Subleading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
-
-    h1D_JetPt_Leading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
-    h1D_JetPt_Subleading->Scale(1./(double)(LargeGapEventCounter + SmallGapEventCounter));
-
-    // Rebin Histograms if necessary
-    h2D_eta_vs_dphi_LargeGap->Rebin2D(8,8);
-    h2D_eta_vs_dphi_SmallGap->Rebin2D(8,8);
-    h2D_eta_vs_dphi_LargeGap->Scale(1.0/64.0);
-    h2D_eta_vs_dphi_SmallGap->Scale(1.0/64.0);
-
-    // Divide by bin widths
-    h2D_eta_vs_dphi_LargeGap->Scale(1./(h2D_eta_vs_dphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_dphi_LargeGap->GetYaxis()->GetBinWidth(0)));
-    h2D_eta_vs_dphi_SmallGap->Scale(1./(h2D_eta_vs_dphi_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_dphi_SmallGap->GetYaxis()->GetBinWidth(0)));
-
-    h2D_pt_vs_eta_LargeGap->Scale(1./(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_LargeGap->GetYaxis()->GetBinWidth(0)));
-    h2D_pt_vs_eta_SmallGap->Scale(1./(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(0) * h2D_pt_vs_eta_SmallGap->GetYaxis()->GetBinWidth(0)));
-
-    h1D_JetPopulation_Leading->Scale(1./h1D_JetPopulation_Leading->GetXaxis()->GetBinWidth(0));
-    h1D_JetPopulation_Subleading->Scale(1./h1D_JetPopulation_Subleading->GetXaxis()->GetBinWidth(0));
-    
-    h1D_JetPt_Leading->Scale(1./h1D_JetPt_Leading->GetXaxis()->GetBinWidth(0));
-    h1D_JetPt_Subleading->Scale(1./h1D_JetPt_Subleading->GetXaxis()->GetBinWidth(0));
-
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Scale(1./(h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->GetBinWidth(0)));
-
-    //normalize histograms if necessary
-
-    //put axis labels on all histograms
-    h2D_pt_vs_eta_LargeGap->SetTitle("Near-side correlation of particles with p_{t}, large gaps");
-    h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_LargeGap->GetXaxis()->SetTitle("p_{t}[GeV]");
-    h2D_pt_vs_eta_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_LargeGap->GetYaxis()->SetTitle("#eta");
-    h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
-
-    h2D_pt_vs_eta_SmallGap->SetTitle("Near-side correlation of particles with p_{t}, small gaps");
-    h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_SmallGap->GetXaxis()->SetTitle("p_{t}[GeV]");
-    h2D_pt_vs_eta_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_SmallGap->GetYaxis()->SetTitle("#eta");
-    h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_pt_vs_eta_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d p_{t} d #eta}");
-
-    h2D_eta_vs_dphi_LargeGap->SetTitle("Particle correlation abs. in #eta, rel. in #phi, large gaps. p_{t} #in [1,2] GeV");
-    h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_LargeGap->GetXaxis()->SetTitle("#eta");
-    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_LargeGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
-    h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_LargeGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
-
-    h2D_eta_vs_dphi_SmallGap->SetTitle("Particle correlation abs. in #eta, rel. in #phi, small gaps. p_{t} #in [1,2] GeV");
-    h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_SmallGap->GetXaxis()->SetTitle("#eta");
-    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_SmallGap->GetYaxis()->SetTitle("#Delta #phi[rad]");
-    h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_dphi_SmallGap->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
-
-    h1D_JetPopulation_Leading->SetTitle("Population of the leading jet");
-    h1D_JetPopulation_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Leading->GetXaxis()->SetTitle("Leading Jet Population");
-    h1D_JetPopulation_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Leading->GetYaxis()->SetTitle("a. u.");
-
-    h1D_JetPopulation_Subleading->SetTitle("Population of the subleading jet");
-    h1D_JetPopulation_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Subleading->GetXaxis()->SetTitle("Subleading Jet Population");
-    h1D_JetPopulation_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPopulation_Subleading->GetYaxis()->SetTitle("a. u.");
-
-    h1D_JetPt_Leading->SetTitle("Pt of the leading jet");
-    h1D_JetPt_Leading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Leading->GetXaxis()->SetTitle("p_{t}^{leading jet} [GeV]");
-    h1D_JetPt_Leading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Leading->GetYaxis()->SetTitle("a. u.");
-
-    h1D_JetPt_Subleading->SetTitle("Pt of the subleading jet");
-    h1D_JetPt_Subleading->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Subleading->GetXaxis()->SetTitle("p_{t}^{subleading jet} [GeV]");
-    h1D_JetPt_Subleading->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_JetPt_Subleading->GetYaxis()->SetTitle("a. u.");
-
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->SetTitle("Fastjet-returned leading jet coordinates in Hybrid Events w/o cut");
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetXaxis()->SetTitle("#eta");
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetYaxis()->SetTitle("#phi[rad]");
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #phi d #eta}");
-
-    //write global results
-    OutputFile->cd();
-    Results->cd();
-    h2D_pt_vs_eta_LargeGap->Write();
-    h2D_pt_vs_eta_SmallGap->Write();
-    h2D_eta_vs_dphi_LargeGap->Write();
-    h2D_eta_vs_dphi_SmallGap->Write();
-    h1D_JetPopulation_Leading->Write();
-    h1D_JetPopulation_Subleading->Write();
-    h1D_JetPt_Leading->Write();
-    h1D_JetPt_Subleading->Write();
-
-
-    cout << "Write ..." << endl;
-
-    OutputFile->Close();
-
-    return 1;
-}
-
-Int_t DijetAna_DiffWakeAna(const TString DataFile, double i_PtRange, double i_LowPtCut) {
-
-    #define DEF_AxisLabelSize 0.05
-    #define DEF_HistoTitleSize 0.1
-    #define DEF_Rebin 16
-
-    gStyle->SetOptStat(0);
-    SetRootGraphicStyle();
-
-    //open the root file
-    TFile *file = TFile::Open(DataFile);
-
-    if (!file || file->IsZombie()) {
-        std::cout << "Error while opening the file!" << std::endl;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-    /
-    /                                   ANALYZE THE DIRECT JET RECOIL SITES AND THE CORRESPONDING BACKGROUND 
-    /
-    /
-    /
-    /
-    /
-    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //load histograms from root file
-    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
-    if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
-    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
-    if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
-    
-
-    //get X(pt) binning
-    double BinsPerMomentum = h2D_pt_vs_eta_SmallGap->GetNbinsX() / h2D_pt_vs_eta_SmallGap->GetXaxis()->GetXmax();
-
-    //configure and draw canvas
-    TCanvas* can_ParticleMultiplicities = new TCanvas("ParticleMultiplicities","ParticleMultiplicities",1000,1000);
-    can_ParticleMultiplicities->Divide(3,1, 0, 0);
-
-    //SMALL GAP
-    can_ParticleMultiplicities->cd(1);
-
-    TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
-    cout << "Lower bin: " << i_LowPtCut*BinsPerMomentum << endl;
-    cout << "Upper bin: " << (i_LowPtCut + i_PtRange) * BinsPerMomentum << endl;
-    h1D_PartMult_SmallGap->Scale(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(1));
-    
-
-    //markings
-    h1D_PartMult_SmallGap->SetTitle("Small Gap");
-    h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_SmallGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
-    h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
-    h1D_PartMult_SmallGap->DrawCopy();
-
-    can_ParticleMultiplicities->cd(2);
-
-    TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
-    h1D_PartMult_LargeGap->Scale(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(1));
-   
-    
-    h1D_PartMult_LargeGap->SetTitle("Large Gap");
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
-    h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
-    h1D_PartMult_LargeGap->DrawCopy();
-
-    //draw difference
-    can_ParticleMultiplicities->cd(3);
-
-    h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
-    h1D_PartMult_LargeGap->SetTitle("Difference");
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta} - #frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_LargeGap->DrawCopy();
-
-    
-
-    return 1;
-}
-
-vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
-{
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-    /
-    /                                                           JET FINDER CODE 
-    /
-    /
-    /
-    /
-    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //DEFINITIONS
-    #define jet_radius 0.2
-    Double_t ghost_maxrap = 1.1;
-    Double_t eta_acceptance = 0.9;
-    double ptmin = 0.15;
-    JetDefinition jet_def(antikt_algorithm, jet_radius);
-    GhostedAreaSpec area_spec(ghost_maxrap);
-    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-
-    //CLUSTER JETS
-    ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
-    vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
-    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius);
-    vector<PseudoJet> FiducialJets = Fiducial_cut_selector(jets_all);
-
-    //ESTIMATE AND SUBTRACT BACKGROUND
-    Int_t Rem_n_hardest = 2;
-    double eBkg_R = 0.2;
-    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R);
-    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-    ClusterSequenceArea ClustSeqBg(vec_particles, jet_def_bkgd, area_def_bkgd);
-    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest));
-    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
-    bkgd_estimator.set_cluster_sequence(ClustSeqBg);
-    Subtractor subtractor(&bkgd_estimator);
-    subtractor.set_use_rho_m(true);
-    vector<PseudoJet> SubtractedJets = subtractor(FiducialJets);
-
-    //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
-    Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
+    TFile* OutputFile;
+    if(gSystem->AccessPathName(str_out) || i_LocalDebugRun)
     {
-        if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
-        SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
+        OutputFile = new TFile(str_out,"RECREATE");
+        OutputFile->cd();
+        cout << "Output file is " << str_out << endl;
+        h1F_NoOfParticlesInRecoilArea->Write();
+        h1F_NoOfParticlesInReferenceArea->Write();
+        h1F_N_ev_minus_N_ref->Write();
+        h1F_NoOfHighPtParticles->Write();
+        h2F_CorrelationDifference_eta_vs_pT->Write();
+
+        OutputFile->Close();
+    }
+    else
+    {
+        OutputFile = TFile::Open(str_out.Data());
+        cout << "ADD TO EXISTING OUTPUT FILE" << endl;
+        OutputFile->cd();
+
+        TH1F* Summed_h1F_NoOfParticlesInRecoilArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInRecoilArea");
+        Summed_h1F_NoOfParticlesInRecoilArea->Add(h1F_NoOfParticlesInRecoilArea);
+
+        TH1F* Summed_h1F_NoOfParticlesInReferenceArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInReferenceArea");
+        Summed_h1F_NoOfParticlesInReferenceArea->Add(h1F_NoOfParticlesInReferenceArea);
+
+        TH1F* Summed_h1F_N_ev_minus_N_ref = (TH1F*) OutputFile->Get("h1F_N_ev_minus_N_ref");
+        Summed_h1F_N_ev_minus_N_ref->Add(h1F_N_ev_minus_N_ref);
+
+        TH1F* Summed_h1F_NoOfHighPtParticles = (TH1F*) OutputFile->Get("h1F_NoOfHighPtParticles");
+        Summed_h1F_NoOfHighPtParticles->Add(h1F_NoOfHighPtParticles);
+
+        TH1F* Summed_h2F_CorrelationDifference_eta_vs_pT = (TH1F*) OutputFile->Get("h2F_CorrelationDifference_eta_vs_pT");
+        Summed_h2F_CorrelationDifference_eta_vs_pT->Add(h2F_CorrelationDifference_eta_vs_pT);
+
+
+        OutputFile = new TFile(str_out.Data(),"RECREATE");
+        Summed_h1F_NoOfParticlesInRecoilArea->Write();
+        Summed_h1F_NoOfParticlesInReferenceArea->Write();
+        Summed_h1F_N_ev_minus_N_ref->Write();
+        Summed_h1F_NoOfHighPtParticles->Write();
+        Summed_h2F_CorrelationDifference_eta_vs_pT->Write();
+
+        OutputFile->Close();
 
     }
 
-    return sorted_by_pt(SubtractedJets);
-
+    return 1;
 }
