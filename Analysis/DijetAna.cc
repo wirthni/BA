@@ -27,6 +27,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
     #define DEF_DijetMinPhiSeparation Pi/2.0
+    #define DEF_1DCorrelationPhiTolerance Pi/2.0
 
     int TotalEvents = 0;
     int ProcessedEvents = 0;
@@ -58,6 +59,10 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     TH1F* h1F_1DCorrelation_eta_pT_1_2[2];
     TH1F* h1F_1DCorrelation_eta_pT_2_4[2];
     TH1F* h1F_1DCorrelation_eta_pT_4_6[2];
+    TH1F* h1F_1DCorrelationDifference_eta_pT_0_1;
+    TH1F* h1F_1DCorrelationDifference_eta_pT_1_2;
+    TH1F* h1F_1DCorrelationDifference_eta_pT_2_4;
+    TH1F* h1F_1DCorrelationDifference_eta_pT_4_6;
     
     h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
     h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
@@ -77,6 +82,11 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     h1F_1DCorrelation_eta_pT_2_4[1] = new TH1F("h1F_1DCorrelation_eta_pT_2_4_LargeGap", "h1F_1DCorrelation_eta_pT_2_4_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
     h1F_1DCorrelation_eta_pT_4_6[1] = new TH1F("h1F_1DCorrelation_eta_pT_4_6_LargeGap", "h1F_1DCorrelation_eta_pT_4_6_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
     
+    h1F_1DCorrelationDifference_eta_pT_0_1 = new TH1F("h1F_1DCorrelationDifference_eta_pT_0_1", "h1F_1DCorrelationDifference_eta_pT_0_1", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelationDifference_eta_pT_1_2 = new TH1F("h1F_1DCorrelationDifference_eta_pT_1_2", "h1F_1DCorrelationDifference_eta_pT_1_2", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelationDifference_eta_pT_2_4 = new TH1F("h1F_1DCorrelationDifference_eta_pT_2_4", "h1F_1DCorrelationDifference_eta_pT_2_4", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+    h1F_1DCorrelationDifference_eta_pT_4_6 = new TH1F("h1F_1DCorrelationDifference_eta_pT_4_6", "h1F_1DCorrelationDifference_eta_pT_4_6", DEF_BinningPerUnit*1.8, -0.9, 0.9);
+
 
     int AnalyzedEventsCounter = 0;
 
@@ -126,6 +136,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         int N_events_skipped = 0;
 
         //Dijet ana variables
+        vector<PseudoJet> ParticleVector[entries_col];
         vector<PseudoJet> HighPtParticles[entries_col];
         vector<PseudoJet> Jets[entries_col];
         int LargeGapEventCounter = 0;
@@ -234,7 +245,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
                 //search for highest momentum and choose corresponding particle as a primary vertex
                 for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
                 {
-                    if(HighPtParticles[i][2] > HighPtParticles[HighestPtIndex][2])
+                    if(HighPtParticles[collision.ColID][i].pt() > HighPtParticles[collision.ColID][HighestPtIndex].pt())
                     {
                         HighestPtIndex = i;
                     }
@@ -251,7 +262,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
                 {
 
                     double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
-                    double DeltaPhi = Jets[collision.ColID].back().phi_std() - HighPtParticles[collision.ColID].phi_std();
+                    double DeltaPhi = Jets[collision.ColID].back().phi() - HighPtParticles[collision.ColID][i].phi();
 
                     //normalize
                     if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
@@ -262,12 +273,12 @@ Int_t DijetAna(TString i_InputFile = "in.root")
                     if(DeltaR <= DEF_JetRadius)
                     {
                         //pop candidate
-                        HighPtParticles[collision.ColID].erase(HighPtParticles.begin()+i);
+                        HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin()+i);
                         i = -1;//start again for safety
                     }
                 }
 
-            }while(HighPtParticles.size() > 0);
+            }while(HighPtParticles[collision.ColID].size() > 0);
 
             //sort high pt hadrons by size to have same structure as FindJets return type
             Jets[collision.ColID] = sorted_by_pt(Jets[collision.ColID]);
@@ -276,6 +287,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
             //Selector Fiducial_cut_selector = SelectorAbsEtaMax(0.9 - DEF_JetRadius); // Fiducial cut for jets
             //JetVector = Fiducial_cut_selector(JetVector);
 
+            continue;
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
@@ -296,13 +308,13 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             if(Jets[collision.ColID][0].pt() < DEF_HadLeadingPt) continue;
 
-            if(Jets[collision.ColId][1].pt() < DEF_HadSubleadingPt) continue;
+            if(Jets[collision.ColID][1].pt() < DEF_HadSubleadingPt) continue;
 
             if(abs(Jets[collision.ColID][0].eta()) > 0.9 - DEF_JetRadius) continue;
 
             if(abs(Jets[collision.ColID][1].eta()) > 0.9 - DEF_JetRadius) continue;
 
-            float PhiSeparation = Jets[collision.ColID][0].phi_std() - Jets[collision.ColID][1].phi_std();
+            float PhiSeparation = Jets[collision.ColID][0].phi() - Jets[collision.ColID][1].phi();
             if(PhiSeparation > Pi) PhiSeparation -= 2*Pi;
             else if(PhiSeparation < -Pi) PhiSeparation += 2*Pi;
 
@@ -312,40 +324,103 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             if(Jets[collision.ColID][0].eta() * Jets[collision.ColID][1].eta() < 0) m_LargeGapEvent = true;
 
+            (m_LargeGapEvent) ? (LargeGapEventCounter++) : (SmallGapEventCounter++);
 
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /*
+            /
+            /                                                     
+            /                                                      FILL CORRELATION HISTOGRAMS
+            /                                                     
+            /                                                     
+            /                                                     
+            /
+            /                                                    
+            /
+            /
+            /
+            *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             for(const auto& particle : ParticleVector[collision.ColID])
             {
 
-                //float EtaDistance = particle.eta() - RecoilSiteEta;
-                float PhiDistance = particle.phi_std() - RecoilSitePhi;
-                if(PhiDistance > Pi) PhiDistance -= 2*Pi;
-                else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+                float PhiDistance = particle.phi() - Jets[collision.ColID][0].phi();
+                if(PhiDistance > 3*Pi/2) PhiDistance -= 2*Pi;
+                else if(PhiDistance < -Pi/2) PhiDistance += 2*Pi;
 
-                if(abs(PhiDistance) <= DEF_MaxCorrelationDeltaPhi)
+                if(particle.pt() < 1.0)
                 {
-                    NoOfParticlesInRecoilAreaCounter++;
-                    h2F_CorrelationRecoil_eta_vs_pT->Fill(particle.eta(), particle.pt());
+                    h2F_2DCorrelation_eta_vs_dphi_pT_0_1[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_0_1[m_LargeGapEvent]->Fill(particle.eta());
                 }
+                else if(particle.pt() < 2.0 && particle.pt() >= 1.0)
+                {
+                    h2F_2DCorrelation_eta_vs_dphi_pT_1_2[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_1_2[m_LargeGapEvent]->Fill(particle.eta());
+                }
+                else if(particle.pt() < 4.0 && particle.pt() >= 2.0)
+                {
+                    h2F_2DCorrelation_eta_vs_dphi_pT_2_4[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_2_4[m_LargeGapEvent]->Fill(particle.eta());
+                }
+                else if(particle.pt() < 60 && particle.pt() >= 4.0)
+                {
+                    h2F_2DCorrelation_eta_vs_dphi_pT_4_6[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_4_6[m_LargeGapEvent]->Fill(particle.eta());
+                }
+                
             }
 
-            //Fill reference correlation histogram
-            TH2F* h2F_CorrelationReference_eta_vs_pT = new TH2F("h2F_CorrelationReference_eta_vs_pT", "h2F_CorrelationReference_eta_vs_pT", 50, -0.9, 0.9, 30, 0, 3);
-
-            for(const auto& particle : ParticleVector[EventProperties[iEvent].SuitableReferenceEvent])
-            {
-                //float EtaDistance = particle.eta() - RecoilSiteEta;
-                float PhiDistance = particle.phi_std() - RecoilSitePhi;
-                if(PhiDistance > Pi) PhiDistance -= 2*Pi;
-                else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
-
-                if(abs(PhiDistance) <= DEF_MaxCorrelationDeltaPhi)
-                {
-                    NoOfParticlesInReferenceAreaCounter++;
-                    h2F_CorrelationReference_eta_vs_pT->Fill(particle.eta(), particle.pt());
-                }
-            }
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*
+        /
+        /                                                     
+        /                                                               EDIT HISTOGRAMS
+        /                                                     
+        /                                                     
+        /                                                     
+        /
+        /                                                    
+        /
+        /
+        /
+        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        //produce differences
+        h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[1], +1);
+        h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[0], -1);
+
+        h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[1], +1);
+        h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[0], -1);
+
+        h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[1], +1);
+        h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[0], -1);
+
+        h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[1], +1);
+        h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[0], -1);
+
+        //scale by bin width
+        for(int iGap = 0; iGap <=1; iGap++)
+        {
+            h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->GetBinWidth(1)));
+            h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->GetBinWidth(1)));
+            h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->GetBinWidth(1)));
+            h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->GetBinWidth(1)));
+        
+            h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1));
+            h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1));
+            h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1));
+            h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1));
+        
+        }
+        h1F_1DCorrelationDifference_eta_pT_0_1->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelationDifference_eta_pT_1_2->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelationDifference_eta_pT_2_4->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelationDifference_eta_pT_4_6->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->GetBinWidth(1));
+
+        //divide by event numbers
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
@@ -371,9 +446,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         if(i_LocalDebugRun) break;
     }
 
-    h2F_CorrelationDifference_eta_vs_pT->Scale(1./(float)AnalyzedEventsCounter);
-    h2F_CorrelationDifference_eta_vs_pT->Scale(1./(h2F_CorrelationDifference_eta_vs_pT->GetXaxis()->GetBinWidth(1) * h2F_CorrelationDifference_eta_vs_pT->GetYaxis()->GetBinWidth(1)));
-
     //Generate output file
     TString RunNumberAsString;
     RunNumberAsString.Form("%d", RunNumber);
@@ -385,12 +457,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         OutputFile = new TFile(str_out,"RECREATE");
         OutputFile->cd();
         cout << "Output file is " << str_out << endl;
-        h1F_NoOfParticlesInRecoilArea->Write();
-        h1F_NoOfParticlesInReferenceArea->Write();
-        h1F_N_ev_minus_N_ref->Write();
-        h1F_NoOfHighPtParticles->Write();
-        h2F_CorrelationDifference_eta_vs_pT->Write();
-
+        
         OutputFile->Close();
     }
     else
@@ -399,28 +466,10 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         cout << "ADD TO EXISTING OUTPUT FILE" << endl;
         OutputFile->cd();
 
-        TH1F* Summed_h1F_NoOfParticlesInRecoilArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInRecoilArea");
-        Summed_h1F_NoOfParticlesInRecoilArea->Add(h1F_NoOfParticlesInRecoilArea);
-
-        TH1F* Summed_h1F_NoOfParticlesInReferenceArea = (TH1F*) OutputFile->Get("h1F_NoOfParticlesInReferenceArea");
-        Summed_h1F_NoOfParticlesInReferenceArea->Add(h1F_NoOfParticlesInReferenceArea);
-
-        TH1F* Summed_h1F_N_ev_minus_N_ref = (TH1F*) OutputFile->Get("h1F_N_ev_minus_N_ref");
-        Summed_h1F_N_ev_minus_N_ref->Add(h1F_N_ev_minus_N_ref);
-
-        TH1F* Summed_h1F_NoOfHighPtParticles = (TH1F*) OutputFile->Get("h1F_NoOfHighPtParticles");
-        Summed_h1F_NoOfHighPtParticles->Add(h1F_NoOfHighPtParticles);
-
-        TH1F* Summed_h2F_CorrelationDifference_eta_vs_pT = (TH1F*) OutputFile->Get("h2F_CorrelationDifference_eta_vs_pT");
-        Summed_h2F_CorrelationDifference_eta_vs_pT->Add(h2F_CorrelationDifference_eta_vs_pT);
-
+        //get
 
         OutputFile = new TFile(str_out.Data(),"RECREATE");
-        Summed_h1F_NoOfParticlesInRecoilArea->Write();
-        Summed_h1F_NoOfParticlesInReferenceArea->Write();
-        Summed_h1F_N_ev_minus_N_ref->Write();
-        Summed_h1F_NoOfHighPtParticles->Write();
-        Summed_h2F_CorrelationDifference_eta_vs_pT->Write();
+        //write
 
         OutputFile->Close();
 
