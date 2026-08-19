@@ -9,16 +9,12 @@ i_InputFile: Format xxx.root
 Int_t DijetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
-    bool i_LocalDebugRun = true;
-    bool i_UseHadronInstead = false;
-    int i_NoOfEvents = -1;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false
     #define DEF_HadLeadingPt 15.0
     #define DEF_HadSubleadingPt 10.0
     #define DEF_BackgroundLimit 7.0 //GeV
@@ -32,10 +28,9 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     int TotalEvents = 0;
     int ProcessedEvents = 0;
     int EventsSkipped   = 0;
-    int RunNumber = -1;    
-
-    Long64_t LargeGapEventCounter = 0;
-    Long64_t SmallGapEventCounter = 0;
+    int RunNumber = -1;
+    int LargeGapEventCounter = 0;
+    int SmallGapEventCounter = 0;
 
     /*END USER VARIABLES*/
 
@@ -87,9 +82,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     h1F_1DCorrelationDifference_eta_pT_2_4 = new TH1F("h1F_1DCorrelationDifference_eta_pT_2_4", "h1F_1DCorrelationDifference_eta_pT_2_4", DEF_BinningPerUnit*1.8, -0.9, 0.9);
     h1F_1DCorrelationDifference_eta_pT_4_6 = new TH1F("h1F_1DCorrelationDifference_eta_pT_4_6", "h1F_1DCorrelationDifference_eta_pT_4_6", DEF_BinningPerUnit*1.8, -0.9, 0.9);
 
-
-    int AnalyzedEventsCounter = 0;
-
     // loop over all directories and print name
     cout << "Process file" << endl;
     TIter next(file->GetListOfKeys());
@@ -139,8 +131,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         vector<PseudoJet> ParticleVector[entries_col];
         vector<PseudoJet> HighPtParticles[entries_col];
         vector<PseudoJet> Jets[entries_col];
-        int LargeGapEventCounter = 0;
-        int SmallGapEventCounter = 0;
 
         // Make an unordered map particle -> collision
         for(uint64_t i_Track = 0; i_Track < entries_track; i_Track ++)
@@ -217,6 +207,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
                 continue;
             }
 
+            RunNumber = collision.RunNumber;
+
             //event specific variables
             bool m_MirrorEvent = false;
             bool m_LargeGapEvent = false;
@@ -282,12 +274,9 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             //sort high pt hadrons by size to have same structure as FindJets return type
             Jets[collision.ColID] = sorted_by_pt(Jets[collision.ColID]);
-            cout << "Found jets: " << Jets[collision.ColID].size() << endl;
             //make eta cut
             //Selector Fiducial_cut_selector = SelectorAbsEtaMax(0.9 - DEF_JetRadius); // Fiducial cut for jets
             //JetVector = Fiducial_cut_selector(JetVector);
-
-            continue;
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
@@ -343,6 +332,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             for(const auto& particle : ParticleVector[collision.ColID])
             {
+                float Sgn = 1;
+                (m_MirrorEvent) ? (Sgn = -1) : (Sgn = 1);
 
                 float PhiDistance = particle.phi() - Jets[collision.ColID][0].phi();
                 if(PhiDistance > 3*Pi/2) PhiDistance -= 2*Pi;
@@ -350,113 +341,246 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
                 if(particle.pt() < 1.0)
                 {
-                    h2F_2DCorrelation_eta_vs_dphi_pT_0_1[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
-                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_0_1[m_LargeGapEvent]->Fill(particle.eta());
+                    h2F_2DCorrelation_eta_vs_dphi_pT_0_1[m_LargeGapEvent]->Fill(Sgn*particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_0_1[m_LargeGapEvent]->Fill(Sgn*particle.eta());
                 }
                 else if(particle.pt() < 2.0 && particle.pt() >= 1.0)
                 {
-                    h2F_2DCorrelation_eta_vs_dphi_pT_1_2[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
-                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_1_2[m_LargeGapEvent]->Fill(particle.eta());
+                    h2F_2DCorrelation_eta_vs_dphi_pT_1_2[m_LargeGapEvent]->Fill(Sgn*particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_1_2[m_LargeGapEvent]->Fill(Sgn*particle.eta());
                 }
                 else if(particle.pt() < 4.0 && particle.pt() >= 2.0)
                 {
-                    h2F_2DCorrelation_eta_vs_dphi_pT_2_4[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
-                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_2_4[m_LargeGapEvent]->Fill(particle.eta());
+                    h2F_2DCorrelation_eta_vs_dphi_pT_2_4[m_LargeGapEvent]->Fill(Sgn*particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_2_4[m_LargeGapEvent]->Fill(Sgn*particle.eta());
                 }
                 else if(particle.pt() < 60 && particle.pt() >= 4.0)
                 {
-                    h2F_2DCorrelation_eta_vs_dphi_pT_4_6[m_LargeGapEvent]->Fill(particle.eta(), PhiDistance);
-                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_4_6[m_LargeGapEvent]->Fill(particle.eta());
+                    h2F_2DCorrelation_eta_vs_dphi_pT_4_6[m_LargeGapEvent]->Fill(Sgn*particle.eta(), PhiDistance);
+                    if(abs(PhiDistance) <= DEF_1DCorrelationPhiTolerance) h1F_1DCorrelation_eta_pT_4_6[m_LargeGapEvent]->Fill(Sgn*particle.eta());
                 }
                 
             }
 
         }
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /*
-        /
-        /                                                     
-        /                                                               EDIT HISTOGRAMS
-        /                                                     
-        /                                                     
-        /                                                     
-        /
-        /                                                    
-        /
-        /
-        /
-        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        //produce differences
-        h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[1], +1);
-        h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[0], -1);
-
-        h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[1], +1);
-        h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[0], -1);
-
-        h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[1], +1);
-        h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[0], -1);
-
-        h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[1], +1);
-        h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[0], -1);
-
-        //scale by bin width
-        for(int iGap = 0; iGap <=1; iGap++)
-        {
-            h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->GetBinWidth(1)));
-            h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->GetBinWidth(1)));
-            h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->GetBinWidth(1)));
-            h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->GetBinWidth(1)));
-        
-            h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1));
-            h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1));
-            h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1));
-            h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1));
-        
-        }
-        h1F_1DCorrelationDifference_eta_pT_0_1->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelationDifference_eta_pT_1_2->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelationDifference_eta_pT_2_4->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelationDifference_eta_pT_4_6->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->GetBinWidth(1));
-
-        //divide by event numbers
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /*
-        /
-        /                                                     
-        /                                 print overall information on the past analysis  
-        /                                                     
-        /                                                     
-        /                                                     
-        /
-        /                                                    
-        /
-        /
-        /
-        *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        cout << "OVERALL ANALYSIS STATS" << endl;
-        cout << "Total number of events: " << TotalEvents << ", of which skipped " << EventsSkipped << endl;
-        
-        EventsSkipped += N_events_skipped;
-
-        if(i_LocalDebugRun) break;
+    
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                                     
+    /                                                               EDIT HISTOGRAMS
+    /                                                     
+    /                                                     
+    /                                                     
+    /
+    /                                                    
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //divide by event numbers
+    for(int iGap = 0; iGap <=1; iGap++)
+    {
+        float ScaleFactor;
+        (iGap) ? (ScaleFactor = 1./(float)LargeGapEventCounter) : (ScaleFactor = 1./(float)SmallGapEventCounter);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(ScaleFactor);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(ScaleFactor);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(ScaleFactor);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(ScaleFactor);
+    
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(ScaleFactor);
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(ScaleFactor);
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(ScaleFactor);
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(ScaleFactor);
+    
+    }
+
+    //produce differences
+    h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[1], +1);
+    h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[0], -1);
+
+    h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[1], +1);
+    h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[0], -1);
+
+    h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[1], +1);
+    h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[0], -1);
+
+    h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[1], +1);
+    h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[0], -1);
+
+    //scale by bin width
+    for(int iGap = 0; iGap <=1; iGap++)
+    {
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->GetBinWidth(1)));
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->GetBinWidth(1)));
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->GetBinWidth(1)));
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->GetBinWidth(1)));
+    
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1));
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1));
+    
+    }
+    h1F_1DCorrelationDifference_eta_pT_0_1->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->GetBinWidth(1));
+    h1F_1DCorrelationDifference_eta_pT_1_2->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->GetBinWidth(1));
+    h1F_1DCorrelationDifference_eta_pT_2_4->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->GetBinWidth(1));
+    h1F_1DCorrelationDifference_eta_pT_4_6->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->GetBinWidth(1));
+
+    //set axis titles
+    for(int iGap = 0; iGap <=1; iGap++)
+    {
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->SetTitle("");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->SetTitle("#eta");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->SetTitle("");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->SetTitle("#eta");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->SetTitle("");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->SetTitle("#eta");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->SetTitle("");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->SetTitle("#eta");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->SetTitle("");
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->SetTitle("#eta");
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->SetTitle("");
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->SetTitle("#eta");
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->SetTitle("");
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->SetTitle("#eta");
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->SetTitle("");
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->SetTitle("#eta");
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+    
+    }
+
+    h1F_1DCorrelationDifference_eta_pT_0_1->SetTitle("");
+    h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->SetTitle("#eta");
+    h1F_1DCorrelationDifference_eta_pT_0_1->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_0_1->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
+
+    h1F_1DCorrelationDifference_eta_pT_1_2->SetTitle("");
+    h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->SetTitle("#eta");
+    h1F_1DCorrelationDifference_eta_pT_1_2->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_1_2->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
+
+    h1F_1DCorrelationDifference_eta_pT_2_4->SetTitle("");
+    h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->SetTitle("#eta");
+    h1F_1DCorrelationDifference_eta_pT_2_4->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_2_4->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
+
+    h1F_1DCorrelationDifference_eta_pT_4_6->SetTitle("");
+    h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->SetTitle("#eta");
+    h1F_1DCorrelationDifference_eta_pT_4_6->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_1DCorrelationDifference_eta_pT_4_6->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                                     
+    /                                                               PRINT ANALYSIS STATS
+    /                                                     
+    /                                                     
+    /                                                     
+    /
+    /                                                    
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    PrintInfo("Overall Analysis Stats");
+
+    cout << "Accepted Events / Total Events: " << 100.0 * ((float)(LargeGapEventCounter + SmallGapEventCounter) / (float)TotalEvents) << " percent" << endl;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                                     
+    /                                                         WRITE OUTPUT FILE
+    /                                                     
+    /                                                     
+    /                                                     
+    /
+    /                                                    
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     //Generate output file
     TString RunNumberAsString;
     RunNumberAsString.Form("%d", RunNumber);
-    TString str_out =  "./" + (TString)RunNumberAsString.Data() + "_SingleJetAna.root";
+    TString str_out =  "./" + (TString)RunNumberAsString.Data() + "_DijetAna.root";
 
     TFile* OutputFile;
-    if(gSystem->AccessPathName(str_out) || i_LocalDebugRun)
+    if(gSystem->AccessPathName(str_out))
     {
         OutputFile = new TFile(str_out,"RECREATE");
         OutputFile->cd();
         cout << "Output file is " << str_out << endl;
+
+        for(int iGap = 0; iGap <=1; iGap++)
+        {
+            h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Write();
+            h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Write();
+            h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Write();
+            h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Write();
+
+            h1F_1DCorrelation_eta_pT_0_1[iGap]->Write();
+            h1F_1DCorrelation_eta_pT_1_2[iGap]->Write();
+            h1F_1DCorrelation_eta_pT_2_4[iGap]->Write();
+            h1F_1DCorrelation_eta_pT_4_6[iGap]->Write();
+        }
+        h1F_1DCorrelationDifference_eta_pT_0_1->Write();
+        h1F_1DCorrelationDifference_eta_pT_1_2->Write();
+        h1F_1DCorrelationDifference_eta_pT_2_4->Write();
+        h1F_1DCorrelationDifference_eta_pT_4_6->Write();
+
         
         OutputFile->Close();
     }
@@ -467,6 +591,65 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         OutputFile->cd();
 
         //get
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[0]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[0]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[1]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[1]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[1]);
+
+        TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[1]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_SmallGap");
+        h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[0]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_SmallGap");
+        h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[0]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_SmallGap");
+        h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[0]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_SmallGap");
+        h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[0]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_LargeGap");
+        h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[1]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_LargeGap");
+        h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[1]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_LargeGap");
+        h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[1]);
+
+        TH1F* h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_LargeGap");
+        h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[1]);
+        
+        TH1F* h1F_1DCorrelationDifference_eta_pT_0_1_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_0_1");
+        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Add(h1F_1DCorrelationDifference_eta_pT_0_1);
+
+        TH1F* h1F_1DCorrelationDifference_eta_pT_1_2_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_1_2");
+        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Add(h1F_1DCorrelationDifference_eta_pT_1_2);
+
+        TH1F* h1F_1DCorrelationDifference_eta_pT_2_4_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_2_4");
+        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Add(h1F_1DCorrelationDifference_eta_pT_2_4);
+
+        TH1F* h1F_1DCorrelationDifference_eta_pT_4_6_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_4_6");
+        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Add(h1F_1DCorrelationDifference_eta_pT_4_6);
 
         OutputFile = new TFile(str_out.Data(),"RECREATE");
         //write
