@@ -14,7 +14,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
-    #define DEF_JetRadius 0.2
+    #define DEF_JetRadius 0.3
     #define DEF_HadLeadingPt 15.0
     #define DEF_HadSubleadingPt 10.0
     #define DEF_BackgroundLimit 7.0 //GeV
@@ -46,6 +46,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     TTree * tracks = nullptr;
 
     //APPLICATION VARIABLES
+    TH1I* CounterHisto = new TH1I("CounterHisto", "CounterHisto", 1, 0, 1);
+
     TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1[2];//[0]: SmallGap, [1]: LargeGap
     TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2[2];
     TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4[2];
@@ -536,6 +538,11 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
     cout << "Accepted Events / Total Events: " << 100.0 * ((float)(LargeGapEventCounter + SmallGapEventCounter) / (float)TotalEvents) << " percent" << endl;
 
+    //save to counter histo
+    CounterHisto->Fill("Input Events", TotalEvents);
+    CounterHisto->Fill("Large Gap Events", LargeGapEventCounter);
+    CounterHisto->Fill("Small Gap Events", SmallGapEventCounter);
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
     /
@@ -580,8 +587,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h1F_1DCorrelationDifference_eta_pT_1_2->Write();
         h1F_1DCorrelationDifference_eta_pT_2_4->Write();
         h1F_1DCorrelationDifference_eta_pT_4_6->Write();
+        CounterHisto->Write();
 
-        
         OutputFile->Close();
     }
     else
@@ -593,66 +600,110 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         //get
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[0]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[0]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[1]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[1]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[1]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[1]);
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_SmallGap");
         h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[0]);
+        h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_SmallGap");
         h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[0]);
+        h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_SmallGap");
         h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[0]);
+        h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_SmallGap");
         h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[0]);
+        h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_LargeGap");
         h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[1]);
+        h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_LargeGap");
         h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[1]);
+        h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_LargeGap");
         h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[1]);
+        h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_LargeGap");
         h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[1]);
+        h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Scale(0.5);
         
         TH1F* h1F_1DCorrelationDifference_eta_pT_0_1_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_0_1");
         h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Add(h1F_1DCorrelationDifference_eta_pT_0_1);
+        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelationDifference_eta_pT_1_2_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_1_2");
         h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Add(h1F_1DCorrelationDifference_eta_pT_1_2);
+        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelationDifference_eta_pT_2_4_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_2_4");
         h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Add(h1F_1DCorrelationDifference_eta_pT_2_4);
+        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelationDifference_eta_pT_4_6_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_4_6");
         h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Add(h1F_1DCorrelationDifference_eta_pT_4_6);
+        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Scale(0.5);
+
+        TH1I* CounterHisto_Sum = (TH1I*) OutputFile->Get("CounterHisto");
+        CounterHisto_Sum->Add(CounterHisto);
 
         OutputFile = new TFile(str_out.Data(),"RECREATE");
-        //write
+        OutputFile->cd();
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Write();
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Write();
+        h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Write();
+        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Write();
+        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Write();
+        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Write();
+        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Write();
+        CounterHisto_Sum->Write();
 
         OutputFile->Close();
 

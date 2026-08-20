@@ -1171,9 +1171,9 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //load histograms from root file
-    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_SmallGap");
+    TH2D* h2D_pt_vs_eta_SmallGap = (TH2D*)file->Get("h2D_pt_vs_eta_SmallGap");
     if(!h2D_pt_vs_eta_SmallGap){ cout << "Small Gap histogram not found!" << endl; return 0;}
-    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("Results/h2D_pt_vs_eta_LargeGap");
+    TH2D* h2D_pt_vs_eta_LargeGap = (TH2D*)file->Get("h2D_pt_vs_eta_LargeGap");
     if(!h2D_pt_vs_eta_LargeGap){ cout << "Large Gap histogram not found!" << endl; return 0;}
     
 
@@ -1250,9 +1250,9 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
     #define DEF_LegendFontSize 0.025
 
     //load histograms from root file
-    TH3F* h3F_ShiftV2 = (TH3F*)file->Get("Results/h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
+    TH3F* h3F_ShiftV2 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V2");
     if(!h3F_ShiftV2){ cout << "V2 shift histogram not found!" << endl; return 0;}
-    TH3F* h3F_ShiftV3 = (TH3F*)file->Get("Results/h3D_LeadDist_vs_PhiShift_vs_Pt_V3");
+    TH3F* h3F_ShiftV3 = (TH3F*)file->Get("h3D_LeadDist_vs_PhiShift_vs_Pt_V3");
     if(!h3F_ShiftV3){ cout << "V3 shift histogram not found!" << endl; return 0;}
     
     //V2 SHIFT

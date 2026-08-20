@@ -96,8 +96,6 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
                 continue;
             }
 
-            cout << "Adding " << h2D_MergerScrawl->GetEntries() << " to entries " << h2D_MergerResult->GetEntries() << endl;
-
             h2D_MergerResult->Add(h2D_MergerScrawl);
             NoOfCombinedFiles++;
 
@@ -106,9 +104,7 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
         }
 
-        cout << NoOfCombinedFiles << endl;
-
-        //h2D_MergerResult->Scale(1./(double)(NoOfCombinedFiles));
+        if(HistoVector[i] != "CounterHisto") h2D_MergerResult->Scale(1./(double)(NoOfCombinedFiles));
 
         OutputFile->cd();
         h2D_MergerResult->Write();
