@@ -22,7 +22,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
     #define DEF_OutputEventOverviews false
-    #define DEF_HadLeadingPt 15.0
+    #define DEF_HadLeadingPt 130.0
     #define DEF_BackgroundLimit 4.0 //GeV
     #define DEF_CorrelationMinPt 0.0
     #define DEF_CorrelationMaxPt 2.0
@@ -30,7 +30,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     #define DEF_MaxJetPt 150.0
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
-    #define DEF_EventTolerance_Multiplicity 70
+    #define DEF_EventTolerance_Multiplicity 10
     #define DEF_EventTolerance_Psi2 Pi/10
     #define DEF_RecoilCorrelationFrameSize 0.5
     #define DEF_MaxParticlePtInCorrelation 5.0
@@ -66,6 +66,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
     TH1F* h1F_TrackPtSpectrumDifference = new TH1F("h1F_TrackPtSpectrumDifference", "h1F_TrackPtSpectrumDifference", 2000, 0, 15);
     TH1F* h1F_N_ev_minus_N_ref = new TH1F("h1F_N_ev_minus_N_ref", "h1F_N_ev_minus_N_ref", 100, -50, 50);
     TH1F* h1F_NoOfHighPtParticles = new TH1F("h1F_NoOfHighPtParticles", "h1F_NoOfHighPtParticles", 50, 0, 50);
+
+    TH1F* h1F_LowPtRelToHadron = new TH1F("h1F_LowPtRelToHadron", "h1F_LowPtRelToHadron", 50, -Pi, Pi);
     int AnalyzedEventsCounter = 0;
 
     // loop over all directories and print name
@@ -125,6 +127,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
             
         };
         struct_EventProperties EventProperties[entries_col];
+        int AverageMultiplicity = entries_track / entries_col;
 
         // Make an unordered map particle -> collision
         for(uint64_t i_Track = 0; i_Track < entries_track; i_Track ++)
@@ -311,6 +314,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
             if(!EventProperties[iEvent].IsHighPtJetEvent) continue;
 
+
             for(int iReferenceEvent = 0; iReferenceEvent < entries_col; iReferenceEvent++)
             {
                 bool BadReferenceEvent = false;
@@ -365,6 +369,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 break;
             }
 
+            h1F_N_ev_minus_N_ref->Fill(EventProperties[iEvent].Multiplicity - EventProperties[EventProperties[iEvent].SuitableReferenceEvent].Multiplicity);
+
+
         }
 
         cout << "Paired Events/High Pt Events: " << PairedEventsCounter << "/" << HighPtEventCounter << ". That is " << ((float)PairedEventsCounter/(float)HighPtEventCounter)*100.0 << " percent." << endl;
@@ -388,8 +395,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
         for(int iEvent = 0; iEvent < entries_col; iEvent++)
         {
-            //DEBUG
-            
+
             PrintProgress(iEvent, entries_col);
 
             Collision collision = Collision::Read(collisions, iEvent);
@@ -420,8 +426,9 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 RecoilSitePhi = EventProperties[iEvent].HighPtParticles[0].phi_std() + Pi;
             }
 
+            int DEBUG_EventCounter = 0;
+            int DEBUG_RefCounter = 0;
 
-            h1F_N_ev_minus_N_ref->Fill(EventProperties[iEvent].Multiplicity - EventProperties[EventProperties[iEvent].SuitableReferenceEvent].Multiplicity);
 
             for(const auto& particle : ParticleVector[collision.ColID])
             {
@@ -430,6 +437,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                 float PhiDistance = particle.phi_std() - RecoilSitePhi;
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+
+                if(particle.pt() < 2.0) h1F_LowPtRelToHadron->Fill(PhiDistance);
 
                 if(abs(PhiDistance) <= DEF_BroadCorrelationDeltaPhi)
                 {
@@ -446,12 +455,50 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
             TH2F* h2F_BroadCorrelationReference_eta_vs_pT = new TH2F("h2F_BroadCorrelationReference_eta_vs_pT", "h2F_BroadCorrelationReference_eta_vs_pT", 50, -0.9, 0.9, 30, 0, 3);
             TH2F* h2F_NarrowCorrelationReference_eta_vs_pT = new TH2F("h2F_NarrowCorrelationReference_eta_vs_pT", "h2F_NarrowCorrelationReference_eta_vs_pT", 50, -0.9, 0.9, 30, 0, 3);
 
+            TRandom3 RandomEvent(0);
+            TRandom3 RandomParticle(0);
+   
+            //mixed event method
+            for(int iMEParticle = 0; iMEParticle < ParticleVector[collision.ColID].size()/8; iMEParticle++)
+            {
+                int ME_Event_No = RandomEvent.Integer(entries_col);
+                Collision collision = Collision::Read(collisions, ME_Event_No);
+                if(CollisionMap[collision.ColID].size() == 0 || ParticleVector[collision.ColID].size() == 0){
+                    cout << "No tracks in collision " << collision.ColID << "! Skipping." << endl;
+                    continue;
+                }
+
+                bool ParticleFound = false;
+                do
+                {
+                    int Particle_No = RandomParticle.Integer(CollisionMap[collision.ColID].size());
+                    
+                    Particle track = Particle::Read(tracks, CollisionMap[collision.ColID].at(Particle_No));
+
+                    float PhiDistance = track.Phi - RecoilSitePhi;
+                    if(PhiDistance > Pi) PhiDistance -= 2*Pi;
+                    else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+
+                    if(abs(PhiDistance) < DEF_NarrowCorrelationDeltaPhi)
+                    {
+                        h2F_NarrowCorrelationReference_eta_vs_pT->Fill(track.Eta, track.Pt);
+                        h1F_TrackPtSpectrumReferenceArea->Fill(track.Pt);
+                        ParticleFound = true;
+                    }
+
+                } while (ParticleFound == false);
+
+            }
+
+            /*
             for(const auto& particle : ParticleVector[EventProperties[iEvent].SuitableReferenceEvent])
             {
                 //float EtaDistance = particle.eta() - RecoilSiteEta;
                 float PhiDistance = particle.phi_std() - RecoilSitePhi;
                 if(PhiDistance > Pi) PhiDistance -= 2*Pi;
                 else if(PhiDistance < -Pi) PhiDistance += 2*Pi;
+
+                if(particle.pt() < 2.0) DEBUG_RefCounter++;
 
                 if(abs(PhiDistance) <= DEF_BroadCorrelationDeltaPhi)
                 {
@@ -463,6 +510,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
                     }
                 }
             }
+            */
 
             h2F_BroadCorrelationDifference_eta_vs_pT->Add(h2F_BroadCorrelationRecoil_eta_vs_pT, +1);
             h2F_BroadCorrelationDifference_eta_vs_pT->Add(h2F_BroadCorrelationReference_eta_vs_pT, -1);
@@ -529,6 +577,8 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         h2F_NarrowCorrelationDifference_eta_vs_pT->Write();
         h1F_TrackPtSpectrumDifference->Write();
 
+        h1F_LowPtRelToHadron->Write();
+
         OutputFile->Close();
     }
     else
@@ -536,6 +586,10 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         OutputFile = TFile::Open(str_out.Data());
         cout << "ADD TO EXISTING OUTPUT FILE" << endl;
         OutputFile->cd();
+
+        TH1F* Summed_h1F_LowPtRelToHadron = (TH1F*) OutputFile->Get("h1F_LowPtRelToHadron");
+        Summed_h1F_LowPtRelToHadron->Add(h1F_LowPtRelToHadron);
+        Summed_h1F_LowPtRelToHadron->Scale(0.5);
 
         TH1F* Summed_h1F_TrackPtSpectrumRecoilArea = (TH1F*) OutputFile->Get("h1F_TrackPtSpectrumRecoilArea");
         Summed_h1F_TrackPtSpectrumRecoilArea->Add(h1F_TrackPtSpectrumRecoilArea);
@@ -573,6 +627,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
         Summed_h1F_NoOfHighPtParticles->Write();
         Summed_h2F_BroadCorrelationDifference_eta_vs_pT->Write();
         Summed_h2F_NarrowCorrelationDifference_eta_vs_pT->Write();
+        Summed_h1F_LowPtRelToHadron->Write();
 
         OutputFile->Close();
 

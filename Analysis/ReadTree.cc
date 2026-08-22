@@ -11,7 +11,6 @@ If executed once, the output .root file contains the Q vector correction histogr
 
 PARAMETERS:
 i_InputFile: Path and filename to the RUN 3 AO2D file
-i_OutputFile: Free-to-choose filename for the generated output file (.root)
 
 OUTPUT:
 [Run Number]_Calibration.root
@@ -25,7 +24,7 @@ Int_t ReadTree(TString i_InputFile)
 
     #define DEF_BinningPerUnit 100
 
-    double pT_thresh = 20.0;   // threshold that was used to produce the trees
+    double pT_thresh = 15.0;   // threshold that was used to produce the trees
     int total_events = 0;
     int total_skip   = 0;
     int RunNumber = 0;
