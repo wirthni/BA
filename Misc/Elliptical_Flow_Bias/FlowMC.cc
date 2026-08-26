@@ -63,7 +63,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_PYTHIAOversampling 100
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false 
+    #define DEF_OutputEventOverviews true 
     #define DEF_JetLeadingPt 10.0
     #define DEF_JetSubleadingPt 7.0
     #define DEF_HadLeadingPt 10.0
@@ -274,6 +274,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            Int_t N_PYTHIA_Particles = 0;
+
             if(i_UsePYTHIAData)
             {
 
@@ -285,13 +287,13 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
                 //--------------------
                 // Event information
-                Int_t   N_Particles     = PYTHIAEvent->getNumParticles();
-                if(N_Particles <= 0)
+                Int_t N_PYTHIA_Particles = PYTHIAEvent->getNumParticles();
+                if(N_PYTHIA_Particles <= 0)
                 {
                     printf("WARNING: iEvent: %d has no entries! \n",iEvent);
                 }
 
-                for(Int_t i_Particle = 0; i_Particle < N_Particles; i_Particle++)
+                for(Int_t i_Particle = 0; i_Particle < N_PYTHIA_Particles; i_Particle++)
                 {    
                     // Particle information
                     // Particle Level
@@ -500,7 +502,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             if(i_GenerateBackground)
             {
-                for(Int_t iBGPart = 0; iBGPart < N; iBGPart++)
+                for(Int_t iBGPart = 0; iBGPart < N- N_PYTHIA_Particles; iBGPart++)
                 {
                     //get particle pt
                     double Pt;
@@ -836,6 +838,16 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             //write event results
             #if DEF_OutputEventOverviews
                 EventHistos->cd();
+                h2D_phi_vs_eta->SetTitle("");
+                h2D_phi_vs_eta->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetXaxis()->SetTitle("#phi [rad]");
+                h2D_phi_vs_eta->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetYaxis()->SetTitle("#eta");
+                h2D_phi_vs_eta->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetZaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_phi_vs_eta->GetZaxis()->SetTitle("#frac{d p_{T}}{d #phi d #eta}");
                 h2D_phi_vs_eta->Write();
                 delete h2D_phi_vs_eta;
             #endif

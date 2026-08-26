@@ -16,9 +16,10 @@ using namespace std;
 
 Int_t Analysis_SimulationStats()
 {
-    #define DEF_AxisLabelSize 0.04
-    #define DEF_AxisTitleSize 0.05
+    #define DEF_AxisLabelSize 0.06
+    #define DEF_AxisTitleSize 0.06
     #define DEF_HistoTitleSize 0.1
+    #define DEF_LegendTextSize 0.06
     #define DEF_Rebin 16
 
     gStyle->SetOptStat(0);
@@ -43,7 +44,7 @@ Int_t Analysis_SimulationStats()
 
     //configure and draw canvas
     TCanvas* Canvas = new TCanvas("Canvas","Canvas",1000,1000);
-    Canvas->Divide(2,2, 0, 0);
+    Canvas->Divide(1,4, 0, 0);
 
     //Multiplicity
     Canvas->cd(1);
@@ -51,10 +52,23 @@ Int_t Analysis_SimulationStats()
     h1D_NDist->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_NDist->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_NDist->GetXaxis()->SetTitle("Multiplicity");
+    h1D_NDist->GetXaxis()->SetRangeUser(1600, 3500);
     h1D_NDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_NDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_NDist->GetYaxis()->SetTitle("a. u.");
-    h1D_NDist->DrawCopy();
+    h1D_NDist->Rebin(32);
+    h1D_NDist->Scale(1./h1D_NDist->Integral());
+    h1D_NDist->SetMarkerStyle(kStar);
+    h1D_NDist->SetMarkerColor(kBlue);
+    h1D_NDist->DrawCopy("P E");
+
+    TLegend *leg1 = new TLegend(0.0,0.8,0.3,1.0);
+    leg1->SetTextSize(DEF_LegendTextSize);
+    leg1->AddEntry((TObject*)nullptr,Form("0-10%% ALICE Pb-Pb"),"");
+    leg1->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 5.02 TeV, |v_{z}| < 8 cm"),"");
+    leg1->AddEntry(h1D_NDist,"Data","p");
+    leg1->SetLineColor(10);
+    leg1->Draw();
 
     //p_T
     Canvas->cd(2);
@@ -65,7 +79,19 @@ Int_t Analysis_SimulationStats()
     h1D_PtDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_PtDist->GetYaxis()->SetTitle("a. u.");
-    h1D_PtDist->DrawCopy();
+    h1D_PtDist->Rebin(32);
+    h1D_PtDist->Scale(1./h1D_PtDist->Integral());
+    h1D_PtDist->SetMarkerStyle(kStar);
+    h1D_PtDist->SetMarkerColor(kBlue);
+    h1D_PtDist->DrawCopy("P E");
+
+    TLegend *leg2 = new TLegend(0.0,0.8,0.3,1.0);
+    leg2->SetTextSize(DEF_LegendTextSize);
+    leg2->AddEntry((TObject*)nullptr,Form("0-10%% ALICE Pb-Pb"),"");
+    leg2->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 5.02 TeV, |v_{z}| < 8 cm"),"");
+    leg2->AddEntry(h1D_PtDist,"Data","p");
+    leg2->SetLineColor(10);
+    leg2->Draw();
 
     //v_2(p_T)
     Canvas->cd(3);
@@ -89,7 +115,18 @@ Int_t Analysis_SimulationStats()
     Graph_v2_pT->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     Graph_v2_pT->GetYaxis()->SetTitle("v_{2}");
     Graph_v2_pT->Draw("AC");
-    prof_Pt_v2->DrawCopy("SAME HIST");
+    prof_Pt_v2->SetMarkerStyle(kStar);
+    prof_Pt_v2->SetMarkerColor(kBlue);
+    prof_Pt_v2->DrawCopy("SAME P E");
+
+    TLegend *leg3 = new TLegend(0.0,0.8,0.3,1.0);
+    leg3->SetTextSize(DEF_LegendTextSize);
+    leg3->AddEntry((TObject*)nullptr,Form("0-10%% ALICE Pb-Pb"),"");
+    leg3->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 5.02 TeV, |v_{z}| < 8 cm"),"");
+    leg3->AddEntry(prof_Pt_v2,"Data","p");
+    leg3->AddEntry(Graph_v2_pT,"Fit","l");
+    leg3->SetLineColor(10);
+    leg3->Draw();
     
 
     //v_2(eta)
@@ -97,7 +134,9 @@ Int_t Analysis_SimulationStats()
     
     Double_t OrigX[6] = {-1.25, -0.75, -0.25, 0.25, 0.75, 1.25};
     Double_t OrigY[6] = {0.0213, 0.0235, 0.0251, 0.0253, 0.0231, 0.0213};
-    TGraph* Graph_Orig = new TGraph(6, OrigX, OrigY);
+    Double_t eX[6] = {0};
+    Double_t eY[6] = {2.01e-3, 2.38e-3, 2.642e-3, 2.67e-3, 2.281e-3, 2.06e-3};
+    TGraphErrors* Graph_Orig = new TGraphErrors(6, OrigX, OrigY, eX, eY);
     Graph_Orig->SetMarkerColor(kBlue);
     Graph_Orig->SetTitle("");
     Graph_Orig->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
@@ -105,13 +144,27 @@ Int_t Analysis_SimulationStats()
     Graph_Orig->GetXaxis()->SetTitle("#eta");
     Graph_Orig->GetXaxis()->SetRangeUser(-1.5, 1.5);
     Graph_Orig->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
-    Graph_Orig->GetYaxis()->SetTitle("v_{2}(p_{T},#eta)/v_{2}(p_{T})");
+    Graph_Orig->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Graph_Orig->GetYaxis()->SetTitle("v_{2}");
     Graph_Orig->SetLineColor(kBlue);
     Graph_Orig->Draw("A*");
 
     auto ParabFit = new TF1("parab", "[0] - [1]*sqrt(x^2)", -1.5, 1.5);
     // create graph
     Graph_Orig->Fit("parab");
+    gPad->Update();
+    TF1 *fit = (TF1*)Graph_Orig->GetListOfFunctions()->FindObject("parab");
+    fit->SetLineColor(kBlack);
+
+    TLegend *leg4 = new TLegend(0.0,0.8,0.3,1.0);
+    leg4->SetTextSize(DEF_LegendTextSize);
+    leg4->AddEntry((TObject*)nullptr,Form("0-5%% ALICE Pb-Pb"),"");
+    leg4->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 2.76 TeV, |v_{z}| < 10 cm"),"");
+    leg4->AddEntry((TObject*)nullptr,Form("0.2 #leq p_{T}^{track} #leq 5.0 GeV"),"");
+    leg4->AddEntry(Graph_Orig,"Data","p");
+    leg4->AddEntry(fit,"Fit","l");
+    leg4->SetLineColor(10);
+    leg4->Draw();
 
     return 1;
 }
