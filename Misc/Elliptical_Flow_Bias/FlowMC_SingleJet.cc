@@ -36,7 +36,7 @@ void PrintInfo(TString i_String);
 /* Parameters:
 i_InputFile: Format xxx.root
 */
-Int_t FlowMC_SingleJetAna(TString i_PathToPYTHIAFiles = "default", const Int_t i_NoOfEvents = 5000,bool i_UsePYTHIAData = true, bool i_GenerateBackground = true, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "Default", bool i_UseHadronInstadOfJet = false, bool i_UsePYTHIAMultipleTimes = false, uint8_t i_InputDataDivisions = 1, uint16_t i_InputDataDivisionNumber = 1)
+Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", const Int_t i_NoOfEvents = 5000,bool i_UsePYTHIAData = true, bool i_GenerateBackground = true, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "Default", bool i_UseHadronInstadOfJet = false, bool i_UsePYTHIAMultipleTimes = false, uint8_t i_InputDataDivisions = 1, uint16_t i_InputDataDivisionNumber = 1)
 {
     //CONFIGURE
     bool i_MakeCrosscheckAnalysis = false;
@@ -643,9 +643,9 @@ Int_t FlowMC_SingleJetAna(TString i_PathToPYTHIAFiles = "default", const Int_t i
     h1F_TrackPtSpectrumDifference->Add(h1F_TrackPtSpectrumReferenceArea, -1);
 
     //Generate output file
-    TString RunNumberAsString;
-    RunNumberAsString.Form("%d", RunNumber);
-    TString str_out =  "./Flow_SingleJetAna.root";
+    TString InputNumberAsString;
+    InputNumberAsString.Form("%d", i_InputDataDivisionNumber);
+    TString str_out =  "./Flow_SingleJetAna_" + InputNumberAsString +".root";
 
     TFile* OutputFile;
     if(gSystem->AccessPathName(str_out))

@@ -69,6 +69,12 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
         {
             DataFile = "DataToMerge/" + i_RootFileName + Form("_%d", j) + ".root";
 
+            if(gSystem->AccessPathName(DataFile))
+            {
+                CorruptFilesCounter++;
+                continue;
+            }
+
             TFile *file = TFile::Open(DataFile);
 
             if (!file || file->IsZombie()) {

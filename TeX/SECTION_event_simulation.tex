@@ -13,7 +13,28 @@
 \begin{document}
 
 \section{Event simulation: The identification of potential biases}
-\subsection{How Pb-Pb events are simulated}
+
+\subsection{Motivation}
+
+When conducting analyses in heavy ion physics or particle physics one usually has to select experimental data from a very huge data collection, for example recorded events from the Large Hadron Collider. However, this data selection process is nontrivial and has obvious, but also hidden consequences on the outcome of the analysis. To give a demonstration on that, let us consider a conceptionally simple measurement and two possible traps that lead to a wrong analysis result. As an example we would like to measure the average elliptic flow parameter $v_2$ in Pb--Pb collisions (see chapter \ref{sec:analysis-of-heavy-ion-collision-data} for an introduction into flow physics). For our analysis, we will be using a sample of Pb--Pb data in the centrality category of 0-10\%, that would be the most central collisions. After conducting the analysis, we get a certain value for $v_2$. But this value is for sure not representative for Pb--Pb collisions in general, because the cut on very central events has removed all peripheral events from the analysis. Therefore, the value of $v_2$ in peripheral events is omitted in the analysis. We call this a selection bias. Another error that could happen in this analysis is to also take high-$p_T$ particles into account in the particle correlation from which the $v_2$ flow parameter is derived. This is not correct, because high-$p_T$ particles, for example as constituents of jets, are not subject to flow. One can see that such mistakes, may they be obvious or worth a closer look, can be made in many stages of the analysis. If we want to make sure that we have not done any mistakes of such kind, we can use a simulation of the real data to crosscheck the analysis result. Back at the diffusion wake measurement we can therefore conclude, that we should not see any diffusion wake signal when conducted with simulated data if we have not implemented any physics of hydrodynamics, which is the origin of the diffusion wake. On the other hand, if the simulated data analysis shows signals of the same kind and order of magnitude as the diffusion wake, it is possible to have missed out an elementary mistake in the analysis method.
+
+\subsection{Modeling the simulation}
+
+Each simulated Pb--Pb event will be generated as an overlay of thermal background from the medium expansion and hadronization, and artificially generated jets from hard scatterings. Both components do not interfere with each other, meaning that the jets are not subject to jet quenching and the medium is not affected by the artificially inserted jets.
+
+The thermal background is generated based on statistics of $0-10\%$ ALICE Pb--Pb data from the RUN 2 period at $\sqrt{s_{NN}} = 5.02\unit{TeV}$ and also based on other publications of Pb--Pb event statistics. The utilized per-event statistics from ALICE RUN 2 involve information on charged hadron multiplicity probability densities $p(N)$ and transverse momentum probability densities $p(p_T)$. The ALICE dataset also provides track transverse momentum dependent elliptic flow parameter statistics $v_2(p_T)$. Because the statistics also include higher-$p_T$ particles that are not subject to flow, it has been corrected such that $\lim_{p_T \rightarrow \infty}  v_2(p_T) = 0$ empirically by fitting the exponentially decaying function
+
+\begin{equation}
+	\begin{gathered}
+		v_2(p_T) = a \cdot (p_T)^b \cdot \exp(-c \cdot p_T) \\
+		\text{with } a=0.063, b=1.6, c=0.47
+	\end{gathered}
+\end{equation}
+
+to the data points below $p_T \leq 5\unit{GeV}$. This value has been chosen, because the logarithmic representation of the particle $p_T$ spectrum of Pb--Pb collisions shows an exponential decay according to Boltzmann statistics for $p_T \in [0, 5]\unit{GeV}$. Such low transverse momenta are therefore dominated by thermal particles that are subject to flow. For higher values, this exponential decay gets distorted by other effects, like particles from hard parton interactions and jets that also contribute to the statistics. Since the elliptic flow parameter $v_2$ also decreases with increasing pseudorapidity of the particle, $v_2(\eta)$ has been modeled with a parabolic fit for datapoints that fulfill $|\eta| \leq 1.25$ based on published data by the ALICE collaboration. \cite[Figure 1, $v_2\{2\}$ for 0-5\%,][]{collaboration_pseudorapidity_2016} The exact shape of $v_2(\eta)$ is not known exactly. Therefore, the $\eta$-symmetric model function $v_2(\eta, p_T) = v_2(p_T) \cdot (1 - a \eta^2) \text{ with } a=0.105 $ has been chosen to be as simple as possible. A collection of the functions and probability density distributions that were used to simulate the thermal background are shown in figure ...
+
+
+
 \subsection{Biases in the dijet method}
 \subsection{Biases in the single jet method}
 
