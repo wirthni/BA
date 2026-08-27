@@ -46,7 +46,7 @@ The thermal background will involve elliptic and triangular ($v_2, v_3 \neq 0$) 
 
 The astute reader may have noticed that the background's transverse momentum probability density will produce high-$p_T$ particles that are not considered background. Due to the indifferentiability of background particles and non-background particles in real data, it is difficult to produce a transverse momentum statistics that only involves background particles. Nevertheless, because the probability density decreases exponentially, low-$p_T$ particles will strongly dominate the particle spectrum, making the occasionally produced high-$p_T$ particles negligible.
 
-To fully simulate Pb--Pb events, realistically distributed high-$p_T$ particles from jets and other hard interactions are still missing. This data is acquired from PYTHIA ....[ALEX FRAGEN]
+To fully simulate Pb--Pb events, realistically distributed high-$p_T$ jets are still missing. This data is generated using the PYTHIA \cite event generator.
 
 The recipe for generating a Pb--Pb event from scratch is pretty straightforward given the introduced data. The first step is to add all $N_\text{PYTHIA}$ PYTHIA particles to the event. Then, a particle multiplicity $N$ is generated based on the probability distribution $p(N)$ from which the number of PYTHIA particles is subtracted, so $N_\text{Background} = N - N_\text{PYTHIA}$. As other event-wise random parameters, the event plane angle $\psi_2$ as well as the triangular flow offset angle $\psi_3$ is chosen in the interval $\psi_{2,3} \in [-\pi/2, +\pi/2]$. Each of the $N_\text{Background}$ particles is then generated with the transverse momentum being determined first from $p(p_T)$. After that, a pseudorapidity is chosen randomly in the interval $\eta \in [-0.9, 0.9]$. Since now the transverse momentum as well as the pseudorapidity are known, it is possible to calculate $v_2(p_T, \eta)$ and also $v_3(p_T, \eta) \equiv v_2(p_T, \eta)$. This was chosen as a simplification, because the order of magnitudes of both values are the same for heavy ion particle multiplicities. \cite{alqahtani_understanding_2026} With the values of $v_2, v_3, \psi_2, \psi_3$ one can generate a probability density distribution of where the particle will be generated in azimuthal angle, that is 
 
@@ -54,7 +54,7 @@ The recipe for generating a Pb--Pb event from scratch is pretty straightforward 
 	p(\phi) = 1 + 2 \left[v_2 \cos(2(\phi - \psi_2)) + v_3 \cos(3(\phi - \psi_3)) \right] \, .
 \end{equation}
 
-With that, a particle has now been assigned a tuple $(\phi, \eta, p_T, m)$ from which all other properties can be derived from. The particle-wise procedure is repeated $N_\text{Background}$ times. An exemplary generated event is shown in figure \ref{fig:generatedevent}. Since the background is generated randomly, one PYTHIA event is reused multiple times with different background samples.
+With that, a particle has now been assigned a tuple $(\phi, \eta, p_T, m)$ from which all other properties can be derived from. The particle-wise procedure is repeated $N_\text{Background}$ times. An exemplary generated event is shown in figure \ref{fig:generatedevent}. Since the background is generated randomly, one PYTHIA event is reused multiple times with other background samples.
 
 \begin{figure}
 	\centering

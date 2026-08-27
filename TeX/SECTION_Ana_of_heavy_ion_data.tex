@@ -15,6 +15,8 @@
 \section{Analysis of heavy ion collision data}
 \label{sec:analysis-of-heavy-ion-collision-data}
 
+\subsection{Anisotropic flow in heavy ion collisions}
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\linewidth]{Media/Pictures/EllipticFlow}
@@ -22,13 +24,15 @@
 	\label{fig:ellipticflow}
 \end{figure}
 
-When analyzing heavy ion collision data from ALICE one has to know first which quantities, may they be event-related or particle-, so track-related, are important to be taken care of for each specific analysis. For serving the purpose of this thesis, we will therefore only take into account those quantities that are or could be needed to conduct an heavy ion analysis regarding the diffusion wake. Starting at where all particles come from let us first look at interesting event, so collision, properties. In the first chapter we have talked about the phenomenologies of heavy ion collisions at collider energies in the case where the cross sections of the two nuclei fully overlap. What has not been talked about yet is what happens when two nuclei collide only peripherally, or non-centrally. The centrality of the collision of two nuclei is characterized by the impact parameter $b$ between the nuclei, so the distance between their centers in the transverse direction. \cite{collaboration_centrality_2021} The smaller the impact parameter is the bigger the overlap region of the nuclei is, thus increasing the size of the resulting medium. The outcome of the collision directly depends on the number of nucleons that participate in it. But this number of participants is not directly accessible and hence needs to be derived from other quantities that scale approximately with the number of participating nucleons, such as the post-collision particle multiplicity. The centrality of events is categorized from 0-100\%, where low values describe the most central events, e.g. 0-10\%. An effect that emerges from the non-centrality of collisions is elliptic flow. When nuclei collide non-centrally, the overlap region is shaped like a lentil, shown in figure \ref{fig:ellipticflow}. Given this initial lentil shape of the overlap region, it is interesting to look at whether this shape also shows up in the distribution of particles in the momentum space.  \cite{collaboration_centrality_2021} A Fourier decomposition is used to describe the azimuthal dependence of the final momentum-space distributions: \cite{sorensen_elliptic_2010}
+In the first chapter we have talked about the phenomenologies of heavy ion collisions at collider energies in the case where the cross sections of the two nuclei fully overlap. What has not been talked about yet is what happens when two nuclei collide only peripherally, or non-centrally. The centrality of the collision of two nuclei is characterized by the impact parameter $b$ between the nuclei, so the distance between their centers in the transverse direction. \cite{collaboration_centrality_2021} The smaller the impact parameter is the bigger the overlap region of the nuclei is, thus increasing the size of the resulting medium. The outcome of the collision directly depends on the number of nucleons that participate in it. But this number of participants is not directly accessible and hence needs to be derived from other quantities that scale approximately with the number of participating nucleons, such as the post-collision particle multiplicity. The centrality of events is categorized from 0-100\%, where low values describe the most central events, e.g. 0-10\%. An effect that emerges from the non-centrality of collisions is elliptic flow. When nuclei collide non-centrally, the overlap region is shaped like a lentil, shown in figure \ref{fig:ellipticflow}. Given this initial lentil shape of the overlap region, it is interesting to look at whether this shape also shows up in the distribution of particles in the momentum space.  \cite{collaboration_centrality_2021} A Fourier decomposition is used to describe the azimuthal dependence of the final momentum-space distributions: \cite{sorensen_elliptic_2010}
 
 \begin{equation}
 	\frac{d^3 N}{p_T d p_T dy d(\phi - \psi)} = \frac{1}{2 \pi} \frac{d N}{p_T d p_T dy} \cdot \left[1 + v_1 \cos(\phi - \psi) + 2 v_2 \cos(2 (\phi - \psi)) + \dots \right] \, .
 \end{equation}
 
 $\phi$ is the azimuth angle of the particle, $y$ is the longitudinal rapidity, $p_T$ the transverse momentum and $\psi$ is the reaction plane angle defined by the vector connecting the centers of the two colliding nuclei. That is the $x$-axis in the case of figure \ref{fig:ellipticflow}. The reaction plane angle $\psi$ is not known and is estimated using the transverse distribution of particles in the final state. The acquired approximation is called event plane angle \cite{poskanzer_methods_1998}. Since the reaction plane angle is not known and we may assume that the event plane angle approximates the reaction plane angle well, we will call the event plane angle $\psi$ in the following. $v_2 > 0$ describes the case where more particles are emitted along the short axis of the overlap region. The bigger $v_2$, the stronger the particle correlation asymmetry is.  It comes out that $v_2 > 0$ for typical per-nucleon energies at the LHC, \cite{collaboration_centrality_2021} so we will expect an enhancement of particles in the direction of the reaction plane. That is how the event plane is defined, then. Because we will be investigating particle correlation differences at orders of magnitude smaller than the effect of the elliptic flow, $\psi$ will be an event property to keep in mind. 
+
+\subsection{Properties of events and particles}
 
 \begin{figure}[H]
 	\centering
@@ -37,7 +41,7 @@ $\phi$ is the azimuth angle of the particle, $y$ is the longitudinal rapidity, $
 	\label{fig:alicecoordinates}
 \end{figure}
 
-The position of the primary vertex $(x,y,z)$ describes how far the event has happened away form the nominal interaction point and will be needed for only selecting events that have a low $z$ value. We do this, because data taking at ALICE is only calibrated for a certain range around the nominal interaction point. The multiplicity $N$ of an event will hold the number of charged particle tracks in the corresponding event. Since we will be taking particle correlation differences between different events, it may become important to do so between similarly populated events.
+When analyzing heavy ion collision data from ALICE one has to know first which quantities, may they be event-related or particle-, so track-related, are important to be taken care of for each specific analysis. For serving the purpose of this thesis, we will therefore only take into account those quantities that are or could be needed to conduct an heavy ion analysis regarding the diffusion wake. Starting at where all particles come from let us first look at interesting event properties. The position of the primary vertex $(x,y,z)$ describes how far the event has happened away form the nominal interaction point and will be needed for only selecting events that have a low $z$ value. We do this, because data taking at ALICE is only calibrated for a certain range around the nominal interaction point. The multiplicity $N$ of an event will hold the number of charged particle tracks in the corresponding event. Since we will be taking particle correlation differences between different events, it may become important to do so between similarly populated events.
 
 Particles, or tracks, will have individual properties, measured by a combination of the ALICE detector systems, including the particle charge $q$, the initial relativistic momentum $\vec{p} = (P^1, P^2, P^3) = (p_x, p_y, p_z)$, the particle dependent TPC energy loss $dE/dx$ for possible particle identification, and the TPC track length. We will remove particles that have their reconstructed trajectories far away from the primary vertex position. This is characterized by the distance to closest approach (DCA) values DCA$_z$ and DCA$_{xy}$.
 
@@ -55,8 +59,39 @@ From these particle properties one can deduce further useful quantities. Since m
 	\label{fig:dijet2dexample}
 \end{figure}
 
-\subsection{FastJet tool for jet identification}
+\subsection{Jets as trigger objects and the anti-$k_t$ algorithm}
+\label{sec:antikt}
 
+Many analyses require the presence of a jet that fulfills certain criteria, for example a minimum transverse momentum. To know the transverse momentum of a jet we need to know the total transverse momentum of the particles that belong to the jet, which is not easy to accomplish since we cannot unambiguously distinguish background particles from other objects, as already mentioned. Another possibility is to speak of the jet as an object itself, not of its individual constituents. The mapping from a collection of single particles to a collection of jets can be done with jet clustering algorithms. FastJet \cite{cacciari_fastjet_2012} is a C++ package that provides a broad range of jet finding tools and jet analysis tools. The jet algorithm that will be used is the anti-$k_t$ sequential jet clustering algorithm, \cite{cacciari_anti-_2008} since its jet identification process is very stable under changes of underlying soft radiation. Just like in other sequential jet algorithms, two measures are introduced:
 
+\begin{equation}
+	\begin{gathered}
+		d_{ij} = \min \left(k_{ti}^{-2}, k_{tj}^{-2}\right) \frac{\Delta_{ij}^2}{R^2}, \\
+		d_{iB} = k_{ti}^{-2}
+	\end{gathered}
+	\label{eq:anti-k_t}
+\end{equation}
+
+where $\Delta_{ij}^2 = (y_i - y_j)^2 + (\phi_i - \phi_j)^2$ and $k_{ti}, y_i \text{ and } \phi_i$ are respectively the transverse momentum, rapidity and azimuth of particle $i$. The quantity $d_{iB}$ is also called the beam distance of particle $i$. The value $R$ is the jet radius parameter. Let us now look at how the algorithm uses the formulae above. The algorithm starts with the four-momenta for all particles in the event $p_i^\mu, i = 0,1,\dots, N-1$. Note that all particles, we call them protojets in this stage, are essentially light-like.\cite{ellis_successive_1993} The jet algorithm then recursively groups pairs of protojets together to form new protojets, preferably those with nearly parallel momentum so that they will eventually form part of the same jet. The way this distance measure is formulated makes soft particles that cluster with neighboring hard particles more probable than soft particles that cluster among themselves. The algorithm decides on when the joining for a particular protojet should cease, after which the protojet is called a jet and not manipulated any further.
+
+In terms of equation (\ref{eq:anti-k_t}), there are first determined all quantities $d_{ij}$ and $d_{iB}$ for all particles $i,j$. Among these values, the smallest one is picked and labeled $d_\text{min}$. If $d_\text{min}$ is a $d_{ij}$, merge protojets $i$ and $j$ into a new protojet $k$ with
+
+\begin{equation}
+	\begin{gathered}
+		p_k^\mu = p_i^\mu + p_j^\mu \\
+		\text{from which directly follows}\\	
+		k_{tk} = k_{ti} + k_{tj} \\
+		\eta_k = \left[k_{ti} \eta_i + k_{tj} \eta_j \right] / k_{tk} \\
+		\phi_k = \left[k_{ti} \phi_i + k_{tj} \phi_j \right] / k_{tk} 
+	\end{gathered}
+\end{equation}
+
+so their coordinates in the phase space $(\phi, \eta)$ are weighted based on their respective transverse momenta. If $d_{min}$ is a $d_i$, the corresponding protojet $i$ is considered not mergable. It is removed from the list of protojets and added to the list of jets. This process is repeated until all protojets are in the list of jets. \cite{ellis_successive_1993} In collisions the hard jets are often accompanied by a more diffuse background of soft particles. \cite{cacciari_fastjet_2012} Performing measurements on averages on this background makes it possible to correct the hard jets for the soft contamination, for example to isolate the summed transverse momentum of the jet from the underlying background particles contributing to this sum. It is not well defined how to distinguish background from other objects like jets. FastJet uses a technique in which first the $N$ hardest jets are removed from the (proto-)jet list and then a measurement on transverse momentum per area, so $\rho = p_T/A$ is performed over the whole event. The resulting average transverse momentum density can then be multiplied with the jet area of jet $i$ to get the contribution of the soft particle background to jet $i$ and subtracted if desired to get the non-background contribution of the jet constituents. 
+
+\subsection{Hadrons as trigger objects}
+
+Identifying high-$p_T$ objects by clustering particles to jets as described in section \ref{sec:antikt} can sometimes lead to unwanted bias effects. The behavior of clustering algorithms is not invariant under changes of local measures, for example the local particle density or the local particle transverse momentum spectrum. This can lead to biases if one conducts analyses in different starting conditions. As an example, let us consider we would like to trigger for a jet that has a transverse momentum of more than $30\bunit{GeV}$. Since the total transverse momentum of the jet is the sum of the transverse momenta of its constituents, more constituents mean that this threshold is reached quicker. For a positive $v_2$, one will find more particles in the event plane that can be used for jet clustering than out of the event plane. As a direct consequence, jets are preferably clustered in-plane than elsewhere although the average initial distribution of hard hadrons is uniform in azimuthal angle. The jet's azimuthal position is therefore biased by the elliptic flow. To overcome this issue it is also possible to take single, high-$p_T$ hadrons as trigger objects. They occur independently from the anisotropic flow of low-$p_T$ hadrons and are therefore not biased. Usually the threshold for the hadron's transverse momentum can be lowered compared to the jet's transverse momentum threshold because the leading hadron of the jet as one constituent of many only contributes a fraction of its total $p_T$.
+
+Both methods, using hadrons as trigger objects as well as using jets, will be used in the analysis to compare the results.
 
 \end{document}

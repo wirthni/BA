@@ -63,9 +63,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     #define DEF_PYTHIAOversampling 100
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews true 
-    #define DEF_JetLeadingPt 10.0
-    #define DEF_JetSubleadingPt 7.0
+    #define DEF_OutputEventOverviews false 
+    #define DEF_JetLeadingPt 40.0
+    #define DEF_JetSubleadingPt 20.0
     #define DEF_HadLeadingPt 10.0
     #define DEF_HadSubleadingPt 7.0
     #define DEF_CorrelationMinPt 1.0
@@ -1564,7 +1564,7 @@ double Function_FlowByPtAndEta(double x, double params[])
     FlowParams = 0.063 * pow(x, 1.6) * exp(-0.47*x);
 
     //now reduce based on eta, a fit to https://www.hepdata.net/record/ins1456145 from -1.25 <= x <= 1.25
-    FlowParams *= (1.0 - 0.105*pow(Eta, 2));
+    FlowParams *= 1 - 0.15*abs(Eta);
 
     return FlowParams;
 }
