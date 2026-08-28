@@ -3,20 +3,25 @@
 using namespace fastjet;
 using namespace std;
 
+vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles);
+
 /* Parameters:
 i_InputFile: Format xxx.root
 */
 Int_t DijetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
+    bool UseJetTrigger = true;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.3
-    #define DEF_HadLeadingPt 15.0
-    #define DEF_HadSubleadingPt 10.0
+    #define DEF_JetLeadingPt 40.0
+    #define DEF_JetSubleadingPt 20.0
+    #define DEF_HadLeadingPt 25.0
+    #define DEF_HadSubleadingPt 15.0
     #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_MaxPartilclesPerJet 200
     #define DEF_MaxJetPt 150.0
@@ -229,50 +234,55 @@ Int_t DijetAna(TString i_InputFile = "in.root")
             /
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            if(UseJetTrigger)
+            {
+                Jets[collision.ColID] = FindJets(ParticleVector[collision.ColID]);
+            }
+            else
+            {
+                if(HighPtParticles[collision.ColID].size() == 0) continue;
+                do{
 
-            if(HighPtParticles[collision.ColID].size() == 0) continue;
+                    Int_t HighestPtIndex = 0;
 
-            do{
-
-                Int_t HighestPtIndex = 0;
-
-                //search for highest momentum and choose corresponding particle as a primary vertex
-                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
-                {
-                    if(HighPtParticles[collision.ColID][i].pt() > HighPtParticles[collision.ColID][HighestPtIndex].pt())
+                    //search for highest momentum and choose corresponding particle as a primary vertex
+                    for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
                     {
-                        HighestPtIndex = i;
+                        if(HighPtParticles[collision.ColID][i].pt() > HighPtParticles[collision.ColID][HighestPtIndex].pt())
+                        {
+                            HighestPtIndex = i;
+                        }
                     }
-                }
 
-                //push particle into jet vector 
-                Jets[collision.ColID].push_back(HighPtParticles[collision.ColID][HighestPtIndex]);
+                    //push particle into jet vector 
+                    Jets[collision.ColID].push_back(HighPtParticles[collision.ColID][HighestPtIndex]);
 
-                //pop jet particle
-                HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin() + HighestPtIndex);
+                    //pop jet particle
+                    HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin() + HighestPtIndex);
 
-                //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
-                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
-                {
-
-                    double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
-                    double DeltaPhi = Jets[collision.ColID].back().phi() - HighPtParticles[collision.ColID][i].phi();
-
-                    //normalize
-                    if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                    else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-
-                    double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
-
-                    if(DeltaR <= DEF_JetRadius)
+                    //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
+                    for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
                     {
-                        //pop candidate
-                        HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin()+i);
-                        i = -1;//start again for safety
-                    }
-                }
 
-            }while(HighPtParticles[collision.ColID].size() > 0);
+                        double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
+                        double DeltaPhi = Jets[collision.ColID].back().phi() - HighPtParticles[collision.ColID][i].phi();
+
+                        //normalize
+                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+
+                        double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
+
+                        if(DeltaR <= DEF_JetRadius)
+                        {
+                            //pop candidate
+                            HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin()+i);
+                            i = -1;//start again for safety
+                        }
+                    }
+
+                }while(HighPtParticles[collision.ColID].size() > 0);
+            }
 
             //sort high pt hadrons by size to have same structure as FindJets return type
             Jets[collision.ColID] = sorted_by_pt(Jets[collision.ColID]);
@@ -297,9 +307,13 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             if(Jets[collision.ColID].size() < 2) continue;
 
-            if(Jets[collision.ColID][0].pt() < DEF_HadLeadingPt) continue;
+            if(!UseJetTrigger && Jets[collision.ColID][0].pt() < DEF_HadLeadingPt) continue;
 
-            if(Jets[collision.ColID][1].pt() < DEF_HadSubleadingPt) continue;
+            if(UseJetTrigger && Jets[collision.ColID][0].pt() < DEF_JetLeadingPt) continue;
+
+            if(!UseJetTrigger && Jets[collision.ColID][1].pt() < DEF_HadSubleadingPt) continue;
+
+            if(UseJetTrigger && Jets[collision.ColID][1].pt() < DEF_JetSubleadingPt) continue;
 
             if(abs(Jets[collision.ColID][0].eta()) > 0.9 - DEF_JetRadius) continue;
 
@@ -384,20 +398,23 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //divide by event numbers
-    for(int iGap = 0; iGap <=1; iGap++)
+    if(LargeGapEventCounter != 0 || SmallGapEventCounter != 0)
     {
-        float ScaleFactor;
-        (iGap) ? (ScaleFactor = 1./(float)LargeGapEventCounter) : (ScaleFactor = 1./(float)SmallGapEventCounter);
-        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(ScaleFactor);
-        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(ScaleFactor);
-        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(ScaleFactor);
-        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(ScaleFactor);
-    
-        h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(ScaleFactor);
-        h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(ScaleFactor);
-        h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(ScaleFactor);
-        h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(ScaleFactor);
-    
+        for(int iGap = 0; iGap <=1; iGap++)
+        {
+            float ScaleFactor;
+            (iGap) ? (ScaleFactor = 1./(float)LargeGapEventCounter) : (ScaleFactor = 1./(float)SmallGapEventCounter);
+            h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(ScaleFactor);
+            h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(ScaleFactor);
+            h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(ScaleFactor);
+            h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(ScaleFactor);
+        
+            h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(ScaleFactor);
+            h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(ScaleFactor);
+            h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(ScaleFactor);
+            h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(ScaleFactor);
+        
+        }
     }
 
     //produce differences
@@ -681,6 +698,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         TH1I* CounterHisto_Sum = (TH1I*) OutputFile->Get("CounterHisto");
         CounterHisto_Sum->Add(CounterHisto);
 
+        OutputFile->Close();
+
         OutputFile = new TFile(str_out.Data(),"RECREATE");
         OutputFile->cd();
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Write();
@@ -710,4 +729,58 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     }
 
     return 1;
+}
+
+vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
+{
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    /
+    /                                                           JET FINDER CODE 
+    /
+    /
+    /
+    /
+    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //DEFINITIONS
+    #define jet_radius 0.2
+    Double_t ghost_maxrap = 1.1;
+    Double_t eta_acceptance = 0.9;
+    double ptmin = 0.15;
+    JetDefinition jet_def(antikt_algorithm, jet_radius);
+    GhostedAreaSpec area_spec(ghost_maxrap);
+    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
+
+    //CLUSTER JETS
+    ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
+    vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
+    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius);
+    vector<PseudoJet> FiducialJets = Fiducial_cut_selector(jets_all);
+
+    //ESTIMATE AND SUBTRACT BACKGROUND
+    Int_t Rem_n_hardest = 2;
+    double eBkg_R = 0.2;
+    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R);
+    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
+    ClusterSequenceArea ClustSeqBg(vec_particles, jet_def_bkgd, area_def_bkgd);
+    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest));
+    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
+    bkgd_estimator.set_cluster_sequence(ClustSeqBg);
+    Subtractor subtractor(&bkgd_estimator);
+    subtractor.set_use_rho_m(true);
+    vector<PseudoJet> SubtractedJets = subtractor(FiducialJets);
+
+    //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
+    Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
+    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
+    {
+        if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
+        //SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
+
+    }
+
+    return sorted_by_pt(SubtractedJets);
+
 }
