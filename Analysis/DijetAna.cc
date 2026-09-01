@@ -18,8 +18,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.3
-    #define DEF_JetLeadingPt 40.0
-    #define DEF_JetSubleadingPt 20.0
+    #define DEF_JetLeadingPt 30.0
+    #define DEF_JetSubleadingPt 15.0
     #define DEF_HadLeadingPt 25.0
     #define DEF_HadSubleadingPt 15.0
     #define DEF_BackgroundLimit 7.0 //GeV
@@ -284,6 +284,8 @@ Int_t DijetAna(TString i_InputFile = "in.root")
                 }while(HighPtParticles[collision.ColID].size() > 0);
             }
 
+            if(Jets[collision.ColID].size() < 1) continue; 
+
             //sort high pt hadrons by size to have same structure as FindJets return type
             Jets[collision.ColID] = sorted_by_pt(Jets[collision.ColID]);
             //make eta cut
@@ -398,7 +400,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //divide by event numbers
-    if(LargeGapEventCounter != 0 || SmallGapEventCounter != 0)
+    if(LargeGapEventCounter > 0 || SmallGapEventCounter > 0)
     {
         for(int iGap = 0; iGap <=1; iGap++)
         {
@@ -698,8 +700,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         TH1I* CounterHisto_Sum = (TH1I*) OutputFile->Get("CounterHisto");
         CounterHisto_Sum->Add(CounterHisto);
 
-        OutputFile->Close();
-
         OutputFile = new TFile(str_out.Data(),"RECREATE");
         OutputFile->cd();
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Write();
@@ -774,7 +774,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 
     //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
     Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
+    for(int iJet = SubtractedJets.size() - 1; iJet >= 0; iJet--)
     {
         if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
         //SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));

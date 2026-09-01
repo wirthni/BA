@@ -60,14 +60,14 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     long NoOfPosPulls = 0;
     long NoOfNegPulls = 0;
 
-    #define DEF_PYTHIAOversampling 100
+    #define DEF_PYTHIAOversampling 50
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews true 
-    #define DEF_JetLeadingPt 40.0
-    #define DEF_JetSubleadingPt 20.0
-    #define DEF_HadLeadingPt 10.0
-    #define DEF_HadSubleadingPt 7.0
+    #define DEF_OutputEventOverviews false 
+    #define DEF_JetLeadingPt 20.0
+    #define DEF_JetSubleadingPt 10.0
+    #define DEF_HadLeadingPt 15.0
+    #define DEF_HadSubleadingPt 10.0
     #define DEF_CorrelationMinPt 1.0
     #define DEF_CorrelationMaxPt 2.0
     #define DEF_MaxPartilclesPerJet 200
@@ -669,13 +669,15 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            bool m_MirrorEvent = false;
+
             if(JetVector.size() < 1) continue;
 
             h2D_eta_vs_phi_JetCoordinates_Leading_NoCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
 
             if(JetVector.size() < 2 )continue;
 
-            if(JetVector[0].eta() < 0) continue;
+            if(JetVector[0].eta() < 0) m_MirrorEvent = true;
 
             h2D_eta_vs_phi_JetCoordinates_Leading_OnlyEtaCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
 
@@ -725,6 +727,9 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                 h1D_JetPopulation_Subleading->Fill(JetVector[1].user_info<MyUserInfo>().getNoOfParticles());
             }
 
+            float Sgn = 1;
+            if(m_MirrorEvent) Sgn = -1;
+
             if(LargeGap)
             {
                 
@@ -734,7 +739,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     double DeltaPhi = particle[0] - JetVector[0].phi_std();
                     if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
                     else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_LargeGap->Fill(particle[2], particle[1]);
+                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_LargeGap->Fill(particle[2], particle[1] * Sgn);
 
                     // Fill event overview
                     #if DEF_OutputEventOverviews
@@ -744,12 +749,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     // Fill correlation relative to leading jet in phi
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_LargeGap->Fill(particle[1], DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_LargeGap->Fill(Sgn * particle[1], DeltaPhi);
 
                     // Fill correlation relative to leading jet
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_LargeGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_LargeGap->Fill(Sgn * particle[1] - JetVector[0].eta(), DeltaPhi);
 
                     //in case of hadron analysis, look how many particles contribute to the leading jet
                     if(i_UseHadronInstadOfJet)
@@ -785,7 +790,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     double DeltaPhi = particle[0] - JetVector[0].phi_std();
                     if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
                     else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_SmallGap->Fill(particle[2], particle[1]);
+                    if(abs(DeltaPhi) <= Pi/2) h2D_pt_vs_eta_SmallGap->Fill(particle[2], particle[1] * Sgn);
 
                     // Fill event overview
                     #if DEF_OutputEventOverviews
@@ -795,12 +800,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     // Fill correlation relative to leading jet in phi
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_SmallGap->Fill(particle[1], DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt)h2D_eta_vs_dphi_SmallGap->Fill(Sgn * particle[1], DeltaPhi);
 
                     // Fill correlation relative to leading jet
                     if(DeltaPhi < -Pi/2) DeltaPhi += 2*Pi;
                     else if(DeltaPhi > 3*Pi/2) DeltaPhi -= 2*Pi;
-                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_SmallGap->Fill(particle[1] - JetVector[0].eta(), DeltaPhi);
+                    if(particle[2] >= DEF_CorrelationMinPt && particle[2] <= DEF_CorrelationMaxPt) h2D_deta_vs_dphi_SmallGap->Fill(Sgn * particle[1] - JetVector[0].eta(), DeltaPhi);
 
                     //in case of hadron analysis, look how many particles contribute to the leading jet
                     if(i_UseHadronInstadOfJet)
@@ -862,11 +867,6 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     cout << "Pos/Neg pulls: " << NoOfPosPulls << "/" << NoOfNegPulls << endl;
 
-    if(SmallGapEventCounter + LargeGapEventCounter == 0){
-        OutputFile->Close();
-        return 0;
-    }
-
     // Normalize histograms by number of events
     h2D_pt_vs_eta_LargeGap->Scale(1./(double)LargeGapEventCounter);
     h2D_pt_vs_eta_SmallGap->Scale(1./(double)SmallGapEventCounter);
@@ -888,8 +888,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     // Rebin Histograms if necessary
     h2D_eta_vs_dphi_LargeGap->Rebin2D(8,8);
     h2D_eta_vs_dphi_SmallGap->Rebin2D(8,8);
-    h2D_eta_vs_dphi_LargeGap->Scale(1.0/64.0);
-    h2D_eta_vs_dphi_SmallGap->Scale(1.0/64.0);
+    h2D_eta_vs_dphi_LargeGap->Scale(1.0/8.0);
+    h2D_eta_vs_dphi_SmallGap->Scale(1.0/8.0);
 
     // Divide by bin widths
     h2D_eta_vs_dphi_LargeGap->Scale(1./(h2D_eta_vs_dphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_dphi_LargeGap->GetYaxis()->GetBinWidth(0)));
@@ -1162,20 +1162,11 @@ i_PtRange: e.g. particles within (1.0, 2.0)GeV/c should be analyzed -> i_PtRange
 i_LowPtCut: e.g. particles within (1.0, 2.0)GeV/c should be analyzed ->i_LowPtCut = 1
 */
 
-Int_t FlowMC_Ana(const TString DataFile) {
+Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
 
     #define DEF_AxisLabelSize 0.05
-    #define DEF_AxisTitleSize 0.05
     #define DEF_HistoTitleSize 0.1
     #define DEF_Rebin 16
-    #define DEF_Margin_Top 0.1
-    #define DEF_Margin_Bottom 0.15
-    #define DEF_Margin_Left 0.25
-    #define DEF_Margin_Left_ForMiddlePanel 0.1
-    #define DEF_Margin_Right_ForMiddlePanel 0.02
-
-    float LowPtCuts[4] = {0.0f, 1.0, 2.0f, 4.0f};
-    float HighPtCuts[4] = {1.0f, 2.0f, 4.0f, 6.0f};
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -1210,67 +1201,53 @@ Int_t FlowMC_Ana(const TString DataFile) {
 
     //configure and draw canvas
     TCanvas* can_ParticleMultiplicities = new TCanvas("ParticleMultiplicities","ParticleMultiplicities",1000,1000);
-    can_ParticleMultiplicities->Divide(3,4, 0, 0);
+    can_ParticleMultiplicities->Divide(3,1, 0, 0);
 
-    for(int iRow=0; iRow<=3; iRow++)
-    {
-        //SMALL GAP
-        can_ParticleMultiplicities->cd(1 + (3*iRow));
+    //SMALL GAP
+    can_ParticleMultiplicities->cd(1);
 
-        TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", LowPtCuts[iRow] * BinsPerMomentum, HighPtCuts[iRow] * BinsPerMomentum);
-        h1D_PartMult_SmallGap->Scale((float)h2D_pt_vs_eta_SmallGap->GetYaxis()->GetBinWidth(1));
-        
-        gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right_ForMiddlePanel, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
-        //markings
-        (iRow==0) ? (h1D_PartMult_SmallGap->SetTitle("Small Gap")) : (h1D_PartMult_SmallGap->SetTitle(""));
-        h1D_PartMult_SmallGap->SetTitleSize(DEF_HistoTitleSize);
-        h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
-        h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
-        h1D_PartMult_SmallGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_SmallGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-        (iRow==0) ? (h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}")) : (h1D_PartMult_SmallGap->GetYaxis()->SetTitle(""));
-        h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
-        h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
-        h1D_PartMult_SmallGap->DrawCopy();
-
-        float ymin = h1D_PartMult_SmallGap->GetYaxis()->GetXmin();
-        float ymax = h1D_PartMult_SmallGap->GetYaxis()->GetXmax();
-
-        can_ParticleMultiplicities->cd(2 + (3*iRow));
-
-        TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", LowPtCuts[iRow] * BinsPerMomentum, HighPtCuts[iRow] * BinsPerMomentum);
-        h1D_PartMult_LargeGap->Scale((float)h2D_pt_vs_eta_LargeGap->GetYaxis()->GetBinWidth(1));
+    TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    cout << "Lower bin: " << i_LowPtCut*BinsPerMomentum << endl;
+    cout << "Upper bin: " << (i_LowPtCut + i_PtRange) * BinsPerMomentum << endl;
+    h1D_PartMult_SmallGap->Scale(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(1));
     
-        gPad->SetMargin(DEF_Margin_Left_ForMiddlePanel, DEF_Margin_Right_ForMiddlePanel, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
-        (iRow==0) ? (h1D_PartMult_LargeGap->SetTitle("Large Gap")) : (h1D_PartMult_LargeGap->SetTitle(""));
-        h1D_PartMult_LargeGap->SetTitleSize(DEF_HistoTitleSize);
-        h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(ymin, ymax);
-        h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
-        h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
-        h1D_PartMult_LargeGap->DrawCopy();
 
-        //draw difference
-        can_ParticleMultiplicities->cd(3 + (3*iRow));
+    //markings
+    h1D_PartMult_SmallGap->SetTitle("Small Gap");
+    h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_SmallGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
+    h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
+    h1D_PartMult_SmallGap->DrawCopy();
 
-        gPad->SetMargin(DEF_Margin_Left_ForMiddlePanel, 0.0, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
-        h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
+    can_ParticleMultiplicities->cd(2);
 
-        (iRow==0) ? (h1D_PartMult_LargeGap->SetTitle("Difference")) : (h1D_PartMult_LargeGap->SetTitle(""));
-        h1D_PartMult_LargeGap->SetTitleSize(DEF_HistoTitleSize);
-        (iRow == 3) ? (h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta")) : (h1D_PartMult_LargeGap->GetXaxis()->SetTitle(""));
-        h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(-0.1, 0.1);
-        h1D_PartMult_LargeGap->GetYaxis()->SetTitle("");
-        h1D_PartMult_LargeGap->DrawCopy();
+    TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
+    h1D_PartMult_LargeGap->Scale(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(1));
+   
+    
+    h1D_PartMult_LargeGap->SetTitle("Large Gap");
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
+    h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
+    h1D_PartMult_LargeGap->DrawCopy();
 
-    }
+    //draw difference
+    can_ParticleMultiplicities->cd(3);
+
+    h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
+    h1D_PartMult_LargeGap->SetTitle("Difference");
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta} - #frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
+    h1D_PartMult_LargeGap->DrawCopy();
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
     /
@@ -1479,10 +1456,10 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 
     //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
     Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(int iJet = 0; iJet < SubtractedJets.size(); iJet++)
+    for(int iJet = SubtractedJets.size() - 1; iJet >= 0; iJet--)
     {
         if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
-        SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
+        //SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
 
     }
 
