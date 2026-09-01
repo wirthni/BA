@@ -51,7 +51,7 @@ To fully simulate Pb--Pb events, realistically distributed high-$p_T$ jets are s
 The recipe for generating a Pb--Pb event from scratch is pretty straightforward given the introduced data. The first step is to add all $N_\text{PYTHIA}$ PYTHIA particles to the event. Then, a particle multiplicity $N$ is generated based on the probability distribution $p(N)$ from which the number of PYTHIA particles is subtracted, so $N_\text{Background} = N - N_\text{PYTHIA}$. As other event-wise random parameters, the event plane angle $\psi_2$ as well as the triangular flow offset angle $\psi_3$ is chosen in the interval $\psi_{2,3} \in [-\pi/2, +\pi/2]$. Each of the $N_\text{Background}$ particles is then generated with the transverse momentum being determined first from $p(p_T)$. After that, a pseudorapidity is chosen randomly in the interval $\eta \in [-0.9, 0.9]$. Since now the transverse momentum as well as the pseudorapidity are known, it is possible to calculate $v_2(p_T, \eta)$ and also $v_3(p_T, \eta) \equiv v_2(p_T, \eta)$. This was chosen as a simplification, because the order of magnitudes of both values are the same for heavy ion particle multiplicities. \cite{alqahtani_understanding_2026} With the values of $v_2, v_3, \psi_2, \psi_3$ one can generate a probability density distribution of where the particle will be generated in azimuthal angle according to isotropic, elliptic and triangular flow, that is
 
 \begin{equation}
-	p(\phi) = \frac{1}{2\pi} \left\{ 1 + 2 \left[v_2 \cos(2(\phi - \psi_2)) + v_3 \cos(3(\phi - \psi_3)) \right] \right\} \, .
+	p(\phi) = \frac{1}{2\pi} \left\{ 1 + 2 \left[v_1 \cos(\phi - \psi_1) +  v_2 \cos(2(\phi - \psi_2)) + v_3 \cos(3(\phi - \psi_3)) \right] \right\} \, .
 \end{equation}
 
 With that, a particle has now been assigned a tuple $(\phi, \eta, p_T, m)$ from which all other properties can be derived from. The particle-wise procedure is repeated $N_\text{Background}$ times. An exemplary generated event is shown in figure \ref{fig:generatedevent}. Since the background is generated randomly, one PYTHIA event is reused multiple times with other background samples.
@@ -69,13 +69,36 @@ For reasons of simplicity the terminology dijet will be used for two correlated 
 
 Using the correlation of hadrons relative to a dijet pair is one way to measure the diffusion wake in Pb--Pb events. To get an idea of how the analysis result would look like without expecting the diffusion wake, this analysis is conducted with the simulated MC generated Pb--Pb events. The event selection procedure is done according to the theoretical prediction of the diffusion wake in dijet events in \cite{yang_background-free_2025}. Trivially, the number of jets must be at least two. From the collection of jets the two jets with the highest transverse momenta are labeled the leading jet (highest $p_T$) and the subleading jet. Both jets must have a transverse momentum above the thresholds $p_{T,\text{min}}^\text{Leading}$ and $p_{T,\text{min}}^\text{Subleading}$ and they must be approximately back-to-back, enforced with the requirement $|\Delta \phi_{\text{Leading}, \text{Subleading}}| \geq \pi/2$. The leading jet is also required to fulfill $\eta_{\text{Leading}} \geq 0$ to always have it in the positive pseudorapidity hemisphere. If not, the whole event is mirrored on the $\eta=0$ plane. Events that fulfill these requirements are then categorized into large gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} < 0$) and small gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} > 0$). The diffusion wake is then isolated using the correlation of particles that are azimuthally close to the leading jet, that is $|\phi_\text{Hadron} - \phi_{\text{Leading}}| \leq \pi/2$ over the full pseudorapidity range. Correlations for low-$p_T$ particles in the bins $ p_T \in \left\{[0,1], [1,2], [2,4], [4,6]\right\} \bunit{GeV}$ are studied separately. Each correlation is  scaled by $1/N_\text{Events}^\text{Large Gap (Small Gap)}$ to get a per-event correlation. 
 
-\paragraph{Results of the dijet analysis}
+\subsubsection{Results of the dijet analysis}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20.pdf}
+	\caption{Results of the dijet analysis with simulated Pb--Pb events using leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$. \\
+		$C = 1/N_\text{Large/Small Gap} \cdot d N_\text{Large/Small Gap}/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet4020}
+\end{figure}
 
 
+\subsubsection{Results of the dihadron analysis}
 
-\paragraph{Results of the dihadron analysis}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_15_10}
+	\caption{Results of the dihadron analysis with simulated Pb--Pb events using leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$. \\
+	$C = 1/N_\text{Large/Small Gap} \cdot d N_\text{Large/Small Gap}/d \eta$.	
+	\textbf{(left)} Particle correlations next to the leading hadron for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultshad1510}
+\end{figure}
+
+Figure \ref{fig:flowresultshad1510} shows the result of the dihadron analysis with simulated Pb--Pb events using leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$. The particle correlations show an enhancement of particles in the positive rapidity range due to the medium response to the leading trigger hadron. The magnitude of the particle correlations decreases rapidly with bigger transverse momenta of the soft particles due to the exponentially decaying occurrence of particles with respect to $p_T$ as seen in the second panel of figure \ref{fig:simulationinput}. The difference between large gap and small gap particle correlations show no ...
+
+
 
 
 \subsection{Single jet(hadron) analysis with MC events}
+
+
 
 \end{document}
