@@ -28,7 +28,8 @@ double GetNByProb(void);
 double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, double i_UpperLim, double i_FuncParams[]);
 double Function_NormGauss(double x, double params[]);
 double Function_PhiByFlow(double x, double params[]);
-double Function_FlowByPtAndEta(double x, double params[]);
+double Function_v2v3ByPtAndEta(double x, double params[]);
+double Function_DirectedFlowByEta(double Eta);
 template <typename T> int sgn(T val);
 
 class MyUserInfo : public fastjet::PseudoJet::UserInfoBase {
@@ -515,10 +516,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     double pseudoparams[2] = {Pt,Eta};
 
                     //flow parameter v_2 is generated based on RUN 2 statistics
-                    double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+                    double v_2_and_v_3 = Function_v2v3ByPtAndEta(Pt, pseudoparams);
+                    double v_1 = Function_DirectedFlowByEta(Eta);
 
-                    h2D_Pt_vs_v2->Fill(Pt, FlowParams);
-                    double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
+                    h2D_Pt_vs_v2->Fill(Pt, v_2_and_v_3);
+
+                    double FlowParamsArray[5] = {v_1, v_2_and_v_3 * i_AllowV2, v_2_and_v_3 * i_AllowV3, V2_Angle, V3_Angle};
 
                     double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
                     if(Phi > Pi) Phi -= 2*Pi;
@@ -1162,11 +1165,20 @@ i_PtRange: e.g. particles within (1.0, 2.0)GeV/c should be analyzed -> i_PtRange
 i_LowPtCut: e.g. particles within (1.0, 2.0)GeV/c should be analyzed ->i_LowPtCut = 1
 */
 
-Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
+Int_t FlowMC_Ana(const TString DataFile) {
 
     #define DEF_AxisLabelSize 0.05
+    #define DEF_AxisTitleSize 0.05
     #define DEF_HistoTitleSize 0.1
     #define DEF_Rebin 16
+    #define DEF_Margin_Top 0.1
+    #define DEF_Margin_Bottom 0.15
+    #define DEF_Margin_Left 0.25
+    #define DEF_Margin_Left_ForMiddlePanel 0.1
+    #define DEF_Margin_Right_ForMiddlePanel 0.02
+
+    float LowPtCuts[4] = {0.0f, 1.0, 2.0f, 4.0f};
+    float HighPtCuts[4] = {1.0f, 2.0f, 4.0f, 6.0f};
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -1201,53 +1213,67 @@ Int_t FlowMC_Ana(const TString DataFile, double i_PtRange, double i_LowPtCut) {
 
     //configure and draw canvas
     TCanvas* can_ParticleMultiplicities = new TCanvas("ParticleMultiplicities","ParticleMultiplicities",1000,1000);
-    can_ParticleMultiplicities->Divide(3,1, 0, 0);
+    can_ParticleMultiplicities->Divide(3,4, 0, 0);
 
-    //SMALL GAP
-    can_ParticleMultiplicities->cd(1);
+    for(int iRow=0; iRow<=3; iRow++)
+    {
+        //SMALL GAP
+        can_ParticleMultiplicities->cd(1 + (3*iRow));
 
-    TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
-    cout << "Lower bin: " << i_LowPtCut*BinsPerMomentum << endl;
-    cout << "Upper bin: " << (i_LowPtCut + i_PtRange) * BinsPerMomentum << endl;
-    h1D_PartMult_SmallGap->Scale(h2D_pt_vs_eta_SmallGap->GetXaxis()->GetBinWidth(1));
+        TH1D* h1D_PartMult_SmallGap = h2D_pt_vs_eta_SmallGap->ProjectionY("h1D_PartMult_SmallGap", LowPtCuts[iRow] * BinsPerMomentum, HighPtCuts[iRow] * BinsPerMomentum);
+        h1D_PartMult_SmallGap->Scale((float)h2D_pt_vs_eta_SmallGap->GetYaxis()->GetBinWidth(1));
+        
+        gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right_ForMiddlePanel, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
+        //markings
+        (iRow==0) ? (h1D_PartMult_SmallGap->SetTitle("Small Gap")) : (h1D_PartMult_SmallGap->SetTitle(""));
+        h1D_PartMult_SmallGap->SetTitleSize(DEF_HistoTitleSize);
+        h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
+        h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
+        h1D_PartMult_SmallGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+        h1D_PartMult_SmallGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+        (iRow==0) ? (h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}")) : (h1D_PartMult_SmallGap->GetYaxis()->SetTitle(""));
+        h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
+        h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
+        h1D_PartMult_SmallGap->DrawCopy();
+
+        float ymin = h1D_PartMult_SmallGap->GetYaxis()->GetXmin();
+        float ymax = h1D_PartMult_SmallGap->GetYaxis()->GetXmax();
+
+        can_ParticleMultiplicities->cd(2 + (3*iRow));
+
+        TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", LowPtCuts[iRow] * BinsPerMomentum, HighPtCuts[iRow] * BinsPerMomentum);
+        h1D_PartMult_LargeGap->Scale((float)h2D_pt_vs_eta_LargeGap->GetYaxis()->GetBinWidth(1));
     
+        gPad->SetMargin(DEF_Margin_Left_ForMiddlePanel, DEF_Margin_Right_ForMiddlePanel, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
+        (iRow==0) ? (h1D_PartMult_LargeGap->SetTitle("Large Gap")) : (h1D_PartMult_LargeGap->SetTitle(""));
+        h1D_PartMult_LargeGap->SetTitleSize(DEF_HistoTitleSize);
+        h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(ymin, ymax);
+        h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
+        h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
+        h1D_PartMult_LargeGap->DrawCopy();
 
-    //markings
-    h1D_PartMult_SmallGap->SetTitle("Small Gap");
-    h1D_PartMult_SmallGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_SmallGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_SmallGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_SmallGap->GetYaxis()->SetTitle("#frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_SmallGap->Rebin(DEF_Rebin);
-    h1D_PartMult_SmallGap->Scale(1./DEF_Rebin);
-    h1D_PartMult_SmallGap->DrawCopy();
+        //draw difference
+        can_ParticleMultiplicities->cd(3 + (3*iRow));
 
-    can_ParticleMultiplicities->cd(2);
+        gPad->SetMargin(DEF_Margin_Left_ForMiddlePanel, 0.0, DEF_Margin_Bottom*(iRow==3), DEF_Margin_Top*(iRow==0));
+        h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
 
-    TH1D* h1D_PartMult_LargeGap = h2D_pt_vs_eta_LargeGap->ProjectionY("h1D_PartMult_LargeGap", i_LowPtCut * BinsPerMomentum, (i_LowPtCut + i_PtRange) * BinsPerMomentum);
-    h1D_PartMult_LargeGap->Scale(h2D_pt_vs_eta_LargeGap->GetXaxis()->GetBinWidth(1));
-   
-    
-    h1D_PartMult_LargeGap->SetTitle("Large Gap");
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_LargeGap->Rebin(DEF_Rebin);
-    h1D_PartMult_LargeGap->Scale(1./DEF_Rebin);
-    h1D_PartMult_LargeGap->DrawCopy();
+        (iRow==0) ? (h1D_PartMult_LargeGap->SetTitle("Difference")) : (h1D_PartMult_LargeGap->SetTitle(""));
+        h1D_PartMult_LargeGap->SetTitleSize(DEF_HistoTitleSize);
+        (iRow == 3) ? (h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta")) : (h1D_PartMult_LargeGap->GetXaxis()->SetTitle(""));
+        h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+        h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(-0.1, 0.1);
+        h1D_PartMult_LargeGap->GetYaxis()->SetTitle("");
+        h1D_PartMult_LargeGap->DrawCopy();
 
-    //draw difference
-    can_ParticleMultiplicities->cd(3);
-
-    h1D_PartMult_LargeGap->Add(h1D_PartMult_SmallGap, -1);
-    h1D_PartMult_LargeGap->SetTitle("Difference");
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetXaxis()->SetTitle("#eta");
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1D_PartMult_LargeGap->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap Events}} #frac{d N}{d #eta} - #frac{1}{N_{Small Gap Events}} #frac{d N}{d #eta}");
-    h1D_PartMult_LargeGap->DrawCopy();
-
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
     /
@@ -1459,7 +1485,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
     for(int iJet = SubtractedJets.size() - 1; iJet >= 0; iJet--)
     {
         if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
-        //SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
+        SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
 
     }
 
@@ -1552,14 +1578,20 @@ double Function_NormGauss(double x, double params[])
 
 double Function_PhiByFlow(double x, double params[])
 {
-    double v_2 = params[0];
-    double v_3 = params[1];
-    double v2_Angle = params[2];
-    double v3_Angle = params[3];
-    return (1/(2*pi))*(1+2*(v_2*cos(2*(x-v2_Angle)) + v_3*cos(3*(x-v3_Angle))));
+    double v_1 = params[0];
+    double v_2 = params[1];
+    double v_3 = params[2];
+    double v2_Angle = params[3];
+    double v3_Angle = params[4];
+    return (1/(2*pi))*(1+2*(v_1 * cos(x-v2_Angle) + v_2*cos(2*(x-v2_Angle)) + v_3*cos(3*(x-v3_Angle))));
 }
 
-double Function_FlowByPtAndEta(double x, double params[])
+double Function_DirectedFlowByEta(double Eta)
+{
+    return (pow(10, -3) * -0.7043 * Eta);
+}
+
+double Function_v2v3ByPtAndEta(double x, double params[])
 {
 
     double Pt = params[0];

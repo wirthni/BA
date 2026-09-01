@@ -30,7 +30,7 @@ double GetNByProb(void);
 double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, double i_UpperLim, double i_FuncParams[]);
 double Function_NormGauss(double x, double params[]);
 double Function_PhiByFlow(double x, double params[]);
-double Function_FlowByPtAndEta(double x, double params[]);
+double Function_v2v3ByPtAndEta(double x, double params[]);
 
 class MyUserInfo : public fastjet::PseudoJet::UserInfoBase {
 public:
@@ -458,7 +458,7 @@ Int_t RidgeAna(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,
                     double Eta = TR_Eta.Uniform(-0.9, 0.9);
                     //get elliptic flow strength from pt
                     double pseudoparams[2] = {Pt,Eta};
-                    double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+                    double FlowParams = Function_v2v3ByPtAndEta(Pt, pseudoparams);
                     double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
 
                     double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
@@ -1183,7 +1183,7 @@ double Function_PhiByFlow(double x, double params[])
     return (1/(2*pi))*(1+2*(v_2*cos(2*(x-v2_Angle)) + v_3*cos(3*(x-v3_Angle))));
 }
 
-double Function_FlowByPtAndEta(double x, double params[])
+double Function_v2v3ByPtAndEta(double x, double params[])
 {
 
     double Pt = params[0];

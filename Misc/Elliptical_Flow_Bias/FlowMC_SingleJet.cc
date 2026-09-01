@@ -28,7 +28,7 @@ double GetNByProb(void);
 double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, double i_UpperLim, double i_FuncParams[]);
 double Function_NormGauss(double x, double params[]);
 double Function_PhiByFlow(double x, double params[]);
-double Function_FlowByPtAndEta(double x, double params[]);
+double Function_v2v3ByPtAndEta(double x, double params[]);
 template <typename T> int sgn(T val);
 void PrintProgress(int i_Iteration, int i_Total);
 void PrintInfo(TString i_String);
@@ -303,7 +303,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", const Int_t i_NoOfEvents =
             double pseudoparams[2] = {Pt,Eta};
 
             //flow parameter v_2 is generated based on RUN 2 statistics
-            double FlowParams = Function_FlowByPtAndEta(Pt, pseudoparams);
+            double FlowParams = Function_v2v3ByPtAndEta(Pt, pseudoparams);
 
             double FlowParamsArray[4] = {FlowParams * i_AllowV2, FlowParams * i_AllowV3, V2_Angle, V3_Angle};
 
@@ -812,7 +812,7 @@ double Function_PhiByFlow(double x, double params[])
     return (1/(2*pi))*(1+2*(v_2*cos(2*(x-v2_Angle)) + v_3*cos(3*(x-v3_Angle))));
 }
 
-double Function_FlowByPtAndEta(double x, double params[])
+double Function_v2v3ByPtAndEta(double x, double params[])
 {
 
     double Pt = params[0];
