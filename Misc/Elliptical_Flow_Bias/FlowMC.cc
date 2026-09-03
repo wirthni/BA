@@ -1174,7 +1174,7 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange) {
     #define DEF_LegendFontSize 0.055
     #define DEF_Margin_Top 0.05
     #define DEF_Margin_Bottom 0.23
-    #define DEF_Margin_Left 0.18
+    #define DEF_Margin_Left 0.20
     #define DEF_Margin_Left_ForMiddlePanel 0.1
     #define DEF_Margin_Right_ForMiddlePanel 0.01
 

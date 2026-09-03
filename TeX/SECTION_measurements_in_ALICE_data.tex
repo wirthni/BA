@@ -13,7 +13,86 @@
 \begin{document}
 
 \section{Measurements in ALICE RUN 3 data}
+
 \subsection{Data selection and preparation}
+
+The data used for measuring the diffusion wake is Pb--Pb data from ALICE RUN 3 from the years 2023-2025. The raw data was filtered for general event requirements to make the diffusion wake analysis itself CPU time efficient and also to avoid using too much disk space. Events were required to have
+
+\begin{itemize}
+	\item a centrality of 0-10\%
+	\item a primary vertex position $z \leq 10\bunit{cm}$
+	\item at least one track with $|\eta| \leq 0.9$ and $p_T > 20\bunit{GeV}$ ($15\bunit{GeV}$ for 2025 data)
+\end{itemize}
+
+to be selected for the diffusion wake analysis. Details on the used datasets and the result of this stage of data selection can be seen in table \ref{table:RUN3_Data}.
+
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{center}
+			\begin{tabular}{llllll}
+				\hline
+				\textbf{Dataset} & $\mathbf{\sqrt{s_{NN}}}$ & \textbf{Raw data size} & \textbf{Selected data size} & \# \textbf{Selected events} \\
+				\hline
+				LHC23\_PbPb\_pass5 & 5.36 TeV & 1.6 PB & 62 GB & 3.44 $\cdot 10^6$ \\
+				
+				LHC24ar\_pass3 & 5.36 TeV & 2.2 PB & 195 GB & 10.8 $\cdot 10^6$ \\
+				
+				LHC25\_PbPb\_pass1 & 5.36 TeV & 3.4 PB & 139 GB & 7.72 $\cdot 10^6$ \\
+				\hline
+				Sum &  &  7.2 PB & 396 GB & 22.0 $\cdot 10^6$ \\
+				
+			\end{tabular}
+		\end{center}
+	\end{footnotesize}
+	\caption{The datasets of ALICE RUN 3 period that were used for the diffusion wake analysis.}
+	\label{table:RUN3_Data}
+\end{table}
+
+To save even more disk space event and particle properties were compressed adequately, for example when the stored raw data has better accuracy than ALICE is able to measure after all tolerances and uncertainties. The degree of compression was adapted from the ALICE RUN 2 analysis code \cite{nadine_alice_grunwald_studies_2022}. An overview of stored event data is given in table \ref{table:event_properties} and an overview over stored track data is given in table \ref{table:track_properties}.
+
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{center}
+			\begin{tabular}{lllll}
+				\hline
+				& \multicolumn{2}{l}{\textbf{before compression}} & \multicolumn{2}{l}{\textbf{after compression}} \\ \hline
+				\textbf{event property} & \multicolumn{1}{l}{\textbf{data type}}  & \textbf{size(b)}  & \multicolumn{1}{l}{\textbf{data type}}  & \textbf{size(b)} \\ \hline
+				Global Index  		& \multicolumn{1}{l}{int64}           &   8    	& \multicolumn{1}{l}{[same]}           &   8   \\ 
+				Run Number      	& \multicolumn{1}{l}{int32}           &   4	   	& \multicolumn{1}{l}{[same]}           &    4  \\ 
+				Centrality      	& \multicolumn{1}{l}{float}           &   4    	& \multicolumn{1}{l}{[same]}           &    4  \\ 
+				Multiplicity    	& \multicolumn{1}{l}{int32}           &   4    	& \multicolumn{1}{l}{[same]}           &  4    \\ 
+				Vertex $(x,y,z)$	& \multicolumn{1}{l}{float}           &   3x4  	& \multicolumn{1}{l}{[same]}           &    3x4  \\ 
+				$\psi_2$        	& \multicolumn{1}{l}{float}           &   4	   	& \multicolumn{1}{l}{int16}           &    2  \\ 
+				$\psi_3$        	& \multicolumn{1}{l}{float}           &   4   	& \multicolumn{1}{l}{int16}           &    2  \\ \hline
+			\end{tabular}
+		\end{center}
+	\end{footnotesize}
+	\caption{Event properties with their data size and data type before and after compression.}
+	\label{table:event_properties}
+\end{table}
+
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{center}
+			\begin{tabular}{lllll}
+				\hline
+				& \multicolumn{2}{l}{\textbf{before compression}} & \multicolumn{2}{l}{\textbf{after compression}} \\ \hline
+				\textbf{track property} & \multicolumn{1}{l}{\textbf{data type}}  & \textbf{size(b)}  & \multicolumn{1}{l}{\textbf{data type}}  & \textbf{size(b)} \\ \hline
+				Collision ID  		& \multicolumn{1}{l}{int32}           &    4   	& \multicolumn{1}{l}{[same]}           	&   4   \\ 
+				Charge     			& \multicolumn{1}{l}{int16}           &    2   	& \multicolumn{1}{l}{[same]}           	&   2  	\\ 
+				$p_x, p_y, p_z$  	& \multicolumn{1}{l}{float}           &   3x4  	& \multicolumn{1}{l}{uint64}           	&   8  	\\ 
+				$\dif E / \dif x$   & \multicolumn{1}{l}{float}           &    4    & \multicolumn{1}{l}{uint16}           	&  	2   \\ 
+				DCA$_{xy}$        	& \multicolumn{1}{l}{float}           &    4 	& \multicolumn{1}{l}{int16}           	&   2  	\\ 
+				DCA$_{z}$        	& \multicolumn{1}{l}{float}           &    4   	& \multicolumn{1}{l}{int16}           	&   2   \\ 
+				TPC track length 	& \multicolumn{1}{l}{float}           &    4   	& \multicolumn{1}{l}{uint16}           	&   2   \\ \hline
+			\end{tabular}
+		\end{center}
+	\end{footnotesize}
+	\caption{Track properties with their data size and data type before and after compression.}
+	\label{table:track_properties}
+\end{table}
+
+
 \subsection{Dijet method measurements}
 \subsection{Single jet method measurements}
 
