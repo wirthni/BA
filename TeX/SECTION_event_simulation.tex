@@ -16,31 +16,50 @@
 
 \subsection{Motivation}
 
-When conducting analyses in heavy ion physics or particle physics one usually has to select experimental data from a very huge data collection, for example recorded events from the Large Hadron Collider. However, this data selection process is nontrivial and has obvious, but also hidden consequences on the outcome of the analysis. To give a demonstration on that, let us consider a conceptionally simple measurement and two possible traps that lead to a wrong analysis result. As an example we would like to measure the average elliptic flow parameter $v_2$ in Pb--Pb collisions (see chapter \ref{sec:analysis-of-heavy-ion-collision-data} for an introduction into flow physics). For our analysis, we will be using a sample of Pb--Pb data in the centrality category of 0-10\%, that would be the most central collisions. After conducting the analysis, we get a certain value for $v_2$. But this value is for sure not representative for Pb--Pb collisions in general, because the cut on very central events has removed all peripheral events from the analysis. Therefore, the value of $v_2$ in peripheral events is omitted in the analysis. We call this a selection bias. Another error that could happen in this analysis is to also take high-$p_T$ particles into account in the particle correlation from which the $v_2$ flow parameter is derived. This is not correct, because high-$p_T$ particles, for example as constituents of jets, are not subject to flow. One can see that such mistakes, may they be obvious or worth a closer look, can be made in many stages of the analysis. If we want to make sure that we have not done any mistakes of such kind, we can use a simulation of the real data to crosscheck the analysis result. Back at the diffusion wake measurement we can therefore conclude, that we should not see any diffusion wake signal when conducted with simulated data if we have not implemented any physics of hydrodynamics, which is the origin of the diffusion wake. On the other hand, if the simulated data analysis shows signals of the same kind and order of magnitude as the diffusion wake, it is possible to have missed out an elementary mistake in the analysis method.
+When conducting analyses in heavy ion physics or particle physics one usually has to select experimental data from a very huge data collection, for example recorded events from the Large Hadron Collider. However, this data selection process is nontrivial and has obvious, but also hidden consequences on the outcome of the analysis. To give a demonstration on that, let us consider a conceptionally simple measurement and two possible traps that lead to a wrong analysis result. As an example we would like to measure the average elliptic flow parameter $v_2$ in Pb--Pb collisions (see chapter \ref{sec:analysis-of-heavy-ion-collision-data} for an introduction into flow physics). For our analysis, we will be using a sample of Pb--Pb data in the centrality category of 0-10\%, that would be the most central collisions. After conducting the analysis, we get a certain value for $v_2$. But this value is for sure not representative for Pb--Pb collisions in general, because the cut on very central events has removed all peripheral events from the analysis. Therefore the value of $v_2$ in peripheral events is omitted in the analysis. We call this a selection bias. Another error that could happen in this analysis is to also take high-$p_T$ particles into account in the particle correlation from which the $v_2$ flow parameter is derived. This is not correct, because high-$p_T$ particles, for example as constituents of jets, are not subject to flow. One can see that such mistakes, may they be obvious or worth a closer look, can be made in many stages of the analysis. If we want to make sure that we have not done any mistakes of such kind, we can use a simulation of the real data to crosscheck the analysis result. Back at the diffusion wake measurement we can therefore conclude, that we should not see any diffusion wake signal when conducted with simulated data if we have not implemented any physics of hydrodynamics, which is the origin of the diffusion wake. On the other hand, if the simulated data analysis shows signals of the same kind and order of magnitude as the diffusion wake, it is possible to have missed out an elementary mistake in the analysis method.
 
 \subsection{Modeling the simulation}
 
 Each simulated Pb--Pb event will be generated as a Monte Carlo generated overlay of thermal background from the medium expansion and hadronization, and artificially generated jets from hard scatterings. Both components do not interfere with each other, meaning that the jets are not subject to jet quenching and the medium is not affected by the artificially inserted jets.
 
-The thermal background will involve isotropic flow, so the uniform distribution of particles in the $(\phi, \eta)$ phase space, but also anisotropic flow in the shape of elliptic and triangular flow ($v_2, v_3 \neq 0$) for each particle. The directed flow ($v_1 \neq 0$) had also been implemented but turned out to not influence the result of the simulation. Although the diffusion wake is a very small effect the directed flow $v_1 \approx 10^{-3}$ is overwhelmed by other flow effects $v_2 \approx v_3 \approx 10^{-1}$. Because of that quantitative details on the implementation of the directed flow are not discussed any further. The background is generated based on statistics of $0-10\%$ ALICE Pb--Pb data from the RUN 2 period at $\sqrt{s_{NN}} = 5.02\bunit{TeV}$ \cite{nadine_alice_grunwald_studies_2022} and also $0-5\%$ ALICE Pb--Pb data at $\sqrt{s_{NN}} = 2.76\bunit{TeV}$ \cite{collaboration_pseudorapidity_2016}. The utilized 0--10\% statistics involve information on event-wise charged hadron multiplicity probability densities $p(N)$, track-wise transverse momentum probability densities $p(p_T)$ and also track-wise transverse momentum dependent elliptic flow parameter statistics $v_2(p_T)$. Because the $v_2(p_T)$ statistics also include higher-$p_T$ particles that are not subject to flow, was corrected such that $\lim_{p_T \rightarrow \infty}  v_2(p_T) = 0$ empirically by fitting an exponentially decaying function to the data points below $p_T \leq 5\unit{GeV}$. This value has been chosen, because the logarithmic representation of the particle $p_T$ spectrum of Pb--Pb collisions shows an exponential decay according to Boltzmann statistics for $p_T \in [0, 5]\unit{GeV}$ (see figure \ref{fig:simulationinput}). Such low transverse momenta are therefore dominated by thermal particles that are subject to flow. For higher values, this exponential decay gets distorted by other effects like particles from hard parton interactions and jets. The elliptic flow of particles decreases with larger pseudorapidity, but the dependence of $v_2$ on $|\eta|$ is provided too coarse for mid-rapidity analyses. \cite[Figure 1, $v_2\{2\}$ for 0--5\%,][]{collaboration_pseudorapidity_2016} That is why it has been modeled with linear fit empirically for data points that fulfill $|\eta| \leq 1.25$. Since $v_2(\eta)$ has only been measured globally for particles with a transverse momentum below $5\bunit{GeV}$, it is understood as a reduction factor. In practice the particle's individual $v_2(p_T)$ will be reduced by the fraction that $v_2(\eta)$ decreases by for the particle's pseudorapidity $\eta$ relative to $\eta = 0$. A collection of the statistics that were used to simulate the thermal background are shown in figure \ref{fig:simulationinput}. The used fit functions for interpolating the pseudorapidity and transverse momentum dependence of the elliptic flow are 
+The thermal background will involve isotropic flow, so the uniform distribution of particles in the $(\phi, \eta)$ phase space, but also anisotropic flow in the shape of directed, elliptic and triangular flow ($v_1, v_2, v_3 \neq 0$) for each particle. The background is generated based on statistics of $0-10\%$ ALICE Pb--Pb data from the RUN 2 period at $\sqrt{s_{NN}} = 5.02\bunit{TeV}$ \cite{nadine_alice_grunwald_studies_2022} and also $0-5\%$ ALICE Pb--Pb data at $\sqrt{s_{NN}} = 2.76\bunit{TeV}$ \cite{collaboration_pseudorapidity_2016}. The utilized 0--10\% statistics involve information on event-wise charged hadron multiplicity probability densities $p(N)$, track-wise transverse momentum probability densities $p(p_T)$ and also track-wise transverse momentum dependent elliptic flow parameter statistics $v_2(p_T)$. Because the $v_2(p_T)$ statistics also include higher-$p_T$ particles that are not subject to flow, was corrected such that $\lim_{p_T \rightarrow \infty}  v_2(p_T) = 0$ empirically by fitting an exponentially decaying function to the data points below $p_T \leq 5\unit{GeV}$. This value has been chosen, because the logarithmic representation of the particle $p_T$ spectrum of Pb--Pb collisions shows an exponential decay according to Boltzmann statistics for $p_T \in [0, 5]\unit{GeV}$ (see figure \ref{fig:simulationinput}). Such low transverse momenta are therefore dominated by thermal particles that are subject to flow. For higher values, this exponential decay gets distorted by other effects like particles from hard parton interactions and jets. The directed flow $v_1$ depends linearly on $\eta$, relevant data was taken from \cite{selyuzhenkov_charged_2011}. The elliptic flow of particles decreases with larger pseudorapidity, but the measured dependence of $v_2$ on $|\eta|$ is provided too coarse for mid-rapidity analyses. \cite[Figure 1, $v_2\{2\}$ for 0--5\%,][]{collaboration_pseudorapidity_2016} That is why it has been modeled with linear fit empirically for data points that fulfill $|\eta| \leq 1.25$ to approximate the behavior at pseudorapidities accessible to ALICE. Since $v_2(\eta)$ has only been measured globally for particles with a transverse momentum below $5\bunit{GeV}$, it is understood as a reduction factor. In practice the particle's individual $v_2(p_T)$ will be reduced by the fraction that $v_2(\eta)$ decreases by relative to $\eta = 0$. The value of the triangular flow coefficient was chosen to be equal to the elliptic flow coefficient, that is $v_3(p_T, \eta) \equiv v_2(p_T, \eta)$. This was chosen as a simplification because the orders of magnitude of both values are the same. \cite{alqahtani_understanding_2026} The Fourier series expansion of the azimuthal particle transverse momentum correlation (see equation (\ref{eq:FourierExpansion})) is used to generate the particles' azimuthal coordinates. The definition of this expansion has the expressions $\cos(n(\phi - \psi_m))$ as base vectors. A direct consequence of truncating the series after the third harmonic as done in this simulation is that fluctuations, embodied by $v_n |_{n \geq 3}$ are always aligned with the event plane (see figure \ref{fig:simuflow}). To avoid this, the offset angle of the triangular flow is defined independently of the event plane angle. The resulting azimuthal particle correlation probability density is
+
+\begin{equation}
+	\label{eq:phi_prob_dist}
+	p(\phi) = \frac{1}{2\pi} \left\{ 1 + 2 \left[v_1 \cos(\phi - \psi_m) +  v_2 \cos(2(\phi - \psi_m)) + v_3 \cos(3(\phi - \psi_3)) \right] \right\} \, .
+\end{equation}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{Media/Plots/Simu_Flow}
+	\caption{The azimuthal correlation of particles in heavy ion collisions in two separate cases, $v_2 \neq 0, v_3 = 0$ (green) and $v_2 = 0, v_3 \neq 0$ (red) following the definition of the Fourier expansion (equation (\ref{eq:FourierExpansion})).}
+	\label{fig:simuflow}
+\end{figure}
+
+
+A collection of the statistics that were used to simulate the thermal background are shown in figure \ref{fig:simulationinput}. The used fit functions for interpolating the pseudorapidity and transverse momentum dependence of the flow parameters are 
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{Media/Plots/SimulationInputs.pdf}
-	\caption{The statistics that are used for Monte Carlo generating the thermal particle background showing (from top to bottom) the per-event multiplicity probability density $p(N)$, the per-particle transverse momentum probability density $p(p_T)$, the per-particle elliptic flow parameter $v_2(p_T)$ depending on its transverse momentum and the per-particle flow parameter $v_2(\eta)$ depending on pseudorapidity. The data from the first three plots was extracted from \cite{nadine_alice_grunwald_studies_2022}. The data for the last plot was extracted from \cite{collaboration_pseudorapidity_2016}.}
+	\caption{The statistics that are used for Monte Carlo generating the thermal particle background showing (from top to bottom) the per-event multiplicity probability density $p(N)$, the per-particle transverse momentum probability density $p(p_T)$, the per-particle elliptic flow parameter $v_2(p_T)$ depending on its transverse momentum and the per-particle flow parameters $v_1(\eta),v_2(\eta)$ depending on pseudorapidity. The data from the first three plots was extracted from \cite{nadine_alice_grunwald_studies_2022}. The data for the fourth plot was extracted from \cite{collaboration_pseudorapidity_2016}. The data for the fifth plot was extracted from \cite{selyuzhenkov_charged_2011}}
 	\label{fig:simulationinput}
 \end{figure}
 
 \begin{equation}
+	\label{eq:simuparams}
 	\begin{gathered}
 		v_2(p_T) = a \cdot (p_T)^b \cdot \exp(-c \cdot p_T)\\
 		v_2(\eta) = d - e \cdot |\eta| \\
+		v_1(\eta) = f \cdot \eta \\
 		\text{with constants} \\
 		a=6.3 \cdot 10^{-2}\\
 		b=1.6 \cdot 10^{0}\\
 		c=4.7\cdot 10^{-1} \\
 		d=2.6\cdot 10^{-2}\\
-		e=3.9\cdot 10^{-3} \, .
+		e=3.9\cdot 10^{-3}\\
+		f=-8.3\cdot 10^{-4} \, .
 	\end{gathered}
 \end{equation}
 
@@ -48,51 +67,244 @@ The astute reader may have noticed that the background's transverse momentum pro
 
 To simulate Pb--Pb events realistically distributed high-$p_T$ jets are still missing. This data is generated using the widely used PYTHIA \cite{noauthor_pythia_nodate} event generator with the same configuration as described in \cite{nadine_alice_grunwald_studies_2022}. PYTHIA is based on Monte Carlo methods and has different physics processes for the production of particles included while considering parton distribution functions of incoming particles as well as initial state radiation. Hard scatterings, typically $2 \rightarrow 2$ processes like $q\bar{q} \rightarrow gg$ and soft processes as elastic scatterings are calculated likewise besides resonance decays and final state parton showers. As a last state of the collision fragmentation processes and secondary decays are also described. For this purpose, PYTHIA was set up to generate pp particle level jets at a collision energy of $\sqrt{s_{NN}} = 5.02\bunit{TeV}$. A total of 3.5 million events have been generated this way. 
 
-The recipe for generating a Pb--Pb event from scratch is straightforward given the introduced data. The first step is to add $N_\text{PYTHIA}$ PYTHIA particles to the event. Then, a particle multiplicity $N$ is generated based on the probability distribution $p(N)$ from which the number of PYTHIA particles is subtracted, so $N_\text{Background} = N - N_\text{PYTHIA}$. As other event-wise random parameters, the event plane angle $\psi_2$ as well as the triangular flow offset angle $\psi_3$ is chosen randomly in the interval $\psi_{2,3} \in [-\pi/2, +\pi/2]$. Each of the $N_\text{Background}$ particles is then generated with the transverse momentum being determined first from $p(p_T)$. After that, a pseudorapidity is chosen randomly in the interval $\eta \in [-0.9, 0.9]$. Since now the transverse momentum as well as the pseudorapidity are known, it is possible to calculate $v_2(p_T, \eta)$ and also $v_3(p_T, \eta) \equiv v_2(p_T, \eta)$. This was chosen as a simplification, because the order of magnitudes of both values are the same for heavy ion particle multiplicities at the simulated center-of-mass energies. \cite{alqahtani_understanding_2026} With the values of $v_2, v_3, \psi_2, \psi_3$ one can generate a probability density distribution of where the particle will be generated in azimuthal angle according to isotropic, elliptic and triangular flow, that is
+The recipe for generating a Pb--Pb event from scratch is straightforward given the introduced data. The first step is to add $N_\text{PYTHIA}$ PYTHIA particles to the event. Then, a particle multiplicity $N$ is generated based on the probability distribution $p(N)$ from which the number of PYTHIA particles is subtracted for having $N_\text{Background} = N - N_\text{PYTHIA}$. As other event-wise random parameters, the event plane angle $\psi_m = \psi_2$ as well as the triangular flow offset angle $\psi_3$ is chosen randomly in the interval $\psi_{2,3} \in [-\pi/2, +\pi/2]$. Each of the $N_\text{Background}$ particles is then generated with the transverse momentum being determined first from $p(p_T)$. After that, a pseudorapidity is chosen randomly in the interval $\eta \in [-0.9, 0.9]$. Since now the transverse momentum as well as the pseudorapidity are known it is possible to calculate $v_1(\eta), v_2(p_T, \eta)$ and $v_3(p_T, \eta)$. With the values of $v_1, v_2, v_3, \psi_2, \psi_3$ one can generate a probability density distribution (equation \ref{eq:phi_prob_dist}) of where the particle will be generated in azimuthal angle according to isotropic, directed, elliptic and triangular flow. With this procedure a particle has now been assigned a tuple $(\phi, \eta, p_T, m=m(\pi^0))$. The particle-wise procedure is repeated $N_\text{Background}$ times. An exemplary generated event is shown in figure \ref{fig:generatedevent}. Since the background is generated randomly, one PYTHIA event is reused multiple times with other background samples. A total of $2 \cdot 10^8$ artificially generated Pb--Pb events are studied in each analysis.
 
-\begin{equation}
-	p(\phi) = \frac{1}{2\pi} \left\{ 1 + 2 \left[v_1 \cos(\phi - \psi_1) +  v_2 \cos(2(\phi - \psi_2)) + v_3 \cos(3(\phi - \psi_3)) \right] \right\} \, .
-\end{equation}
-
-UNABHÄNGIG: \cite{collaboration_symmetry_2023}
-
-With that, a particle has now been assigned a tuple $(\phi, \eta, p_T, m)$ from which all other properties can be derived from. The particle-wise procedure is repeated $N_\text{Background}$ times. An exemplary generated event is shown in figure \ref{fig:generatedevent}. Since the background is generated randomly, one PYTHIA event is reused multiple times with other background samples.
-
-\begin{figure}
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.99\linewidth]{Media/Plots/GeneratedEvent.png}
+	\includegraphics[width=0.9\linewidth]{Media/Plots/GeneratedEvent.png}
 	\caption{A Pb--Pb event generated from a combination of PYTHIA pp events with Monte Carlo generated background based on ALICE Pb--Pb data. The jet originates from a PYTHIA pp collision and the many soft particles originate from the MC background generation.}
 	\label{fig:generatedevent}
 \end{figure}
 
 \subsection{Dijet(Dihadron) analysis with MC events}
 
-For reasons of simplicity the terminology dijet will be used for two correlated jets as trigger objects and for two hadrons as trigger objects likewise to avoid writing out each of the two cases. The principle of the analysis stays the same in general. It will be explicitly noted if the difference is important.
-
-Using the correlation of hadrons relative to a dijet pair is one way to measure the diffusion wake in Pb--Pb events. To get an idea of how the analysis result would look like without expecting the diffusion wake, this analysis is conducted with the simulated MC generated Pb--Pb events. The event selection procedure is done according to the theoretical prediction of the diffusion wake in dijet events in \cite{yang_background-free_2025}. Trivially, the number of jets must be at least two. From the collection of jets the two jets with the highest transverse momenta are labeled the leading jet (highest $p_T$) and the subleading jet. Both jets must have a transverse momentum above the thresholds $p_{T,\text{min}}^\text{Leading}$ and $p_{T,\text{min}}^\text{Subleading}$ and they must be approximately back-to-back, enforced with the requirement $|\Delta \phi_{\text{Leading}, \text{Subleading}}| \geq \pi/2$. The leading jet is also required to fulfill $\eta_{\text{Leading}} \geq 0$ to always have it in the positive pseudorapidity hemisphere. If not, the whole event is mirrored on the $\eta=0$ plane. Events that fulfill these requirements are then categorized into large gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} < 0$) and small gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} > 0$). The diffusion wake is then isolated using the correlation of particles that are azimuthally close to the leading jet, that is $|\phi_\text{Hadron} - \phi_{\text{Leading}}| \leq \pi/2$ over the full pseudorapidity range. Correlations for low-$p_T$ particles in the bins $ p_T \in \left\{[0,1], [1,2], [2,4], [4,6]\right\} \bunit{GeV}$ are studied separately. Each correlation is  scaled by $1/N_\text{Events}^\text{Large Gap (Small Gap)}$ to get a per-event correlation. 
+The procedure of the dijet/dihadron analysis with Monte-Carlo generated events is identical to the procedure described in section \ref{sec:dianaALICE}.
 
 \subsubsection{Results of the dijet analysis}
+\label{sec:results-dijet-simu}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20.pdf}
-	\caption{Results of the dijet analysis with $2 \cdot 10^8$ simulated Pb--Pb events using leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$.	$C = 1/N_\text{Large/Small Gap} \cdot d N_\text{Large/Small Gap}/d \eta$.	
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40, 20)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
 		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
 	\label{fig:flowresultsjet4020}
 \end{figure}
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_30_15.pdf}
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30, 15)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet3015}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_20_10.pdf}
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (20, 10)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet2010}
+\end{figure}
+
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{tabular}{llll}
+			\hline
+			\textbf{Input Events} & $\mathbf{(p_{T,\textbf{min}}^\textbf{Leading}, p_{T,\textbf{min}}^\textbf{Subleading})}$ & \textbf{\#Large Gap Events(\%)} & \textbf{\#Small Gap Events(\%)} \\
+			\hline
+			\multirow{3}{*}{$2.0 \cdot 10^8$}   & (40, 20) GeV    & $5.4\cdot 10^6$(2.7\%)                       & $5.3\cdot 10^6$(2.7\%)                       \\
+			& (30, 15) GeV    &          $1.1\cdot 10^7$(5.5\%)                   &          $1.0 \cdot 10^7$(5.0\%)                   \\
+			& (20, 10) GeV    &           $2.3\cdot 10^7$(12\%)                  &             $2.3\cdot 10^7$(12\%)               \\
+			\hline
+		\end{tabular}
+	\end{footnotesize}
+	\caption{Statistics about the number of simulated Pb--Pb events that passed the criteria for the dijet diffusion wake analysis with three different trigger requirements.}
+\end{table}
+
+Before discussing the the results of the diffusion wake analysis using dijets we should look at the orders of magnitude of the hadron correlations in the left panels of figures (\ref{fig:flowresultsjet4020}, \ref{fig:flowresultsjet3015}, \ref{fig:flowresultsjet2010}) to do a sanity check on the structure of the simulation itself. The absolute values for $1/N \dif N/\dif \eta$ are very similar to those in the ALICE RUN 3 data results, confirming the similarity of the simulated events with real Pb--Pb events. Small deviations can be traced back to two major effects. First, the average total number of identified charged hadrons per event is not necessarily equal in ALICE data from RUN 2, from which the simulation parameters are derived, and ALICE RUN 3 data due to detector improvements and changes. Another reason is that the PYTHIA data also brings few low-$p_T$ particles into each event and the MC generated background also brings few high-$p_T$ particles into each event. This results in possible overlaps in transverse momentum probability densities in the resulting events. In the positive pseudorapidity range there is always a tiny enhancement of soft hadrons. The relative enhancement of soft hadrons in the positive compared to the negative pseudorapidity range increases with increasing transverse momentum bin of the soft hadrons. This makes it probable that the enhancement comes from few soft particles from PYTHIA data that are blindly placed between other soft particles from the MC background.[STIMMT???????????????]
+
+The differences in leading jet near-side charged hadron correlations between large pseudorapidity gaps and small pseudorapidity gaps are shown in the right panels of figures (\ref{fig:flowresultsjet4020}, \ref{fig:flowresultsjet3015}, \ref{fig:flowresultsjet2010}). The difference signal is very tiny compared to the absolute value of the correlations ($\approx 500$ for the lowest $p_T$ bin) and also slightly smaller than the expected diffusion wake signal ($\approx -1$, see figure \ref{fig:diffusionwakesimu}), which is expected, but also necessary to conduct an unbiased diffusion wake analysis. The signal which is especially pronounced for lower trigger $p_T$ values, tends to oppose the diffusion wake signal very slightly with an enhancement of soft particles in the negative pseudorapidity region and a depletion in the positive pseudorapidity region. Although the bias identified bias signal is small, a huge amount of Pb--Pb events ($2\cdot 10^8$) had to be simulated to achieve a signal that is definitely non-zero. This number of events is significantly more than the number of events that are provided in the three ALICE RUN 3 datasets ($2 \cdot 10^7$).
 
 \subsubsection{Results of the dihadron analysis}
 
 \begin{figure}[H]
 	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_30_15.pdf}
+	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30, 15)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading hadron for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultshad3015}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_20_15.pdf}
+	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (20, 15)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading hadron for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultshad2015}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
 	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_15_10}
-	\caption{Results of the dihadron analysis with $2 \cdot 10^8$ simulated Pb--Pb events using leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40, 20)\bunit{GeV}$.	$C = 1/N_\text{Large/Small Gap} \cdot d N_\text{Large/Small Gap}/d \eta$.	
-	\textbf{(left)} Particle correlations next to the leading hadron for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading hadron for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
 	\label{fig:flowresultshad1510}
 \end{figure}
 
-Figure \ref{fig:flowresultshad1510} shows the result of the dihadron analysis with simulated Pb--Pb events using leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15, 10)\bunit{GeV}$. The particle correlations show an enhancement of particles in the positive rapidity range due to the medium response to the leading trigger hadron. The magnitude of the particle correlations decreases rapidly with bigger transverse momenta of the soft particles due to the exponentially decaying occurrence of particles with respect to $p_T$ as seen in the second panel of figure \ref{fig:simulationinput}. The difference between large gap and small gap particle correlations show no ...
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{tabular}{llll}
+			\hline
+			\textbf{Input Events} & $\mathbf{(p_{T,\textbf{min}}^\textbf{Leading}, p_{T,\textbf{min}}^\textbf{Subleading})}$ & \textbf{\#Large Gap Events(\%)} & \textbf{\#Small Gap Events(\%)} \\
+			\hline
+			\multirow{3}{*}{$2.0 \cdot 10^8$}   & (30, 15) GeV    & $5.5\cdot 10^4$(0.028\%)                       & $5.5\cdot 10^4$(0.028\%)                       \\
+			& (20, 15) GeV    &          $1.3\cdot 10^5$(0.065\%)                   &          $1.3\cdot 10^5$(0.065\%)                   \\
+			& (15, 10) GeV    &           $8.1\cdot 10^5$(0.41\%)                  &             $8.0\cdot 10^5$(0.40\%)               \\
+			\hline
+		\end{tabular}
+	\end{footnotesize}
+	\caption{Statistics about the number of simulated Pb--Pb events that passed the criteria for the dihadron diffusion wake analysis with three different trigger requirements.}
+	\label{tab:SimHadAcceptance}
+\end{table}
+
+The dihadron analysis results are subject to large statistical errors due to the low event acceptance rate (see table \ref{tab:SimHadAcceptance}). The separate soft hadron correlations in the left panels of figures (\ref{fig:flowresultshad3015}, \ref{fig:flowresultshad2015}, \ref{fig:flowresultshad1510}) have similar magnitudes like the ones in the dijet analysis although the asymmetry in pseudorapidity is less pronounced. 
+
+Within the uncertainties of this analysis no diffusion wake bias is visible in the right panels of figures (\ref{fig:flowresultshad3015}, \ref{fig:flowresultshad2015}, \ref{fig:flowresultshad1510}). The lowest trigger variant with the highest event acceptance rate (figure \ref{fig:flowresultshad1510}) shows a slight tendency to also oppose the diffusion wake signal like seen in the results of the dijet analysis with simulated Pb--Pb events in section \ref{sec:results-dijet-simu}.
+
+\subsubsection{Effect of simulation parameter changes}
+
+A great advantage of the simulation is that we can testify the behavior of the dijet/dihadron analysis result depending on the input parameters of the simulation. That could be the number of generated background particles or the slope of the anisotropic flow dependence on pseudorapidity (see last plots in figure \ref{fig:simulationinput}). One especially interesting value to have a look at is the directed flow $v_1$. Figure \ref{fig:v1Bias} demonstrates how differently the subleading jet is subject to a directed flow bias in the large/small gap case. When the leading jet has a pseudorapidity unequal to zero, the directed flow depletes or enhances the soft particle background next to the jet depending on the azimuthal coordinate of the jet. In the case of small gaps (blue, figure \ref{fig:v1Bias}) the directed flow acts oppositely, meaning if the leading jet is embedded in soft particles, the subleading jet will be in a soft particle depletion zone. In the case of large gaps (red, figure \ref{fig:v1Bias}) the directed flow acts symmetrically, so the leading jet and the subleading jet are enhanced/depleted in soft particles equally. Although the directed flow is small compared to the elliptic flow this asymmetry is worth a closer investigation.
+
+To test the influence of the directed flow $v_1$ on the analysis result its pseudorapidity dependent value (equation (\ref{eq:simuparams})) is made 100 times bigger, so $v_1'(\eta) = 100 \cdot v_1(\eta)$. Figure \ref{fig:flowresultsjet4020bigv1} shows the result of the dijet analysis using a trigger jet pair of $(40,20)\bunit{GeV}$ and figure  \ref{fig:flowresultshad1510bigv1} shows the result of the dihadron analysis using a trigger hadron pair of $(15,10)\bunit{GeV}$. The influence of the increased directed flow is the strongest for the softest particles, decreasing with increasing transverse momentum bin. With the original directed flow configuration (figure \ref{fig:flowresultsjet4020}) the correlation difference with the $(40,20)\bunit{GeV}$ dijet trigger is compatible with zero. Increasing the directed flow leads to to a depletion of soft particles for $\eta < 0$ and an enhancement of soft particles elsewhere (figure \ref{fig:flowresultsjet4020bigv1}). The dihadron $(15,10)\bunit{GeV}$ analysis (figure \ref{fig:flowresultshad1510bigv1}) shows a similar behavior although the influence is less by an order of magnitude. The shape of the correlation difference for the softest particles coincides with the shape of the diffusion wake in the hydrodynamic simulation in figure \ref{fig:diffusionwakesimu}, showing that not only a diffusion wake, which is absent in the simulated Pb--Pb events, can lead to such a signal.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20_BigV1.pdf}
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40,20)\bunit{GeV}$ with an increased directed flow $v_1'(\eta)$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet4020bigv1}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_15_10_BigV1.pdf}
+	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV}$ with an increased directed flow $v_1'(\eta)$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultshad1510bigv1}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
+			
+			\begin{axis}[
+				height=9.6cm,
+				width=13.7cm,
+				font=\tiny,
+				anchor=center,
+				view={0}{90},
+				colormap/viridis,
+				xlabel={},
+				xticklabel=\empty,
+				yticklabel=\empty,
+				ylabel={},
+				domain=-0.9:0.9,
+				y domain=-3.14:3.14,
+				samples=50,
+				samples y=50,
+				]
+				
+				\addplot3[
+				surf,
+				shader=interp,
+				] {1+(-0.3*x)*2*cos(360*(y-3.14/2)/(2*3.14)) + 0.3*2*cos(720*(y-3.14/2)/(2*3.14))};
+				
+			\end{axis}
+			
+			%z label
+			%\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			
+			%phase spaces
+			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
+			\draw (0, 3.6) -- (0, 4.4) node[above] {$\eta = 0$};
+			\draw (-6.0, 3.6) -- (-6.0, 4.4) node[above] {$-0.9$};
+			\draw (6.0, 3.6) -- (6.0, 4.4) node[above] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi = 0$};
+			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
+			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
+			
+			
+			%background measurements
+			\draw[color=orange] (-3,-2) ellipse (2cm and 1cm) node{Signal Area};
+			\draw[color=red] (-3,2) circle (0.6) node{SLJ};
+			\draw[color=black] (3.0,-2) circle (0.6) node{LJ};
+			
+			
+		\end{tikzpicture}
+		\caption*{Large Gap}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
+			
+			\begin{axis}[
+				height=9.6cm,
+				width=13.7cm,
+				font=\tiny,
+				anchor=center,
+				view={0}{90},
+				colormap/viridis,
+				xlabel={},
+				xticklabel=\empty,
+				yticklabel=\empty,
+				ylabel={},
+				domain=-0.9:0.9,
+				y domain=-3.14:3.14,
+				samples=50,
+				samples y=50,
+				]
+				
+				\addplot3[
+				surf,
+				shader=interp,
+				] {1+(-0.3*x)*2*cos(360*(y+3.14/2)/(2*3.14)) + 0.3*2*cos(720*(y+3.14/2)/(2*3.14))};
+				
+			\end{axis}
+			
+			%z label
+			%\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			
+			%phase spaces
+			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
+			\draw (0, 3.6) -- (0, 4.4) node[above] {$\eta = 0$};
+			\draw (-6.0, 3.6) -- (-6.0, 4.4) node[above] {$-0.9$};
+			\draw (6.0, 3.6) -- (6.0, 4.4) node[above] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi = 0$};
+			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
+			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
+			
+			
+			%background measurements
+			\draw[color=orange] (-3,-2) ellipse (2cm and 1cm) node{Signal Area};
+			\draw[color=blue] (3.0,2) circle (0.6) node{SLJ};
+			\draw[color=black] (3.0,-2) circle (0.6) node{LJ};
+			
+			
+		\end{tikzpicture}
+		\caption*{Small Gap}
+	\end{minipage}
+	\caption{The most probable correlations between the dijet pair and the soft hadron background in the large/small gap case in the $(\phi, \eta)$ phase space. Soft hadrons are simulated with directed and elliptic flow with demonstration values $v_1 = -0.3\cdot \eta, v_2 = 0.3, \psi_m = \pi/2$. The circles named \textbf{LJ} are exemplary leading jets, the other circles named \textbf{SLJ} are subleading jets, one in each of the categories large gap (red) and small gap (blue). The region marked \textbf{Signal Area} is located where the diffusion wake is expected.}
+	\label{fig:v1Bias}
+\end{figure}
+
+For the dijet trigger analysis this behavior can be explained by how probable which soft hadron-jet configuration is. The large gap case (figure \ref{fig:v1Bias}, left) is more probable to happen in the shown configuration. Both jets are embedded in a soft particle enhanced region, thus more easily reaching the required trigger thresholds $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading})$. In this case the region where the diffusion wake is expected is depleted of soft particles. In the small gap case (\ref{fig:v1Bias}, blue) the situation is different. Soft particles have a fractionally larger contribution to the transverse momentum of the subleading jet than to the leading jet because the hard constituents of the leading jet already have a bigger transverse momentum than those of the subleading jet. So on average the leading jet is not tied to the event plane as much because it does not rely on the transverse momenta of soft particles. But the subleading reaches the $p_T$ threshold more quickly if is embedded in a soft particle enhanced region. Therefore the subleading jet tends to be tied to the most soft particle enhanced region. As a direct consequence the area of the diffusion wake of the leading jet is enhanced with soft particles. Subtracting the two correlations leads to a depleted particle correlation difference where the diffusion wake is expected. This mechanism is confirmed by the raw soft hadron correlations in the left panels of figure \ref{fig:flowresultsjet4020bigv1}. The large gap case shows the leading jet embedded in many soft particles. The small gap case shows that the leading jet does not depend on those soft particles which is why the soft particle correlation is more uniform in pseudorapidity.
+
+In the case of a dihadron trigger the influence of the enhanced directed flow is less pronounced and the explanation is different than in the dijet case because the individual hard trigger hadrons do not rely on soft background. [EXPLANATION]
+
 
 
 

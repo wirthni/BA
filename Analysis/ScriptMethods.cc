@@ -16,11 +16,16 @@ using namespace std;
 
 Int_t Analysis_SimulationStats()
 {
-    #define DEF_AxisLabelSize 0.06
-    #define DEF_AxisTitleSize 0.06
+    #define DEF_AxisLabelSize 0.09
+    #define DEF_AxisTitleSize 0.09
     #define DEF_HistoTitleSize 0.1
-    #define DEF_LegendTextSize 0.06
+    #define DEF_LegendTextSize 0.07
     #define DEF_Rebin 16
+    #define DEF_Margin_Top 0.05
+    #define DEF_Margin_Bottom 0.20
+    #define DEF_Margin_Left 0.1
+    #define DEF_Margin_Right 0.1
+    #define DEF_TitleOffset 0.5
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
@@ -44,10 +49,11 @@ Int_t Analysis_SimulationStats()
 
     //configure and draw canvas
     TCanvas* Canvas = new TCanvas("Canvas","Canvas",1000,1000);
-    Canvas->Divide(1,4, 0, 0);
+    Canvas->Divide(1,5, 0, 0);
 
     //Multiplicity
     Canvas->cd(1);
+    gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right, DEF_Margin_Bottom, DEF_Margin_Top);
     h1D_NDist->SetTitle("");
     h1D_NDist->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_NDist->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
@@ -55,6 +61,7 @@ Int_t Analysis_SimulationStats()
     h1D_NDist->GetXaxis()->SetRangeUser(1600, 3500);
     h1D_NDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_NDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+    h1D_NDist->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
     h1D_NDist->GetYaxis()->SetTitle("a. u.");
     h1D_NDist->Rebin(32);
     h1D_NDist->Scale(1./h1D_NDist->Integral());
@@ -72,6 +79,7 @@ Int_t Analysis_SimulationStats()
 
     //p_T
     Canvas->cd(2);
+    gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right, DEF_Margin_Bottom, DEF_Margin_Top);
     h1D_PtDist->SetTitle("");
     h1D_PtDist->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
@@ -79,6 +87,7 @@ Int_t Analysis_SimulationStats()
     h1D_PtDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_PtDist->GetYaxis()->SetTitle("a. u.");
+    h1D_PtDist->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
     h1D_PtDist->Rebin(32);
     h1D_PtDist->Scale(1./h1D_PtDist->Integral());
     h1D_PtDist->SetMarkerStyle(kStar);
@@ -95,7 +104,7 @@ Int_t Analysis_SimulationStats()
 
     //v_2(p_T)
     Canvas->cd(3);
-
+    gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right, DEF_Margin_Bottom, DEF_Margin_Top);
     Int_t n = 40;
     Double_t x[n], y[n];
     for (Int_t i=0;i<n;i++) {
@@ -114,6 +123,7 @@ Int_t Analysis_SimulationStats()
     Graph_v2_pT->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     Graph_v2_pT->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     Graph_v2_pT->GetYaxis()->SetTitle("v_{2}");
+    Graph_v2_pT->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
     Graph_v2_pT->Draw("AC");
     prof_Pt_v2->SetMarkerStyle(kStar);
     prof_Pt_v2->SetMarkerColor(kBlue);
@@ -131,7 +141,7 @@ Int_t Analysis_SimulationStats()
 
     //v_2(eta)
     Canvas->cd(4);
-    
+    gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right, DEF_Margin_Bottom, DEF_Margin_Top);
     Double_t OrigX[6] = {-1.25, -0.75, -0.25, 0.25, 0.75, 1.25};
     Double_t OrigY[6] = {0.0213, 0.0235, 0.0251, 0.0253, 0.0231, 0.0213};
     Double_t eX[6] = {0};
@@ -146,6 +156,7 @@ Int_t Analysis_SimulationStats()
     Graph_Orig->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     Graph_Orig->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     Graph_Orig->GetYaxis()->SetTitle("v_{2}");
+    Graph_Orig->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
     Graph_Orig->SetLineColor(kBlue);
     Graph_Orig->Draw("A*");
 
@@ -166,10 +177,51 @@ Int_t Analysis_SimulationStats()
     leg4->SetLineColor(10);
     leg4->Draw();
 
+    Canvas->cd(5);
+    gPad->SetMargin(DEF_Margin_Left, DEF_Margin_Right, DEF_Margin_Bottom, DEF_Margin_Top);
+    #define XErr 0.16
+    Double_t OrigX2[5] = {-0.64, -0.32, 0.0, 0.32, 0.64};
+    Double_t OrigY2[5] = {5.843e-4, 2.641e-4, 4.290e-5, -1.414e-4, -5.401e-4};
+    Double_t eX2[5] = {XErr, XErr, XErr, XErr, XErr};
+    Double_t eY2[5] = {1.626e-4, 1.282e-4, 1.333e-4, 1.280e-4, 1.221e-4};
+    TGraphErrors* Graph_Orig2 = new TGraphErrors(5, OrigX2, OrigY2, eX2, eY2);
+    Graph_Orig2->SetMarkerColor(kBlue);
+    Graph_Orig2->SetTitle("");
+    Graph_Orig2->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Graph_Orig2->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Graph_Orig2->GetXaxis()->SetTitle("#eta");
+    //Graph_Orig2->GetXaxis()->SetRangeUser(-1.5, 1.5);
+    Graph_Orig2->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Graph_Orig2->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Graph_Orig2->GetYaxis()->SetTitle("v_{1}");
+    Graph_Orig2->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
+    Graph_Orig2->SetLineColor(kBlue);
+    Graph_Orig2->Draw("A*");
+
+    auto LinFit = new TF1("lin", "[0]*x", -0.64, 0.64);
+    LinFit->SetParameters(0. -8.4e-4);
+    // create graph
+    Graph_Orig2->Fit("lin");
+    gPad->Update();
+
+    TF1 *fit2 = (TF1*)Graph_Orig2->GetListOfFunctions()->FindObject("lin");
+    fit2->SetLineColor(kBlack);
+
+    TLegend *leg5 = new TLegend(0.0,0.8,0.3,1.0);
+    leg5->SetTextSize(DEF_LegendTextSize);
+    leg5->AddEntry((TObject*)nullptr,Form("10-20%% ALICE Pb-Pb"),"");
+    leg5->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 2.76 TeV"),"");
+    leg5->AddEntry((TObject*)nullptr,Form("0.15 #leq p_{T}^{track} #leq 20.0 GeV"),"");
+    leg5->AddEntry(Graph_Orig2,"Data","p");
+    leg5->AddEntry(fit2,"Fit","l");
+    leg5->SetLineColor(10);
+    leg5->Draw();
+
+
     return 1;
 }
 
-Int_t DijetAna(const TString DataFile, float DiffRange) {
+Int_t DijetAna(const TString DataFile, float DiffRange, bool IsJetMeasurement, int LeadPt, int SublPt) {
 
     #define DEF_AxisLabelSize 0.07
     #define DEF_AxisTitleSize 0.08
@@ -266,8 +318,14 @@ Int_t DijetAna(const TString DataFile, float DiffRange) {
 
 
         TLegend *leg = new TLegend(0.25,0.77,0.26,0.93);
-        leg->AddEntry((TObject*)nullptr,"ALICE Pb-Pb 0-10%  #sqrt{s_{NN}}=5.02 TeV","");
-        leg->AddEntry((TObject*)nullptr,Form("|#phi - #phi_{Leading}| #leq #pi/2, %.1f #leq p_{T} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
+        if(iRow==0)
+        {
+            leg->AddEntry((TObject*)nullptr,"ALICE Pb-Pb 0-10%  #sqrt{s_{NN}}=5.36 TeV","");
+            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("R = 0.2, |#eta_{jet}| #leq 0.9 - R, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            else leg->AddEntry((TObject*)nullptr, Form("|#eta_{Lead./Subl. Hadron}| #leq 0.9, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            leg->AddEntry((TObject*)nullptr,"|#phi_{Hadron} - #phi_{Leading}| #leq #pi/2", "");
+        }
+        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
         leg->SetTextSize(DEF_LegendFontSize); 
         leg->Draw();
@@ -300,7 +358,7 @@ Int_t DijetAna(const TString DataFile, float DiffRange) {
         h1F_LargeGap[iRow]->SetMarkerStyle(kCircle);
         h1F_LargeGap[iRow]->SetMarkerColor(kBlack);
         h1F_LargeGap[iRow]->DrawCopy();
-        h1F_LargeGap[iRow]->GetYaxis()->SetRangeUser(-DiffRange, DiffRange);
+        //h1F_LargeGap[iRow]->GetYaxis()->SetRangeUser(-DiffRange, DiffRange);
         h1F_LargeGap[iRow]->DrawCopy();
     }
 

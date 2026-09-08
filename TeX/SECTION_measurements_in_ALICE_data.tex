@@ -33,13 +33,13 @@ to be selected for the diffusion wake analysis. Details on the used datasets and
 				\hline
 				\textbf{Dataset} & $\mathbf{\sqrt{s_{NN}}}$ & \textbf{Raw data size} & \textbf{Selected data size} & \# \textbf{Selected events} \\
 				\hline
-				LHC23\_PbPb\_pass5 & 5.36 TeV & 1.6 PB & 62 GB & 3.44 $\cdot 10^6$ \\
+				LHC23\_PbPb\_pass5 & 5.36 TeV & 1.6 PB & 62 GB & 3.2 $\cdot 10^6$ \\
 				
-				LHC24ar\_pass3 & 5.36 TeV & 2.2 PB & 195 GB & 10.8 $\cdot 10^6$ \\
+				LHC24ar\_pass3 & 5.36 TeV & 2.2 PB & 195 GB & 1.0 $\cdot 10^7$ \\
 				
-				LHC25\_PbPb\_pass1 & 5.36 TeV & 3.4 PB & 139 GB & 7.72 $\cdot 10^6$ \\
+				LHC25\_PbPb\_pass1 & 5.36 TeV & 3.4 PB & 139 GB & 7.2 $\cdot 10^6$ \\
 				\hline
-				Sum &  &  7.2 PB & 396 GB & 22.0 $\cdot 10^6$ \\
+				Sum &  &  7.2 PB & 396 GB & 2.1 $\cdot 10^7$ \\
 				
 			\end{tabular}
 		\end{center}
@@ -92,21 +92,61 @@ To save even more disk space event and particle properties were compressed adequ
 	\label{table:track_properties}
 \end{table}
 
+\subsection{Dijet(Dihadron) analysis with ALICE data}
+\label{sec:dianaALICE}
 
-\subsection{Dijet method measurements}
-\subsection{Single jet method measurements}
+For reasons of simplicity the name dijet will be used for two correlated jets as trigger objects and for two hadrons as trigger objects likewise to avoid writing out each of the two cases. The principle of the analysis stays the same in general. It will be explicitly noted if the difference is important.
 
-For the following chapters, it is important to give a quick notice on non-central collisions. When looking at two non-centrally colliding nuclei longitudinally, that is in beam direction, one should notice that the overlap region of the two discs has an initial approximately lenticular shape in the transverse plane, \cite{busza_heavy_2018} making the shape of the original QGP non-spherical. This results in anisotropies in the pressure of the hydrodynamic fluid, which in turn influences the expansion velocity and hence the azimuthal momentum distribution of the finally produced particles.
+Using the correlation of hadrons relative to a dijet pair is one way to measure the diffusion wake in Pb--Pb events. The event selection procedure is done according to the theoretical prediction of the diffusion wake in dijet events in \cite{yang_background-free_2025}. Trivially, the number of jets must be at least two. From the collection of jets the two jets with the highest transverse momenta are labeled the leading jet (highest $p_T$) and the subleading jet. Both jets must have a transverse momentum above the thresholds $p_{T,\text{min}}^\text{Leading}$ and $p_{T,\text{min}}^\text{Subleading}$ and must be in the detector acceptance with their full radius $R$, so for the ALICE pseudorapidity acceptance that means $|\eta_\text{jet}| \leq 0.9 - R$. They must furthermore be approximately back-to-back, enforced with the requirement $|\Delta \phi_{\text{Leading}, \text{Subleading}}| \geq \pi/2$. The leading jet is also required to fulfill $\eta_{\text{Leading}} \geq 0$ to always have it in the positive pseudorapidity hemisphere. If not, the whole event is mirrored along the $\eta=0$ plane. Events that fulfill these requirements are then categorized into large gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} < 0$) and small gap events ($\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} > 0$). The diffusion wake is then isolated using the correlation of hadrons that are azimuthally close to the leading jet, that is $|\phi_\text{Hadron} - \phi_{\text{Leading}}| \leq \pi/2$ over the full pseudorapidity range. Correlations for low-$p_T$ particles in the bins $ p_T \in \left\{[0,1], [1,2], [2,4], [4,6]\right\} \bunit{GeV}$ are studied separately. As trigger objects a dihadron pair with transverse momenta $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) \in \left\{(15, 10), (20, 15), (30, 15)\right\} \bunit{GeV}$ and a dijet pair with transverse momenta $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) \in \left\{(20, 10), (30, 15), (20, 20)\right\} \bunit{GeV}$ are also studied separately. Each correlation is scaled by $1/N_\text{Events}^\text{Large Gap (Small Gap)}$ to get a per-event correlation.
 
-[BILD VON EP]
 
-A simulation using the coupled linear Boltzmann transport and hydro (CoLBT-hydro) \cite{yang_3d_2023} has revealed the spatial properties of the expected diffusion wake. The diffusion wake, opposite to the propagating jet in the azimuthal angle $\phi$, spans over several pseudorapidity units (see figure \ref{fig:diffusionwakecolbthybrid})
+\subsection{Results of the dijet analysis} 
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.75\linewidth]{Media/Plots/DiffusionWake_CoLBT_hybrid}
-	\caption{\textbf{a)} Diffusion wake valley and \textbf{b)} MPI ridge in $\gamma$-triggered jet-hadron correlation in $|\Delta \phi| > \pi/2$ as a function of $\Delta \eta$ with different ranges of $x_{j\gamma} = p_T^\text{jet}/p_T^\gamma$ in 0\%-10\% central Pb+Pb collisions at $\sqrt{S_{NN}} = 5.02\unit{TeV}$ from CoLBT-hydro. [...]. Figure and description (shortened) from \cite{yang_3d_2023}}
-	\label{fig:diffusionwakecolbthybrid}
+	\includegraphics[width=\linewidth]{Media/Plots/RUN3Results_Jet_40_20.pdf}
+	\caption{Results of the dijet analysis using ALICE RUN 3 data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40, 20)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:aliceresultsjet4020}
 \end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/RUN3Results_Jet_40_20.pdf}
+	\caption{Results of the dijet analysis using ALICE RUN 3 data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30, 15)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:aliceresultsjet3015}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/RUN3Results_Jet_40_20.pdf}
+	\caption{Results of the dijet analysis using ALICE RUN 3 data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (20, 10)\bunit{GeV}$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:aliceresultsjet2010}
+\end{figure}
+
+\begin{table}[H]
+	\begin{footnotesize}
+		\begin{tabular}{llll}
+			\hline
+			\textbf{Input Events} & $\mathbf{(p_{T,\textbf{min}}^\textbf{Leading}, p_{T,\textbf{min}}^\textbf{Subleading})}$ & \textbf{\#Large Gap Events(\%)} & \textbf{\#Small Gap Events(\%)} \\
+			\hline
+			\multirow{3}{*}{$2.1 \cdot 10^7$}   & (40, 20)    & $2.9\cdot 10^5$(1.4\%)                       & $2.8\cdot 10^5$(1.3\%)                       \\
+			& (30, 15)    &          $1.1\cdot 10^6$(5.2\%)                   &               $1.1\cdot 10^6$(5.2\%)               \\
+			& (20, 10)    &                $2.8\cdot 10^6$(13\%)              &               $2.8\cdot 10^6$(13\%)             \\
+			\hline
+		\end{tabular}
+	\end{footnotesize}
+	\caption{Statistics about the number of ALICE RUN 3 Pb--Pb events that passed the criteria for the dijet diffusion wake analysis with three different trigger requirements.}
+\end{table}
+
+The left panels of figures (\ref{fig:aliceresultsjet4020}, \ref{fig:aliceresultsjet3015}, \ref{fig:aliceresultsjet2010}) show the charged hadron correlation azimuthally close to the leading trigger jet. The depletion of very soft particles at mid-rapidity can be traced back to detector acceptance effects and also track reconstruction efficiency effects at mid-rapidity. This inhomogeneity is not a problem because we are only interested in correlation differences between large and small rapidity gap configurations leading to a cancellation of these effects. There is a tendence for more soft particles in the positive pseudorapidity range ($\eta > 0$) than in the negative pseudorapidity range. This enhancement of soft particles increases relative to the negative pseudorapidity range with increasing $p_T$ bins of the soft particles. This is due to [WHAAAAAAAAAAAAAAAAAAAAT?].
+
+The right panels of figures (\ref{fig:aliceresultsjet4020}, \ref{fig:aliceresultsjet3015}, \ref{fig:aliceresultsjet2010}) show the differences between the large gap correlations and the small gap correlations for the different soft particle $p_T$ bins to the left. The softest hadron bin of the $(40,20)\bunit{GeV}$ trigger jet sample shows a slight enhancement of soft particles for $\eta > 0$ where the leading jet is located. [WHYY]? This tendency is also visible for $1.0 \leq p_\text{T, Hadron} \leq 2.0\bunit{GeV}$. This behavior is consistent with the prediction made in \ref{fig:DijetProposal2} for positive pseudorapidities, although there is no depletion in the negative range. But it does not comply with the hydrodynamic prediction made in \ref{fig:diffusionwakesimu} in which the $\eta > 0$ range is identical to zero. For the two larger hadron $p_T$ bins the deflection vanishes as expected. 
+
+\subsection{Results of the dihadron analysis}
+
+
 
 \end{document}

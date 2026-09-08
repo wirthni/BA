@@ -61,12 +61,12 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
     long NoOfPosPulls = 0;
     long NoOfNegPulls = 0;
 
-    #define DEF_PYTHIAOversampling 50
+    #define DEF_PYTHIAOversampling 100
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
     #define DEF_OutputEventOverviews false 
-    #define DEF_JetLeadingPt 20.0
-    #define DEF_JetSubleadingPt 10.0
+    #define DEF_JetLeadingPt 40.0
+    #define DEF_JetSubleadingPt 20.0
     #define DEF_HadLeadingPt 15.0
     #define DEF_HadSubleadingPt 10.0
     #define DEF_CorrelationMinPt 1.0
@@ -1165,7 +1165,7 @@ i_PtRange: e.g. particles within (1.0, 2.0)GeV/c should be analyzed -> i_PtRange
 i_LowPtCut: e.g. particles within (1.0, 2.0)GeV/c should be analyzed ->i_LowPtCut = 1
 */
 
-Int_t FlowMC_Ana(const TString DataFile, float DiffRange) {
+Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement, int LeadPt, int SublPt) {
 
     #define DEF_AxisLabelSize 0.07
     #define DEF_AxisTitleSize 0.08
@@ -1256,8 +1256,14 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange) {
 
 
         TLegend *leg = new TLegend(0.25,0.77,0.26,0.93);
-        leg->AddEntry((TObject*)nullptr,"Pb--Pb Simulation @ #sqrt{s_{NN}} = 5.02 TeV","");
-        leg->AddEntry((TObject*)nullptr,Form("|#phi - #phi_{Leading}| #leq #pi/2, %.1f #leq p_{T} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
+        if(iRow == 0)
+        {
+            leg->AddEntry((TObject*)nullptr,"Pb--Pb Simulation @ #sqrt{s_{NN}} = 5.02 TeV","");
+            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("R = 0.2, |#eta_{jet}| #leq 0.9 - R, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            else leg->AddEntry((TObject*)nullptr,Form("|#eta_{Lead./Subl. Hadron}| #leq 0.9, p_{T} = (%.1d, %.1d) GeV",LeadPt, SublPt), "");
+            leg->AddEntry((TObject*)nullptr,Form("|#phi - #phi_{Leading}| #leq #pi/2"),"");
+        }
+        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
         leg->SetTextSize(DEF_LegendFontSize); 
         leg->Draw();
@@ -1287,7 +1293,8 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange) {
         h1D_PartMult_LargeGap->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
         h1D_PartMult_LargeGap->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
         h1D_PartMult_LargeGap->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-        h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(-DiffRange, DiffRange);
+        h1D_PartMult_LargeGap->GetYaxis()->SetMaxDigits(6);
+        //h1D_PartMult_LargeGap->GetYaxis()->SetRangeUser(-DiffRange, DiffRange);
         h1D_PartMult_LargeGap->SetMarkerStyle(kCircle);
         h1D_PartMult_LargeGap->SetMarkerColor(kBlack);
         h1D_PartMult_LargeGap->DrawCopy();
@@ -1607,7 +1614,7 @@ double Function_PhiByFlow(double x, double params[])
 
 double Function_DirectedFlowByEta(double Eta)
 {
-    return (pow(10, -3) * -0.7043 * Eta);
+    return (pow(10, -1) * -0.7043 * Eta);////////////////ARTIFICIALLY MADE 100 TIMES BIGGER 
 }
 
 double Function_v2v3ByPtAndEta(double x, double params[])
