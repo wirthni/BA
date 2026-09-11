@@ -1259,9 +1259,10 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
         if(iRow == 0)
         {
             leg->AddEntry((TObject*)nullptr,"Pb--Pb Simulation @ #sqrt{s_{NN}} = 5.02 TeV","");
-            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("R = 0.2, |#eta_{jet}| #leq 0.9 - R, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
-            else leg->AddEntry((TObject*)nullptr,Form("|#eta_{Lead./Subl. Hadron}| #leq 0.9, p_{T} = (%.1d, %.1d) GeV",LeadPt, SublPt), "");
+            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            else leg->AddEntry((TObject*)nullptr, Form("Dihadron, |#eta_{Lead./Subl. Hadron}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
             leg->AddEntry((TObject*)nullptr,Form("|#phi - #phi_{Leading}| #leq #pi/2"),"");
+            leg->AddEntry((TObject*)nullptr,"statistical errors only", "");
         }
         leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
@@ -1299,6 +1300,34 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
         h1D_PartMult_LargeGap->SetMarkerColor(kBlack);
         h1D_PartMult_LargeGap->DrawCopy();
 
+        TLine *line = new TLine(-.9, 0.0, .9, 0.0);
+        line->SetLineColor(kGray);
+        line->Draw("SAME");
+
+        h1D_PartMult_LargeGap->DrawCopy("SAME");
+
+        //get chi^2 of null hypothesis test
+        int NBins = 5;//h1F_LargeGap[iRow]->GetXaxis()->GetNbins();
+        float Sum = 0;
+
+        for(int iBin = 1; iBin <= NBins; iBin++)
+        {
+            float Num = pow(h1D_PartMult_LargeGap->GetBinContent(iBin), 2);
+            float Den = pow(h1D_PartMult_LargeGap->GetBinError(iBin),1);
+            cout << Num/Den << endl;
+            Sum += Num/Den;
+        }
+
+        Sum /= NBins-1;
+
+        TLegend *ChiLeg = new TLegend(0.7,0.2,0.8,0.35);
+        ChiLeg->AddEntry((TObject*)nullptr, "Null hypothesis","");
+        ChiLeg->AddEntry((TObject*)nullptr, "for full #eta","");
+        ChiLeg->AddEntry((TObject*)nullptr,Form("#Chi^{2} = %.2f", Sum),"");
+        ChiLeg->SetLineColor(10);
+        ChiLeg->SetTextSize(DEF_LegendFontSize); 
+        ChiLeg->Draw();
+
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
@@ -1312,8 +1341,8 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     #define LowPtJetFrom 20.0f //GeV
-    #define MiddlePtJetFrom 50.0f //GeV
-    #define HighPtJetFrom 80.0f //GeV
+    #define MiddlePtJetFrom 40.0f //GeV
+    #define HighPtJetFrom 70.0f //GeV
     #define DEF_ShiftBins 60
     #define DEF_Rebin 3
     #define DEF_AxisLabelSize 0.05
@@ -1382,18 +1411,21 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
     h1D_LowPtJetsShift->SetTitle("");
     h1D_LowPtJetsShift->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_LowPtJetsShift->GetXaxis()->SetLabelSize(DEF_AxisNumbersSize);
-    h1D_LowPtJetsShift->GetXaxis()->SetTitle("Jet distance in #phi to closest V_{2} maximum [rad]");
+    h1D_LowPtJetsShift->GetXaxis()->SetTitle("d [rad]");
     h1D_LowPtJetsShift->GetXaxis()->CenterTitle();
     h1D_LowPtJetsShift->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
     h1D_LowPtJetsShift->GetYaxis()->SetLabelSize(DEF_AxisNumbersSize);
-    h1D_LowPtJetsShift->GetYaxis()->SetTitle("Relative jet shift in #phi [rad]");
+    h1D_LowPtJetsShift->GetYaxis()->SetTitle("<#Delta #phi> [rad]");
     h1D_LowPtJetsShift->GetYaxis()->CenterTitle();
     h1D_LowPtJetsShift->SetMarkerStyle(kFullCircle);
     h1D_LowPtJetsShift->SetMarkerColor(kRed);
     h1D_LowPtJetsShift->SetLineColor(kRed);
     h1D_LowPtJetsShift->Rebin(DEF_Rebin);
     h1D_LowPtJetsShift->Scale(1./DEF_Rebin);
-    h1D_LowPtJetsShift->Fit("sine_low");
+    TFitResultPtr FitResultPointer = h1D_LowPtJetsShift->Fit("sine_low", "S");
+    //TH1D *hint = new TH1D("hint", "Fit with .95 conf.band", DEF_ShiftBins, -Pi/2, +Pi/2);
+    //TVirtualFitter::GetFitter()->GetConfidenceIntervals(hint, 0.95);
+    //hint->SetFillColor(kBlue-9);
     TF1 *Temp = (TF1*)h1D_LowPtJetsShift->GetListOfFunctions()->FindObject("sine_low");
     Temp->SetLineColor(kRed);
     FitParams[0] = Temp->GetParameter(0);
@@ -1434,25 +1466,26 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
     FitParams[2] = Temp3->GetParameter(0);
 
     TH1* Low_Lgd = (TH1*)h1D_LowPtJetsShift->DrawCopy("P E1");
+    //hint->DrawCopy("e3 same");
     TH1* Mid_Lgd = (TH1*)h1D_MiddlePtJetsShift->DrawCopy("SAME P E1");
     TH1* High_Lgd = (TH1*)h1D_HighPtJetsShift->DrawCopy("SAME P E1");
 
     TLegend *leg = new TLegend(0.7,0.7,0.85,0.85);
-    leg->AddEntry((TObject*)nullptr,Form("Jet p_{T} from clustering before adding background"),"");
-    leg->AddEntry(Low_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", LowPtJetFrom, MiddlePtJetFrom),"p");
-    leg->AddEntry(Mid_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} #leq %.1f GeV", MiddlePtJetFrom, HighPtJetFrom),"p");
-    leg->AddEntry(High_Lgd,Form("Jets with %.1f #leq p_{T}^{Jet, reco} < #infty GeV", HighPtJetFrom),"p");
+    leg->AddEntry((TObject*)nullptr,Form("Jet p_{T} of reconstructed jet before adding background"),"");
+    leg->AddEntry(Low_Lgd,Form("Jets with %.1f #leq p_{T,Leading} #leq %.1f GeV", LowPtJetFrom, MiddlePtJetFrom),"p");
+    leg->AddEntry(Mid_Lgd,Form("Jets with %.1f #leq p_{T,Leading} #leq %.1f GeV", MiddlePtJetFrom, HighPtJetFrom),"p");
+    leg->AddEntry(High_Lgd,Form("Jets with %.1f #leq p_{T,Leading} < #infty GeV", HighPtJetFrom),"p");
     leg->SetLineColor(10);
     leg->SetTextSize(DEF_LegendFontSize); 
     leg->Draw();
 
     TLegend *info = new TLegend(0.7,0.7,0.85,0.85);
-    info->AddEntry((TObject*)nullptr,Form("Event = PYTHIA p-p + Thermal Background (BG)"),"");
-    info->AddEntry((TObject*)nullptr,Form("BG: Randomly generated, based on ALICE 2018 Pb-Pb, 0-10%, #sqrt{s} = 5.02TeV"),"");
-    info->AddEntry((TObject*)nullptr,Form("|#eta^{Jet}| #leq 0.7 = 0.9 - R"),"");
-    info->AddEntry((TObject*)nullptr,Form("Jet clustering by FastJet: R=0.2, Anti-k_{t}"),"");
+    info->AddEntry((TObject*)nullptr,Form("200M events from PYTHIA p-p + artificial background (BG)"),"");
+    info->AddEntry((TObject*)nullptr,Form("BG: MC generated, based on ALICE 2018 Pb-Pb, 0-10%, #sqrt{s} = 5.02TeV"),"");
+    info->AddEntry((TObject*)nullptr,Form("|#eta_{Leading}| #leq 0.7 = 0.9 - R"),"");
+    info->AddEntry((TObject*)nullptr,Form("Jet clustering: R=0.2, Anti-k_{t}"),"");
     info->AddEntry((TObject*)nullptr,Form("Only jets that were not shifted by more than #pi/2"),"");
-    info->AddEntry((TObject*)nullptr,Form("Fitted function: A*sin(...) with parameter A. Fit results:"),"");
+    info->AddEntry((TObject*)nullptr,Form("Fitted function: A*sin(2d) with parameter A. Fit results:"),"");
     info->AddEntry((TObject*)nullptr,Form("A(Low p_{T}, Middle p_{T}, High p_{T}) = (%.3e, %.3e, %.3e)", FitParams[0], FitParams[1], FitParams[2]),"");
     info->SetLineColor(10);
     info->SetTextSize(DEF_LegendFontSize); 

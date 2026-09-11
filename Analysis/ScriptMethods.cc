@@ -226,7 +226,7 @@ Int_t DijetAna(const TString DataFile, float DiffRange, bool IsJetMeasurement, i
     #define DEF_AxisLabelSize 0.07
     #define DEF_AxisTitleSize 0.08
     #define DEF_HistoTitleSize 0.1
-    #define DEF_Rebin 25
+    #define DEF_Rebin 20
     #define DEF_LegendFontSize 0.055
     #define DEF_Margin_Top 0.05
     #define DEF_Margin_Bottom 0.23
@@ -321,9 +321,10 @@ Int_t DijetAna(const TString DataFile, float DiffRange, bool IsJetMeasurement, i
         if(iRow==0)
         {
             leg->AddEntry((TObject*)nullptr,"ALICE Pb-Pb 0-10%  #sqrt{s_{NN}}=5.36 TeV","");
-            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("R = 0.2, |#eta_{jet}| #leq 0.9 - R, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
-            else leg->AddEntry((TObject*)nullptr, Form("|#eta_{Lead./Subl. Hadron}| #leq 0.9, p_{T} = (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            else leg->AddEntry((TObject*)nullptr, Form("Dihadron, |#eta_{Lead./Subl. Hadron}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
             leg->AddEntry((TObject*)nullptr,"|#phi_{Hadron} - #phi_{Leading}| #leq #pi/2", "");
+            leg->AddEntry((TObject*)nullptr,"statistical errors only", "");
         }
         leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
@@ -357,9 +358,36 @@ Int_t DijetAna(const TString DataFile, float DiffRange, bool IsJetMeasurement, i
         h1F_LargeGap[iRow]->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
         h1F_LargeGap[iRow]->SetMarkerStyle(kCircle);
         h1F_LargeGap[iRow]->SetMarkerColor(kBlack);
-        h1F_LargeGap[iRow]->DrawCopy();
-        //h1F_LargeGap[iRow]->GetYaxis()->SetRangeUser(-DiffRange, DiffRange);
-        h1F_LargeGap[iRow]->DrawCopy();
+        h1F_LargeGap[iRow]->DrawCopy("");
+
+        TLine *line = new TLine(-.9, 0.0, .9, 0.0);
+        line->SetLineColor(kGray);
+        line->Draw("SAME");
+
+        h1F_LargeGap[iRow]->DrawCopy("same");
+
+        //get chi^2 of null hypothesis test
+        int NBins = 5;//h1F_LargeGap[iRow]->GetXaxis()->GetNbins();
+        float Sum = 0;
+
+        for(int iBin = 1; iBin <= NBins; iBin++)
+        {
+            float Num = pow(h1F_LargeGap[iRow]->GetBinContent(iBin), 2);
+            float Den = pow(h1F_LargeGap[iRow]->GetBinError(iBin),1);
+            cout << Num/Den << endl;
+            Sum += Num/Den;
+        }
+
+        Sum /= NBins-1;
+
+        TLegend *ChiLeg = new TLegend(0.7,0.2,0.8,0.35);
+        ChiLeg->AddEntry((TObject*)nullptr, "Null hypothesis","");
+        ChiLeg->AddEntry((TObject*)nullptr, "for #eta #leq 0","");
+        ChiLeg->AddEntry((TObject*)nullptr,Form("#Chi^{2} = %.2f", Sum),"");
+        ChiLeg->SetLineColor(10);
+        ChiLeg->SetTextSize(DEF_LegendFontSize); 
+        ChiLeg->Draw();
+
     }
 
     return 1;

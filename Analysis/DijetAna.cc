@@ -11,16 +11,16 @@ i_InputFile: Format xxx.root
 Int_t DijetAna(TString i_InputFile = "in.root")
 {
     //CONFIGURE
-    bool UseJetTrigger = true;
+    bool UseJetTrigger = false;
 
     gStyle->SetOptStat(0);
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.3
-    #define DEF_JetLeadingPt 30.0
-    #define DEF_JetSubleadingPt 15.0
-    #define DEF_HadLeadingPt 25.0
+    #define DEF_JetLeadingPt 40.0
+    #define DEF_JetSubleadingPt 20.0
+    #define DEF_HadLeadingPt 30.0
     #define DEF_HadSubleadingPt 15.0
     #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_MaxPartilclesPerJet 200
@@ -61,10 +61,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     TH1F* h1F_1DCorrelation_eta_pT_1_2[2];
     TH1F* h1F_1DCorrelation_eta_pT_2_4[2];
     TH1F* h1F_1DCorrelation_eta_pT_4_6[2];
-    TH1F* h1F_1DCorrelationDifference_eta_pT_0_1;
-    TH1F* h1F_1DCorrelationDifference_eta_pT_1_2;
-    TH1F* h1F_1DCorrelationDifference_eta_pT_2_4;
-    TH1F* h1F_1DCorrelationDifference_eta_pT_4_6;
     
     h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
     h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0] = new TH2F("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", "h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap", DEF_BinningPerUnit*1.8, -0.9, 0.9, DEF_BinningPerUnit*2*Pi, -Pi/2, 3*Pi/2);
@@ -83,11 +79,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     h1F_1DCorrelation_eta_pT_1_2[1] = new TH1F("h1F_1DCorrelation_eta_pT_1_2_LargeGap", "h1F_1DCorrelation_eta_pT_1_2_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
     h1F_1DCorrelation_eta_pT_2_4[1] = new TH1F("h1F_1DCorrelation_eta_pT_2_4_LargeGap", "h1F_1DCorrelation_eta_pT_2_4_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
     h1F_1DCorrelation_eta_pT_4_6[1] = new TH1F("h1F_1DCorrelation_eta_pT_4_6_LargeGap", "h1F_1DCorrelation_eta_pT_4_6_LargeGap", DEF_BinningPerUnit*1.8, -0.9, 0.9);
-    
-    h1F_1DCorrelationDifference_eta_pT_0_1 = new TH1F("h1F_1DCorrelationDifference_eta_pT_0_1", "h1F_1DCorrelationDifference_eta_pT_0_1", DEF_BinningPerUnit*1.8, -0.9, 0.9);
-    h1F_1DCorrelationDifference_eta_pT_1_2 = new TH1F("h1F_1DCorrelationDifference_eta_pT_1_2", "h1F_1DCorrelationDifference_eta_pT_1_2", DEF_BinningPerUnit*1.8, -0.9, 0.9);
-    h1F_1DCorrelationDifference_eta_pT_2_4 = new TH1F("h1F_1DCorrelationDifference_eta_pT_2_4", "h1F_1DCorrelationDifference_eta_pT_2_4", DEF_BinningPerUnit*1.8, -0.9, 0.9);
-    h1F_1DCorrelationDifference_eta_pT_4_6 = new TH1F("h1F_1DCorrelationDifference_eta_pT_4_6", "h1F_1DCorrelationDifference_eta_pT_4_6", DEF_BinningPerUnit*1.8, -0.9, 0.9);
 
     // loop over all directories and print name
     cout << "Process file" << endl;
@@ -321,6 +312,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
 
             if(abs(Jets[collision.ColID][1].eta()) > 0.9 - DEF_JetRadius) continue;
 
+
             float PhiSeparation = Jets[collision.ColID][0].phi() - Jets[collision.ColID][1].phi();
             if(PhiSeparation > Pi) PhiSeparation -= 2*Pi;
             else if(PhiSeparation < -Pi) PhiSeparation += 2*Pi;
@@ -399,39 +391,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     /
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //divide by event numbers
-    if(LargeGapEventCounter > 0 || SmallGapEventCounter > 0)
-    {
-        for(int iGap = 0; iGap <=1; iGap++)
-        {
-            float ScaleFactor;
-            (iGap) ? (ScaleFactor = 1./(float)LargeGapEventCounter) : (ScaleFactor = 1./(float)SmallGapEventCounter);
-            h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(ScaleFactor);
-            h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(ScaleFactor);
-            h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(ScaleFactor);
-            h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(ScaleFactor);
-        
-            h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(ScaleFactor);
-            h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(ScaleFactor);
-            h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(ScaleFactor);
-            h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(ScaleFactor);
-        
-        }
-    }
-
-    //produce differences
-    h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[1], +1);
-    h1F_1DCorrelationDifference_eta_pT_0_1->Add(h1F_1DCorrelation_eta_pT_0_1[0], -1);
-
-    h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[1], +1);
-    h1F_1DCorrelationDifference_eta_pT_1_2->Add(h1F_1DCorrelation_eta_pT_1_2[0], -1);
-
-    h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[1], +1);
-    h1F_1DCorrelationDifference_eta_pT_2_4->Add(h1F_1DCorrelation_eta_pT_2_4[0], -1);
-
-    h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[1], +1);
-    h1F_1DCorrelationDifference_eta_pT_4_6->Add(h1F_1DCorrelation_eta_pT_4_6[0], -1);
-
     //scale by bin width
     for(int iGap = 0; iGap <=1; iGap++)
     {
@@ -446,10 +405,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1));
     
     }
-    h1F_1DCorrelationDifference_eta_pT_0_1->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->GetBinWidth(1));
-    h1F_1DCorrelationDifference_eta_pT_1_2->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->GetBinWidth(1));
-    h1F_1DCorrelationDifference_eta_pT_2_4->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->GetBinWidth(1));
-    h1F_1DCorrelationDifference_eta_pT_4_6->Scale(1./(float)h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->GetBinWidth(1));
 
     //set axis titles
     for(int iGap = 0; iGap <=1; iGap++)
@@ -460,7 +415,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetZaxis()->SetTitle("#frac{d N}{d #Delta #phi d #eta}");
 
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->SetTitle("");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -468,7 +423,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetZaxis()->SetTitle("#frac{d N}{d #Delta #phi d #eta}");
 
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->SetTitle("");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -476,7 +431,7 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetZaxis()->SetTitle("#frac{d N}{d #Delta #phi d #eta}");
 
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->SetTitle("");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
@@ -484,58 +439,33 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->SetTitle("#Delta #phi [rad]");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #Delta #phi d #eta}");
+        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetZaxis()->SetTitle("#frac{d N}{d #Delta #phi d #eta}");
 
         h1F_1DCorrelation_eta_pT_0_1[iGap]->SetTitle("");
         h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
         h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->SetTitle("#eta");
         h1F_1DCorrelation_eta_pT_0_1[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+        h1F_1DCorrelation_eta_pT_0_1[iGap]->GetYaxis()->SetTitle("#frac{d N}{d #eta}");
 
         h1F_1DCorrelation_eta_pT_1_2[iGap]->SetTitle("");
         h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
         h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->SetTitle("#eta");
         h1F_1DCorrelation_eta_pT_1_2[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+        h1F_1DCorrelation_eta_pT_1_2[iGap]->GetYaxis()->SetTitle("#frac{d N}{d #eta}");
 
         h1F_1DCorrelation_eta_pT_2_4[iGap]->SetTitle("");
         h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
         h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->SetTitle("#eta");
         h1F_1DCorrelation_eta_pT_2_4[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+        h1F_1DCorrelation_eta_pT_2_4[iGap]->GetYaxis()->SetTitle("#frac{d N}{d #eta}");
 
         h1F_1DCorrelation_eta_pT_4_6[iGap]->SetTitle("");
         h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
         h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->SetTitle("#eta");
         h1F_1DCorrelation_eta_pT_4_6[iGap]->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetYaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta}");
+        h1F_1DCorrelation_eta_pT_4_6[iGap]->GetYaxis()->SetTitle("#frac{d N}{d #eta}");
     
     }
-
-    h1F_1DCorrelationDifference_eta_pT_0_1->SetTitle("");
-    h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_0_1->GetXaxis()->SetTitle("#eta");
-    h1F_1DCorrelationDifference_eta_pT_0_1->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_0_1->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
-
-    h1F_1DCorrelationDifference_eta_pT_1_2->SetTitle("");
-    h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_1_2->GetXaxis()->SetTitle("#eta");
-    h1F_1DCorrelationDifference_eta_pT_1_2->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_1_2->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
-
-    h1F_1DCorrelationDifference_eta_pT_2_4->SetTitle("");
-    h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_2_4->GetXaxis()->SetTitle("#eta");
-    h1F_1DCorrelationDifference_eta_pT_2_4->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_2_4->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
-
-    h1F_1DCorrelationDifference_eta_pT_4_6->SetTitle("");
-    h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_4_6->GetXaxis()->SetTitle("#eta");
-    h1F_1DCorrelationDifference_eta_pT_4_6->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-    h1F_1DCorrelationDifference_eta_pT_4_6->GetYaxis()->SetTitle("#frac{1}{N_{Large Gap}} #frac{d N_{Large Gap}}{d #eta} - #frac{1}{N_{Small Gap}} #frac{d N_{SmallGap}}{d #eta}");
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
@@ -602,10 +532,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
             h1F_1DCorrelation_eta_pT_2_4[iGap]->Write();
             h1F_1DCorrelation_eta_pT_4_6[iGap]->Write();
         }
-        h1F_1DCorrelationDifference_eta_pT_0_1->Write();
-        h1F_1DCorrelationDifference_eta_pT_1_2->Write();
-        h1F_1DCorrelationDifference_eta_pT_2_4->Write();
-        h1F_1DCorrelationDifference_eta_pT_4_6->Write();
         CounterHisto->Write();
 
         OutputFile->Close();
@@ -619,84 +545,52 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         //get
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[0]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[0]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[0]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[0]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_SmallGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_0_1[1]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_0_1_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_1_2[1]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_1_2_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_2_4[1]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_2_4_LargeGap_Sum->Scale(0.5);
 
         TH2F* h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum = (TH2F*) OutputFile->Get("h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap");
         h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Add(h2F_2DCorrelation_eta_vs_dphi_pT_4_6[1]);
-        h2F_2DCorrelation_eta_vs_dphi_pT_4_6_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_SmallGap");
         h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[0]);
-        h1F_1DCorrelation_eta_pT_0_1_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_SmallGap");
         h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[0]);
-        h1F_1DCorrelation_eta_pT_1_2_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_SmallGap");
         h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[0]);
-        h1F_1DCorrelation_eta_pT_2_4_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_SmallGap");
         h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[0]);
-        h1F_1DCorrelation_eta_pT_4_6_SmallGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_0_1_LargeGap");
         h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_0_1[1]);
-        h1F_1DCorrelation_eta_pT_0_1_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_1_2_LargeGap");
         h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_1_2[1]);
-        h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_2_4_LargeGap");
         h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_2_4[1]);
-        h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Scale(0.5);
 
         TH1F* h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelation_eta_pT_4_6_LargeGap");
         h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Add(h1F_1DCorrelation_eta_pT_4_6[1]);
-        h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Scale(0.5);
         
-        TH1F* h1F_1DCorrelationDifference_eta_pT_0_1_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_0_1");
-        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Add(h1F_1DCorrelationDifference_eta_pT_0_1);
-        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Scale(0.5);
-
-        TH1F* h1F_1DCorrelationDifference_eta_pT_1_2_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_1_2");
-        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Add(h1F_1DCorrelationDifference_eta_pT_1_2);
-        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Scale(0.5);
-
-        TH1F* h1F_1DCorrelationDifference_eta_pT_2_4_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_2_4");
-        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Add(h1F_1DCorrelationDifference_eta_pT_2_4);
-        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Scale(0.5);
-
-        TH1F* h1F_1DCorrelationDifference_eta_pT_4_6_Sum = (TH1F*) OutputFile->Get("h1F_1DCorrelationDifference_eta_pT_4_6");
-        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Add(h1F_1DCorrelationDifference_eta_pT_4_6);
-        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Scale(0.5);
-
         TH1I* CounterHisto_Sum = (TH1I*) OutputFile->Get("CounterHisto");
         CounterHisto_Sum->Add(CounterHisto);
 
@@ -718,10 +612,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
         h1F_1DCorrelation_eta_pT_1_2_LargeGap_Sum->Write();
         h1F_1DCorrelation_eta_pT_2_4_LargeGap_Sum->Write();
         h1F_1DCorrelation_eta_pT_4_6_LargeGap_Sum->Write();
-        h1F_1DCorrelationDifference_eta_pT_0_1_Sum->Write();
-        h1F_1DCorrelationDifference_eta_pT_1_2_Sum->Write();
-        h1F_1DCorrelationDifference_eta_pT_2_4_Sum->Write();
-        h1F_1DCorrelationDifference_eta_pT_4_6_Sum->Write();
         CounterHisto_Sum->Write();
 
         OutputFile->Close();

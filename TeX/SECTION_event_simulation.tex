@@ -13,6 +13,7 @@
 \begin{document}
 
 \section{Event simulation: The identification of potential biases}
+\label{sec:event-simulation}
 
 \subsection{Motivation}
 
@@ -256,6 +257,7 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 				width=13.7cm,
 				font=\tiny,
 				anchor=center,
+				colorbar,
 				view={0}{90},
 				colormap/viridis,
 				xlabel={},
@@ -276,7 +278,7 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 			\end{axis}
 			
 			%z label
-			%\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
 			
 			%phase spaces
 			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
@@ -306,10 +308,17 @@ For the dijet trigger analysis this behavior can be explained by how probable wh
 In the case of a dihadron trigger the influence of the enhanced directed flow is less pronounced and the explanation is different than in the dijet case because the individual hard trigger hadrons do not rely on soft background. [EXPLANATION]
 
 
+\subsection{Single hadron analysis with MC events}
+
+The measurement of the diffusion wake in a dijet-hadron correlation or a dihadron-hadron correlation is done to isolate the diffusion wake signal from the uncorrelated soft background. Naively one could think about selecting evens that have a single high-$p_T$ hadron and to study the correlation of soft hadrons with the trigger hadron. If the trigger hadron has an azimuthal coordinate $\phi_\text{trigger}$, its diffusion wake and therefore the soft hadron depletion is expected at $\phi_\text{depletion} =  \phi_\text{trigger} \pm \pi$. Therefore the soft soft hadron correlation is studied azimuthally opposite in the full pseudorapidity range, that is $|\phi_\text{depletion} - \phi_h| < \Delta \phi, -0.9 \leq \eta_h \leq 0.9$ where $\Delta \phi$ defines how far soft hadrons are allowed to be from the depletion site to be studied. This correlation has to be interpreted relative to another soft hadron correlation that is unbiased by the trigger hadron. To avoid acceptance and tracking efficiency effects this reference correlation should be studied exactly where the original correlation is studied in the $(\phi, \eta)$ phase space. One possibility to accomplish that is to choose a reference event that has very similar properties like the original event. Events are defined to be similar if their particle multiplicity and event plane angle are similar. The reference event only differs from the original event by not having a hard hadron where the trigger hadron in the original event was. Then the reference region is uncorrelated to the trigger hadron in the original event. By subtracting the reference correlation from the soft hadron correlation behind the trigger hadron one should be able to isolate its influence on the soft particle spectrum.
+
+The analysis is conducted as follows. At once around 2000 events are analyzed simultaneously. Each of the events is first checked for a trigger hadron above some threshold, just like in the dijet analysis. Then the azimuthally opposite side of this trigger hadron, where the soft hadron correlation is measured, is required to be free of any high-$p_T$ objects within $\Delta \phi$. If an event fulfills these requirements it is considered suitable for the single hadron analysis. Then, a suitable reference event is chosen for each event. The reference event must have a particle multiplicity that is not far off the original multiplicity, so $|N_i - N_\text{reference(i)}| < \Delta N$ and a similar event plane angle, so $|\psi_{m,i} - \psi_{m,\text{reference(i)}}| < \Delta \psi$. Azimuthally it must also be free of any high-$p_T$ objects around the original trigger hadron in event $i$ and around its azimuthally opposite side within $\Delta \phi$. 
 
 
 
-\subsection{Single jet(hadron) analysis with MC events}
+If an event fulfills these requirements it is considered a suitable reference event of event $i$.
+
+When choosing to study a low-$p_T$ spectrum of soft hadrons that are azimuthally opposite to the trigger hadron the diffusion wake should manifest itself as a dip in the particle spectrum at low transverse momenta. 
 
 
 

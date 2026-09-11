@@ -54,8 +54,32 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
 
     for(int i=0; i<HistoVector.size(); i++)
     {
-        int NoOfCombinedFiles = 1;
+
+        Int_t CounterBinNo = 0;
+        Int_t Counter = 0;
+
         cout << "Now merging " << HistoVector[i] << endl;
+
+        TH1I* CounterHisto = (TH1I*) file1->Get("CounterHisto");
+        if(!CounterHisto || CounterHisto->GetEntries() == 0 || CounterHisto->IsZombie() || CounterHisto->GetEntries() != CounterHisto->GetEntries())
+        {
+             cout << "Could not retrieve counter histogram!" << endl;
+             continue;
+        }
+
+        //check if it is a large gap or a small gap file
+        if(HistoVector[i].Contains("Large"))
+        {
+            CounterBinNo = CounterHisto->GetXaxis()->FindBin("Large Gap Events");
+        }
+        else
+        {
+            CounterBinNo = CounterHisto->GetXaxis()->FindBin("Small Gap Events");
+        }
+
+        //count entries of first histogram
+        Counter += CounterHisto->GetBinContent(CounterBinNo);
+
 
         //take general histo info from first file
         TH3F* h2D_MergerResult = (TH3F*)file1->Get(HistoVector[i]);
@@ -64,6 +88,7 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
              cout << "First file has corrupt data, cannot retrieve histogram!" << endl;
              continue;
         }
+
 
         //append the other files 2,3,...
         for(int j = i_FromRunNumber+1; j <= i_ToRunNumber; j++)
@@ -97,14 +122,32 @@ Int_t HistoMerger(int i_FromRunNumber, int i_ToRunNumber, TString i_Suffix)
             }
 
             h2D_MergerResult->Add(h2D_MergerScrawl);
-            NoOfCombinedFiles++;
+
+            TH1I* CounterHisto = (TH1I*) file->Get("CounterHisto");
+            if(!CounterHisto || CounterHisto->GetEntries() == 0 || CounterHisto->IsZombie() || CounterHisto->GetEntries() != CounterHisto->GetEntries())
+            {
+                cout << "Could not retrieve counter histogram!" << endl;
+                continue;
+            }
+
+            Counter += CounterHisto->GetBinContent(CounterBinNo);
 
             file->Close();
             delete(file);
 
         }
 
-        if(HistoVector[i] != "CounterHisto") h2D_MergerResult->Scale(1./(double)(NoOfCombinedFiles));
+        //Scale by event number
+        if(HistoVector[i] != "CounterHisto") h2D_MergerResult->Scale(1./(double)(Counter));
+
+        if(HistoVector[i] != "CounterHisto" && HistoVector[i].Contains("h2"))
+        {
+            h2D_MergerResult->Scale(1./((double) h2D_MergerResult->GetXaxis()->GetBinWidth(1) * (double) h2D_MergerResult->GetYaxis()->GetBinWidth(1)));
+        }
+        else
+        {
+            h2D_MergerResult->Scale(1./(double) h2D_MergerResult->GetXaxis()->GetBinWidth(1));
+        }
 
         OutputFile->cd();
         h2D_MergerResult->Write();
