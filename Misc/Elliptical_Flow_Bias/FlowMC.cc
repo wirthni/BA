@@ -1258,6 +1258,7 @@ Int_t FlowMC_Ana(const TString DataFile, float DiffRange, bool IsJetMeasurement,
         TLegend *leg = new TLegend(0.25,0.77,0.26,0.93);
         if(iRow == 0)
         {
+            leg->AddEntry((TObject*)nullptr,"This thesis","");
             leg->AddEntry((TObject*)nullptr,"Pb--Pb Simulation @ #sqrt{s_{NN}} = 5.02 TeV","");
             if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
             else leg->AddEntry((TObject*)nullptr, Form("Dihadron, |#eta_{Lead./Subl. Hadron}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");

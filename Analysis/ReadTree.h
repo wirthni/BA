@@ -7,6 +7,7 @@
 #include "StJetTrackEvent.h"
 #include "StJetTrackEventLinkDef.h"
 #include "TClassRef.h"
+#include "THStack.h"
 #include <algorithm>
 #include <cstdlib>
 #include "fastjet/config.h"

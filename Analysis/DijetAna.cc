@@ -17,11 +17,11 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     SetRootGraphicStyle();
 
     #define DEF_BinningPerUnit 100
-    #define DEF_JetRadius 0.3
-    #define DEF_JetLeadingPt 40.0
-    #define DEF_JetSubleadingPt 20.0
-    #define DEF_HadLeadingPt 30.0
-    #define DEF_HadSubleadingPt 15.0
+    #define DEF_JetRadius 0.2
+    #define DEF_JetLeadingPt 20.0
+    #define DEF_JetSubleadingPt 10.0
+    #define DEF_HadLeadingPt 15.0
+    #define DEF_HadSubleadingPt 8.0
     #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_MaxPartilclesPerJet 200
     #define DEF_MaxJetPt 150.0
@@ -390,21 +390,6 @@ Int_t DijetAna(TString i_InputFile = "in.root")
     /
     /
     *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //scale by bin width
-    for(int iGap = 0; iGap <=1; iGap++)
-    {
-        h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_0_1[iGap]->GetYaxis()->GetBinWidth(1)));
-        h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_1_2[iGap]->GetYaxis()->GetBinWidth(1)));
-        h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_2_4[iGap]->GetYaxis()->GetBinWidth(1)));
-        h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->Scale(1./((float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1) * (float)h2F_2DCorrelation_eta_vs_dphi_pT_4_6[iGap]->GetYaxis()->GetBinWidth(1)));
-    
-        h1F_1DCorrelation_eta_pT_0_1[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_0_1[iGap]->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelation_eta_pT_1_2[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_1_2[iGap]->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelation_eta_pT_2_4[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_2_4[iGap]->GetXaxis()->GetBinWidth(1));
-        h1F_1DCorrelation_eta_pT_4_6[iGap]->Scale(1./(float)h1F_1DCorrelation_eta_pT_4_6[iGap]->GetXaxis()->GetBinWidth(1));
-    
-    }
 
     //set axis titles
     for(int iGap = 0; iGap <=1; iGap++)
