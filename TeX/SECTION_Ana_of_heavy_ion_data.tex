@@ -93,7 +93,7 @@ Many analyses require the presence of a jet that fulfills certain criteria, for 
 	\label{eq:anti-k_t}
 \end{equation}
 
-where $\Delta_{ij}^2 = (y_i - y_j)^2 + (\phi_i - \phi_j)^2$ and $k_{ti}, y_i \text{ and } \phi_i$ are the transverse momentum, papidity and azimuth of particle $i$ respectively. The quantity $d_{iB}$ is called beam distance of particle $i$. $R$ is the jet radius parameter.
+where $\Delta_{ij}^2 = (y_i - y_j)^2 + (\phi_i - \phi_j)^2$ and $k_{ti}, y_i \text{ and } \phi_i$ are the transverse momentum, rapidity and azimuth of particle $i$ respectively. The quantity $d_{iB}$ is called beam distance of particle $i$. $R$ is the jet radius parameter.
 
 The algorithm starts with the four-momenta for all particles in the event \\ $p_i^\mu, i = 0,1,\dots, N_\text{ch}-1$. All particles, they are called protojets in this stage, are essentially light-like \cite{ellis_successive_1993}. The jet algorithm then recursively groups pairs of protojets together to form new protojets, preferably those with nearly parallel momentum. The formulation of equation (\ref{eq:anti-k_t}) makes clustering of soft particles with neighboring hard particles more probable than the clustering among soft particles themselves. The algorithm decides on when the joining for a particular protojet should cease, after which the protojet is called a jet and not manipulated any further.
 
