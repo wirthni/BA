@@ -796,7 +796,7 @@ Int_t Analysis_SimulationStats()
     h1D_PtDist->SetTitle("");
     h1D_PtDist->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-    h1D_PtDist->GetXaxis()->SetTitle("p_{T} [GeV]");
+    h1D_PtDist->GetXaxis()->SetTitle("p_{T} [GeV/c]");
     h1D_PtDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_PtDist->GetYaxis()->SetTitle("a. u.");
@@ -831,7 +831,7 @@ Int_t Analysis_SimulationStats()
     Graph_v2_pT->SetTitle("");
     Graph_v2_pT->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
     Graph_v2_pT->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-    Graph_v2_pT->GetXaxis()->SetTitle("p_{T} [GeV]");
+    Graph_v2_pT->GetXaxis()->SetTitle("p_{T} [GeV/c]");
     Graph_v2_pT->GetXaxis()->SetRangeUser(0,20);
     Graph_v2_pT->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     Graph_v2_pT->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
@@ -884,7 +884,7 @@ Int_t Analysis_SimulationStats()
     leg4->SetTextSize(DEF_LegendTextSize);
     leg4->AddEntry((TObject*)nullptr,Form("0-5%% ALICE Pb-Pb"),"");
     leg4->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 2.76 TeV, |v_{z}| < 10 cm"),"");
-    leg4->AddEntry((TObject*)nullptr,Form("0.2 #leq p_{T}^{track} #leq 5.0 GeV"),"");
+    leg4->AddEntry((TObject*)nullptr,Form("0.2 #leq p_{T}^{track} #leq 5.0 GeV/c"),"");
     leg4->AddEntry(Graph_Orig,"Data","p");
     leg4->AddEntry(fit,"Fit","l");
     leg4->SetLineColor(10);
@@ -924,7 +924,7 @@ Int_t Analysis_SimulationStats()
     leg5->SetTextSize(DEF_LegendTextSize);
     leg5->AddEntry((TObject*)nullptr,Form("10-20%% ALICE Pb-Pb"),"");
     leg5->AddEntry((TObject*)nullptr,Form("#sqrt{s_{NN}} = 2.76 TeV"),"");
-    leg5->AddEntry((TObject*)nullptr,Form("0.15 #leq p_{T}^{track} #leq 20.0 GeV"),"");
+    leg5->AddEntry((TObject*)nullptr,Form("0.15 #leq p_{T}^{track} #leq 20.0 GeV/c"),"");
     leg5->AddEntry(Graph_Orig2,"Data","p");
     leg5->AddEntry(fit2,"Fit","l");
     leg5->SetLineColor(10);
@@ -1035,12 +1035,12 @@ Int_t DijetAna(const TString DataFile, float DiffRange, bool IsJetMeasurement, i
         {
             leg->AddEntry((TObject*)nullptr,"This thesis","");
             leg->AddEntry((TObject*)nullptr,"ALICE Pb-Pb 0-10%  #sqrt{s_{NN}}=5.36 TeV","");
-            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
-            else leg->AddEntry((TObject*)nullptr, Form("Dihadron, |#eta_{Lead./Subl. Hadron}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", LeadPt, SublPt), "");
+            if(IsJetMeasurement) leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV/c", LeadPt, SublPt), "");
+            else leg->AddEntry((TObject*)nullptr, Form("Dihadron, |#eta_{Lead./Subl. Hadron}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV/c", LeadPt, SublPt), "");
             leg->AddEntry((TObject*)nullptr,"|#phi_{Hadron} - #phi_{Leading}| #leq #pi/2", "");
             leg->AddEntry((TObject*)nullptr,"statistical errors only", "");
         }
-        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
+        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV/c", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
         leg->SetTextSize(DEF_LegendFontSize); 
         leg->Draw();

@@ -12,18 +12,17 @@
 
 \begin{document}
 
-\section{Simulating the shift of reconstructed jets}
+\section{Simulating azimuthal shift of reconstructed jets}
 
-In section \ref{sec:hadron-triggers} it was mentioned that the behavior of jet clustering algorithms like the anti-$k_t$ algorithm depends on local quantities, like the underlying hadron density. The bigger the hadron density in a certain area in the $(\phi, \eta)$ phase space is the easier a reconstructed jet reaches a certain transverse momentum threshold because its $p_T$ consists of the transverse momenta of its constituents. Therefore jets tend to be clustered in the event plane where the soft hadron density is enhanced. It turns out the Pb--Pb event simulation, refer to section \ref{sec:event-simulation} for details, can be used to quantify how strongly the underlying soft background shifts the jet towards the event plane compared to where it would be clustered without any underlying background.
+Two major effects influence the diffusion wake analysis when conducted with a dijet trigger.
 
-To accomplish this jet clustering is first performed on a bare PYTHIA event that consists of jets but no soft hadron background to identify the leading jet. It has identified properties $(\phi_{\text{Leading}}, \eta_{\text{Leading}}, p_{T,\text{Leading}})$. Next the artificial soft hadron background is added to the PYTHIA event. The soft background is flow modulated and has a random event plane angle $\phi = \psi_m$. The leading jet has a distance of $d = \phi_{\text{Leading}} - \psi_m$ to the event plane. Now another jet clustering is performed on the event, giving new information on the leading jet $(\phi'_{\text{Leading}}, \eta'_{\text{Leading}}, p'_{T,\text{Leading}})$. The shift $\Delta \phi = \phi'_{\text{Leading}} - \phi_{\text{Leading}}$ is studied depending on the original distance of the leading jet to the event plane $d$. 
+In the selection of events for the diffusion wake analysis a dijet trigger above transverse momentum thresholds  $p_{T,\text{min}}^\text{Leading}$ and $p_{T,\text{min}}^\text{Subleading}$ is required \cite{yang_background-free_2025}. Since these thresholds are reached easier if the jet clustering is performed in the event plane, the dijet pair has a positive correlation with the event plane. Thus, events used for the diffusion wake analysis have their dijet pairs on average aligned with the event plane.
 
-\subsection{Modeling the jet shift}
-\label{sec:modeling-jet-shift}
+The second effect is important after the clustering has already brought the dijet pair above the $p_T$ thresholds. In section \ref{sec:hadron-triggers} it was mentioned that the behavior of jet clustering algorithms like the anti-$k_t$ algorithm depends on local quantities, like the underlying hadron density. The jet cluster algorithm weights the azimuthal coordinate of the cluster result based on the $p_T$ of each constituent \cite{cacciari_fastjet_2012}. Meaning that the leading hadrons of the jet define the final jet's position strongly. However, the underlying soft hadron constituents also contribute a fraction to the final position. Figure \ref{fig:jetshiftmodel} shows a gaussian profile of hard hadrons embedded in a low-$p_T$ hadron profile modulated with elliptic flow. Speaking in terms of figure \ref{fig:jetshiftmodel} the average $p_T$ of the soft background hadrons to the left of the hard hadrons is higher than to the right. The non-uniform soft hadron background will therefore shift the final jet to the left compared to where the jet would have been clustered without the underlying background.
 
 \begin{figure}[H]
 	\centering
-	\begin{tikzpicture}
+	\begin{tikzpicture}[scale=1.5]
 		%draw coordinate system
 		\draw [->] (-3.14,0) -- (3.14,0)node[right] {$\phi - \psi_m$ [rad]};
 		\draw [->] (0,0) -- (0,3) node[above] {$\rho = \frac{d p_T}{d \phi}$};
@@ -44,7 +43,14 @@ To accomplish this jet clustering is first performed on a bare PYTHIA event that
 	\label{fig:jetshiftmodel}
 \end{figure}
 
-To be able to judge the result of the analysis a simple model of the jet shift has to be introduced. Figure \ref{fig:jetshiftmodel} shows the overlay configuration of a jet and underlying soft hadron background that is subject to elliptic flow in the azimuthal direction. Due to symmetry reasons the shift is expected to be zero in the event plane or perpendicular to the event plane. The most shift is expected if the soft hadron density asymmetry around the leading jet is greatest. Because the jet radius $R$ is much smaller than the $v_2$ flow modulation spreads in azimuthal direction, the underlying flow can be expanded locally at the leading jet position according to
+A Pb--Pb event simulation as described in section \ref{sec:event-simulation} can be used to quantify how strongly the underlying soft background shifts the jet towards the event plane compared to where it would be clustered without any underlying background.
+
+The jet clustering is first performed on a bare PYTHIA event that consists of jets but no soft hadron background to identify the leading jet with the properties $(\phi_{\text{Leading}}, \eta_{\text{Leading}}, p_{T,\text{Leading}})$. Next, the artificial soft hadron background is added to the PYTHIA event. The soft background is flow modulated and has a random event plane angle $\phi = \psi_m$. The leading jet has a distance of $d = \phi_{\text{Leading}} - \psi_m$ to the event plane. Now another jet clustering is performed on the event, giving new information on the leading jet $(\phi'_{\text{Leading}}, \eta'_{\text{Leading}}, p'_{T,\text{Leading}})$. The shift $\Delta \phi = \phi'_{\text{Leading}} - \phi_{\text{Leading}}$ is studied depending on the original distance of the leading jet to the event plane $d$. 
+
+\subsection{Modeling the jet shift}
+\label{sec:modeling-jet-shift}
+
+To be able to judge the result of the analysis a simple model of the jet shift has to be introduced. Figure \ref{fig:jetshiftmodel} shows the overlay configuration of a jet and underlying soft hadron background that is subject to elliptic flow in the azimuthal direction. Due to symmetry reasons the shift is expected to be zero in the event plane or perpendicular to the event plane. The most shift is expected if the soft hadron density asymmetry around the leading jet is greatest. Because the jet radius $R := 0.2$ is much smaller than the $v_2$ flow modulation spreads in azimuthal direction, the underlying flow can be expanded locally at the leading jet position according to
 
 \begin{equation}
 	\begin{gathered}
@@ -55,7 +61,7 @@ To be able to judge the result of the analysis a simple model of the jet shift h
 	\label{eq:background_density}
 \end{equation}
 
-It is difficult to fully translate the anti-$k_t$ algorithm's behavior into an analytical model for many hadrons that are clustered. Therefore interest only lies in how the algorithm clusters a jet in the few-particle limit where only one high-$p_T$ jet hadron is clustered with one low-$p_T$ hadron in the thermal background. The position of the low-$p_T$ hadron is determined based on where it appears most probably around the jet hadron according to equation (\ref{eq:background_density}). This is sufficient to prove the first-order linear behavior of the jet shift $\Delta \phi$ in $m$.
+It is difficult to fully translate the anti-$k_t$ algorithm's behavior into an analytical model for many hadrons that are clustered. Therefore, the interest only lies in how the algorithm clusters a jet in the few-particle limit where only one high-$p_T$ jet hadron is clustered with one low-$p_T$ hadron in the thermal background. The position of the low-$p_T$ hadron is determined based on where it appears most probably around the jet hadron according to equation (\ref{eq:background_density}). This is sufficient to prove the first-order linear behavior of the jet shift $\Delta \phi$ in $m$.
 
 \paragraph{Local coordinate system}
 
@@ -66,20 +72,20 @@ Since the jet clustering only happens in a small azimuthal range it is appropria
 	\begin{tikzpicture}
 		
 		% Particles
-		\draw[thick , ->, red] (0,1) -- (0,3) node[above] {$\phi_\text{Leading} = 0$};
-		\draw[thick , ->, blue] (0,1) -- (1.1,2.7) node[right] {$\phi_\text{h}$};
+		\draw[thick , ->, red] (1,0) -- (3,0) node[right] {$\phi_\text{Leading} = 0$};
+		\draw[thick , ->, blue] (1,0) -- (2.6,1.1) node[right] {$\phi_\text{h}$};
 		
 		% Winkelbogen oben
-		\draw[thick, ->] (-1.5,2.3) arc[start angle=140,end angle=40,radius=2] node[right] {$\phi$};
+		\draw[thick, ->] (2.3,-1.6) arc[start angle=-50,end angle=50,radius=2] node[right] {$\phi$};
 		
 		% Kleines Koordinatensystem unten rechts
-		\begin{scope}[shift={(1,-0.2)}]
-			\draw[->] (0,0) -- (0,1) node[above] {$x$};
-			\draw[->] (0,0) -- (1,0) node[right] {$y$};
+		\begin{scope}[shift={(0,-1)}]
+			\draw[->] (0,0) -- (0,1) node[above] {$y$};
+			\draw[->] (0,0) -- (1,0) node[right] {$x$};
 		\end{scope}
 		
 	\end{tikzpicture}
-	\caption{The ALICE coordinate system with the high-$p_T$ jet at $\phi = 0$.}
+	\caption{The ALICE coordinate system with the high-$p_T$ jet at $\phi = 0$ and the low-$p_T$ hadron at $\phi = \phi_h$.}
 	\label{fig:localcoord-shift}
 \end{figure}
 
@@ -143,13 +149,15 @@ where $A$ is a fit parameter.
 
 \subsection{Jet shift in simulated Pb-Pb events}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{Media/Plots/JetShiftResult.pdf}
 	\caption{The shift of reconstructed jets towards the event plane in simulated Pb--Pb events.}
 	\label{fig:jetshiftresult}
 \end{figure}
 
-Figure \ref{fig:jetshiftresult} shows the fitted results for the shift of reconstructed jets towards the event plane in simulated Pb--Pb events. The results are presented separately for different jet transverse momentum bins. The categorization is made before adding the soft hadron background. The general shape of the histogram resembles the expectations. Speaking in terms of figure \ref{fig:jetshiftmodel}: If the jet is right of the event plane it gets pulled to the left and vice versa. As expected soft jets are pulled less than hard jets because for harder jets an individual soft hadron contributes a smaller fraction to the total jet than for soft jets. The softest jets with $20.0 \leq p_{T,\text{Leading}} \leq 40.0 \bunit{GeV/c}$ are pulled by a maximum value of $d = 1.458 \cdot 10^{-2} \bunit{rad} = 0.836 \deg$. The jets are pulled hardest if they are approximately located where the local azimuthal elliptic flow changes the greatest, so for $d = \pm \pi/2$. The fit model that was derived in \ref{sec:modeling-jet-shift} approximately resembles the measured behavior, but does not fully explain the result. The shift tends to be greatest slightly off of $d = \pm \pi/2$. Reasons for this behavior could be truncation errors in the model derivation or that the linear behavior of the jet algorithm in the single particle approximation breaks down too quickly for more particles.
+Figure \ref{fig:jetshiftresult} shows the fitted results for the shift of reconstructed jets towards the event plane in simulated Pb--Pb events. The results are presented separately for different jet transverse momentum bins. The categorization is made before adding the soft hadron background. The general shape of the histogram resembles the expectations. Speaking in terms of figure \ref{fig:jetshiftmodel}: If the jet is right of the event plane it gets pulled to the left and vice versa. As expected, soft jets are pulled less than hard jets because for harder jets an individual soft hadron contributes a smaller fraction to the total jet than for soft jets. The softest jets with $20.0 \leq p_{T,\text{Leading}} \leq 40.0 \bunit{GeV/c}$ are pulled by a maximum value of $d = 1.458 \cdot 10^{-2} \bunit{rad} = 0.836 \deg$. The jets are pulled hardest if they are approximately located where the local azimuthal elliptic flow changes the greatest, so for $d = \pm \pi/2$. The fit model derived in \ref{sec:modeling-jet-shift} approximately resembles the measured behavior, but does not fully explain the result. The shift tends to be greatest slightly off of $d = \pm \pi/2$. Reasons for this behavior could be truncation errors in the model derivation or that the linear behavior of the jet algorithm in the single particle approximation breaks down too quickly for more particles.
+
+
 
 \end{document}
