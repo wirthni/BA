@@ -775,7 +775,7 @@ Int_t Analysis_SimulationStats()
     h1D_NDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_NDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
     h1D_NDist->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
-    h1D_NDist->GetYaxis()->SetTitle("a. u.");
+    h1D_NDist->GetYaxis()->SetTitle("yield");
     h1D_NDist->Rebin(32);
     h1D_NDist->Scale(1./h1D_NDist->Integral());
     h1D_NDist->SetMarkerStyle(kStar);
@@ -799,7 +799,7 @@ Int_t Analysis_SimulationStats()
     h1D_PtDist->GetXaxis()->SetTitle("p_{T} [GeV/c]");
     h1D_PtDist->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
     h1D_PtDist->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-    h1D_PtDist->GetYaxis()->SetTitle("a. u.");
+    h1D_PtDist->GetYaxis()->SetTitle("yield");
     h1D_PtDist->GetYaxis()->SetTitleOffset(DEF_TitleOffset);
     h1D_PtDist->Rebin(32);
     h1D_PtDist->Scale(1./h1D_PtDist->Integral());

@@ -17,7 +17,7 @@
 
 \subsection{Motivation}
 
-When conducting analyses in heavy ion physics or particle physics one usually has to select experimental data from a very huge data collection. However, this data selection process is nontrivial and has obvious but also hidden consequences on the outcome of the analysis. In the following two examples are given to illustrate how certain selections can bias the result of a measurement. One would like to measure the average elliptic flow parameter $v_2$ in Pb--Pb collisions (see chapter \ref{sec:analysis-of-heavy-ion-collision-data} for an introduction into flow physics). For that a sample of Pb--Pb data in the centrality category of 0-10\% is used. A certain value for $v_2$ is the result. But this value is not representative for Pb--Pb collisions in general, because the cut on the most central events has removed all peripheral events from the analysis. Therefore the value of $v_2$ in peripheral events is omitted in the analysis. This is called a selection bias. Another mistake that could happen in this analysis is to also take high-$p_T$ particles into account in the particle correlation from which the $v_2$ flow parameter is derived. This is not correct, because high-$p_T$ particles as jet constituents are not subject to flow. One can see that such mistakes can be made in many stages of the analysis. To avoid those errors, a simulation can be used to crosscheck the analysis result. No diffusion wake signal should be seen when conducted with simulated data that does not simulate jet-hydrodynamic effects. On the other hand, if the simulated data analysis shows signals of the same kind and order of magnitude as the diffusion wake, it is possible that the very same effect took place in the real data analysis.
+When conducting analyses in heavy ion physics or particle physics one usually has to select experimental data from a very huge data collection. However, this data selection process is nontrivial and has obvious but also hidden consequences on the outcome of the analysis. In the following two examples are given to illustrate how certain selections can bias the result of a measurement. One would like to measure the average elliptic flow parameter $v_2$ in Pb--Pb collisions (see chapter \ref{sec:analysis-of-heavy-ion-collision-data} for an introduction into flow physics). For that a sample of Pb--Pb data in the centrality category of 0-10\% is used. A certain value for $v_2$ is the result. But this value is not representative for Pb--Pb collisions in general, because the cut on the most central events has removed all peripheral events from the analysis. Therefore the value of $v_2$ in peripheral events is omitted in the analysis. This is called a selection bias. Another mistake that could happen in this analysis is to also take high-$p_T$ particles into account in the particle correlation from which the $v_2$ flow parameter is derived. This is incorrect, since high-$p_T$ particles as jet constituents are not subject to flow in the hydrodynamic calculation. One can see that such mistakes can be made in many stages of the analysis. To avoid those errors, a simulation can be used to crosscheck the analysis result. No diffusion wake signal should be seen when conducted with simulated data that does not simulate jet-hydrodynamic effects. On the other hand, if the simulated data analysis shows signals of the same kind and order of magnitude as the diffusion wake, it is possible that the very same effect took place in the real data analysis.
 
 \subsection{Modeling the simulation}
 
@@ -147,17 +147,21 @@ Since the simulation is used to test for potential biases the simulation result 
 			\hline
 		\end{tabular}
 	\end{footnotesize}
-	\caption{Statistics about the number of simulated Pb--Pb events that passed the criteria for the dijet diffusion wake analysis with three different trigger requirements.}
+	\caption{The number of simulated Pb--Pb events that passed the criteria for the dijet diffusion wake analysis with three different trigger requirements.}
 	\label{tab:SimJetAcceptance}
 \end{table}
 
-To do a sanity check of the simulation it is useful to study the left panels of figures (\ref{fig:flowresultsjet4020}, \ref{fig:flowresultsjet3015}, \ref{fig:flowresultsjet2010}. The absolute values for $1/N \dif N/\dif \eta$ are very similar to those in the ALICE RUN 3 data results, confirming the similarity of the simulated events with real Pb--Pb events. Small deviations can be traced back to two major effects. First, the average total number of identified charged hadrons per event is not necessarily equal in ALICE RUN 2 and RUN 3 data due to detector improvements and changes. Another reason is that PYTHIA data also brings few low-$p_T$ hadrons into each event and the MC generated background also brings few high-$p_T$ particles into each event. This results in overlaps in transverse momentum probability densities in the resulting events. The discussion of the left panels is similar to the one in chapter \ref{sec:ALICEdijet}. 
+To do a sanity check of the simulation it is useful to study the left panels of figures (\ref{fig:flowresultsjet4020}, \ref{fig:flowresultsjet3015}, \ref{fig:flowresultsjet2010}. The absolute values for $1/N \dif N/\dif \eta$ in each $p_T$ bin ($\approx 510, \approx 160, \approx 15, \approx 1$) are very similar to those in the ALICE RUN 3 data results (figures \ref{fig:aliceresultsjet4020}, \ref{fig:aliceresultsjet3015}, \ref{fig:aliceresultsjet2010}), confirming the similarity of the simulated events with real Pb--Pb events. Small deviations can be traced back to two major effects. First, the average total number of identified charged hadrons per event is not necessarily equal in ALICE RUN 2 and RUN 3 data due to detector improvements and changes. Another reason is that PYTHIA data also adds few low-$p_T$ hadrons into each event and the MC generated background also adds few high-$p_T$ particles into each event. This results in overlaps in transverse momentum probability densities in the resulting events. The remaining discussion of the left panels is similar to the one in chapter \ref{sec:ALICEdijet}. 
+
+The event acceptance rates of the dijet triggered simulated events (table \ref{tab:SimJetAcceptance}) are in good agreement with the acceptance rates in ALICE RUN 3 data (table \ref{tab:ALICEJetAcceptanceRates}).
 
 The differences in leading jet near-side charged hadron correlations between large pseudorapidity gaps and small pseudorapidity gaps are shown in the right panels of figures (\ref{fig:flowresultsjet4020}, \ref{fig:flowresultsjet3015}, \ref{fig:flowresultsjet2010}). 
 
-For the $(40,20)\bunit{GeV/c}$ trigger (figure \ref{fig:flowresultsjet4020}) all results are slightly biased with the tendency for an enhancement at $\eta \leq 0$ and a depletion for $\eta \geq 0$, opposing the diffusion wake signal. 
+For the $(40,20)\bunit{GeV/c}$ trigger (figure \ref{fig:flowresultsjet4020}) all results are slightly biased with the tendency for an enhancement at $\eta \leq 0$ and a depletion for $\eta \geq 0$, opposing the diffusion wake signal. No bin is unbiased in the means of $\chi^2$.
 
-For the $(30,15)\bunit{GeV/c}$ and $(20,15)\bunit{GeV/c}$ trigger the diffusion wake opposing is bigger and the result is highly biased. All $p_T$ bins in figures \ref{fig:flowresultsjet3015} and \ref{fig:flowresultsjet2010} show this bias signal as a clear wave, inverted relative to what is proposed in figure \ref{fig:DijetProposal2}.
+For the $(30,15)\bunit{GeV/c}$ and $(20,15)\bunit{GeV/c}$ trigger the diffusion wake opposing signal is still small, but clearly visible. It has the same waveform as the CoLBT-hydro diffusion wake prediction on the signal \ref{fig:DijetProposal2} inverted in $\eta$, but is much smaller with an amplitude of $C_\text{Large Gap} - C_\text{Small Gap} \approx 0.1$. All $p_T$ bins in figures \ref{fig:flowresultsjet3015} and \ref{fig:flowresultsjet2010} show this bias signal. No bin is unbiased in the means of $\chi^2$.
+
+The simulation has shown that the lower the jet trigger transverse momentum threshold the larger a diffusion wake opposing bias becomes. Although the $\chi^2$ test has shown that the result is clearly biased, the systematic bias is small compared to the diffusion wake signal. However, it is not negligible when investigating the diffusion wake signal quantitatively accurate. Furthermore, it is of big interest to study where this waveform comes from. If it is possible to invert this signal artificially it could even manifest the origin of the diffusion wake elsewhere than in relativistic hydrodynamics. Further investigations on the observed bias have to be done to judge where it comes from. For that the flow parameters $v_i$ may be manipulated separately. It is also possible that minor flaws of the simulation, for example the transverse momentum probability density overlaps when combining PYTHIA+BG, produce the bias signal.
 
 \subsubsection{Results of the dihadron analysis}
 
@@ -197,59 +201,51 @@ For the $(30,15)\bunit{GeV/c}$ and $(20,15)\bunit{GeV/c}$ trigger the diffusion 
 			\hline
 		\end{tabular}
 	\end{footnotesize}
-	\caption{Statistics about the number of simulated Pb--Pb events that passed the criteria for the dihadron diffusion wake analysis with three different trigger requirements.}
+	\caption{The number of simulated Pb--Pb events that passed the criteria for the dihadron diffusion wake analysis with three different trigger requirements.}
 	\label{tab:SimHadAcceptance}
 \end{table}
 
+The event acceptance rates for the $(20, 15)\bunit{GeV/c}$ and $(15,10)\bunit{GeV/c}$ trigger variants (table \ref{tab:SimHadAcceptance}) are lower compared to the acceptance rates in ALICE RUN 3 data (table \ref{tab:ALICEHadAcceptanceRates}). The acceptance is lower by a factor of 10 for the mid trigger threshold and by a factor of 4 for the lowest trigger threshold. TODO: WHY ALEX, WHY????
+
+\iffalse
+TODO:
+A possible explanation for this deviation lies in the provided events. The ALICE RUN 3 Pb--Pb data has been preselected for events that have at least one high-$p_T$ hadron (refer to section \ref{sec:dianaALICE}), but not the PYTHIA p-p that is used to model high-$p_T$ hadrons in the simulated events.
+\fi
 
 The order of magnitude of each raw soft hadron correlation (left panels of figures (\ref{fig:flowresultshad3015}, \ref{fig:flowresultshad2015}, \ref{fig:flowresultshad1510})) is the same as in the dijet analysis, so is the general discussion. Refer to section \ref{sec:ALICEdijet}.
 
 The right panels of figures (\ref{fig:flowresultshad3015}, \ref{fig:flowresultshad2015}, \ref{fig:flowresultshad1510}) show the differences between large and small gap correlations. 
 
-For the $(30,15)\bunit{GeV/c}$ trigger the diffusion wake signal is slightly biased except for the $4 \leq p_T \leq 6 \bunit{GeV/c}$ bin. The signal is only weakly structured and the bias is subject to big fluctuations.
+For the $(30,15)\bunit{GeV/c}$ trigger the diffusion wake signal is slightly biased ($\chi^2 > 1$) except for the $4 \leq p_T \leq 6 \bunit{GeV/c}$ bin ($\chi^2 = 0.54$). The signal is only weakly structured and the bias is subject to big fluctuations. The $4 \leq p_T \leq 6\bunit{GeV/c}$ bin shows a diffusion wake opposing bias ($\chi^2 = 2.29$) where the signal is positive for $\eta < 0$. 
 
-For the $(20,15)\bunit{GeV/c}$ trigger the result is only unbiased in the $0 \leq p_T \leq 1 \bunit{GeV/c}$ soft hadron bin, else it is slightly biased. The signal is only weakly structured and the bias is subject to big fluctuations except for bin $4 \leq p_T \leq 6\bunit{GeV/c}$ where the signal is positive for $\eta < 0$, opposing the diffusion wake. 
+For the $(20,15)\bunit{GeV/c}$ trigger the result is only unbiased in the $0 \leq p_T \leq 1 \bunit{GeV/c}$ soft hadron bin ($\chi^2 = 0.64$), else it is slightly biased ($\chi^2 > 1$). The signal is only weakly structured and the bias is subject to big fluctuations except for bin $4 \leq p_T \leq 6\bunit{GeV/c}$ where the signal is positive for $\eta < 0$, opposing the diffusion wake. 
 
-For the $(15,10)\bunit{GeV/c}$ trigger the result is only unbiased in the $1 \leq p_T \leq 2 \bunit{GeV/c}$ soft hadron bin, else it is slightly biased. However, the signal is below zero for $\eta > 0$ in the $1 \leq p_T \leq 2 \bunit{GeV/c}$ bin, opposing the diffusion wake signal. The bias signal has a clear structure in the $4 \leq p_T \leq 6 \bunit{GeV/c}$ bin where it has a waveform opposing the diffusion wake signal. 
+For the $(15,10)\bunit{GeV/c}$ trigger the result is only unbiased in the $1 \leq p_T \leq 2 \bunit{GeV/c}$ soft hadron bin ($\chi^2 0.30$), else it is slightly biased ($\chi^2 > 1$). The signal is below zero for $\eta > 0$ in the $1 \leq p_T \leq 2 \bunit{GeV/c}$ bin, opposing the diffusion wake signal. The bias signal has a clear structure in the $4 \leq p_T \leq 6 \bunit{GeV/c}$ bin where it also has a waveform opposing the diffusion wake signal, similar to the result of the dijet analysis with low dijet $p_T$ thresholds. 
 
-\subsubsection{Context of the results}
+Similar to the dijet analysis the dihadron analysis has revealed a small bias signal. The lower the jet trigger transverse momentum threshold the larger a diffusion wake opposing bias becomes. The impact of this bias on the result is smaller than in the dijet analysis.
 
-First the diffusion wake analysis is first conducted using a correlated dijet pair as trigger. The simulation has shown that the lower the jet trigger transverse momentum the larger a diffusion wake opposing bias becomes. The $1 \leq p_T \leq 2 \bunit{GeV/c}$ bin is part of the prediction in figure \ref{fig:diffusionwakesimu}. The diffusion wake has a deflection of $\approx -0.8 C$ for $\eta < 0$ whereas the bias has a deflection of $\approx +0.1 C$ in the same region. This means that although the $\chi^2$ test has shown that the result is clearly biased, the systematic bias is small compared to the diffusion wake signal. However, it is not negligible when investigating the diffusion wake signal quantitatively accurate. Further investigations on the observed bias have to be done to judge where it comes from. Either the signal is genuine or it is a fragment of the simulation. The simulation is highly sensitive to small parameter changes. It is possible that minor flaws of the simulation, for example the transverse momentum probability density overlaps when combining PYTHIA+BG, produce the bias signal. The event acceptance rates of the dijet triggered simulated events (table \ref{tab:SimJetAcceptance}) are in good agreement with the acceptance rates in ALICE RUN 3 data (table \ref{tab:ALICEJetAcceptanceRates}).
-
-The diffusion wake analysis is then conducted using a correlated dihadron pair as trigger. The dihadron trigger method's results are less biased than the results of the dijet trigger method in every soft hadron $p_T$ bin. Deflections in the diffusion wake signal are smaller than in the dijet trigger method and deflections are less pronounced. The event acceptance rates for the $(20, 15)\bunit{GeV/c}$ and $(15,10)\bunit{GeV/c}$ trigger variants (table \ref{tab:SimHadAcceptance}) are low compared to the acceptance rates in ALICE RUN 3 data (table \ref{tab:ALICEHadAcceptanceRates}). The acceptance is lower by a factor of 10 for the mid trigger threshold and by a factor of 4 for the lowest trigger threshold. [TODO]
 
 \subsubsection{Effect of simulation parameter changes}
 
-A great advantage of the simulation is that we can testify the behavior of the dijet/dihadron analysis result depending on the input parameters of the simulation. That could be the number of generated background particles or the slope of the anisotropic flow dependence on pseudorapidity (see last plots in figure \ref{fig:simulationinput}). One especially interesting value to have a look at is the directed flow $v_1$. Figure \ref{fig:v1Bias} demonstrates how differently the subleading jet is subject to a directed flow bias in the large/small gap case. When the leading jet has a pseudorapidity unequal to zero, the directed flow depletes or enhances the soft particle background next to the jet depending on the azimuthal coordinate of the jet. In the case of small gaps (blue, figure \ref{fig:v1Bias}) the directed flow acts oppositely, meaning if the leading jet is embedded in soft particles, the subleading jet will be in a soft particle depletion zone. In the case of large gaps (red, figure \ref{fig:v1Bias}) the directed flow acts symmetrically, so the leading jet and the subleading jet are enhanced/depleted in soft particles equally. Although the directed flow is small compared to the elliptic flow this asymmetry is worth a closer investigation.
+A great advantage of the simulation is that the dijet/dihadron analysis result can be studied depending on the simulation's input parameters. That could be the number of generated background particles or the strength of flow anisotropies (see figure \ref{fig:simulationinput} for details on the used parameters). It is of special interest to have a look at the directed flow $v_1(\eta)$.
 
-To test the influence of the directed flow $v_1$ on the analysis result its pseudorapidity dependent value (equation (\ref{eq:simuparams})) is made 100 times bigger, so $v_1'(\eta) = 100 \cdot v_1(\eta)$. Figure \ref{fig:flowresultsjet4020bigv1} shows the result of the dijet analysis using a trigger jet pair of $(40,20)\bunit{GeV/c}$ and figure  \ref{fig:flowresultshad1510bigv1} shows the result of the dihadron analysis using a trigger hadron pair of $(15,10)\bunit{GeV/c}$. The influence of the increased directed flow is the strongest for the softest particles, decreasing with increasing transverse momentum bin. With the original directed flow configuration (figure \ref{fig:flowresultsjet4020}) the correlation difference with the $(40,20)\bunit{GeV/c}$ dijet trigger is compatible with zero. Increasing the directed flow leads to to a depletion of soft particles for $\eta < 0$ and an enhancement of soft particles elsewhere (figure \ref{fig:flowresultsjet4020bigv1}). The dihadron $(15,10)\bunit{GeV/c}$ analysis (figure \ref{fig:flowresultshad1510bigv1}) shows a similar behavior although the influence is less by an order of magnitude. The shape of the correlation difference for the softest particles coincides with the shape of the diffusion wake in the hydrodynamic simulation in figure \ref{fig:diffusionwakesimu}, showing that not only a diffusion wake, which is absent in the simulated Pb--Pb events, can lead to such a signal.
+The directed flow can lead to a event selection bias in the dijet analysis by how probable which soft hadron-dijet configuration is. The large gap case (figure \ref{fig:v1Bias}, left) is most probable to be accepted for the diffusion wake analysis in the shown configuration - both jets are embedded in a soft particle enhanced region, thus more easily reaching the required trigger thresholds $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading})$. In this case the region where the diffusion wake is expected is depleted of soft particles. In the small gap case (\ref{fig:v1Bias}, right) the situation is different. The leading and subleading jet compete for the soft hadron enhanced region in an unknown way. Therefore, the average soft hadron-dijet correlation is a mixture of the two variants. When subtracting the large gap correlation from the small gap correlation, the difference would therefore be negative for $\eta < 0$ and positive for $\eta > 0$ which is the signature of the diffusion wake.
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20_V1Mag_100.pdf}
-	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40,20)\bunit{GeV/c}$ with an increased directed flow $v_1'(\eta)$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
-		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
-	\label{fig:flowresultsjet4020bigv1}
-\end{figure}
+The directed flow can lead to the same bias in the dihadron analysis if high-$p_T$ hadrons at the trigger $p_T$ threshold are subject to flow effects. The ALICE collaboration has measured the elliptic flow of hadrons in $\sqrt{s_{NN}} = 2.76 \bunit{TeV}$ Pb--Pb collisions for high-$p_T$ values \cite{dobrin_elliptic_2011}. According to these measurements $v_2(p_T)$ flattens out for $p_T > 8 \bunit{GeV/c}$ but stays positive with $v_2 \approx 0.06$. This is different to the assumed exponential decay of flow effects with increasing $p_T$. 
+
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_15_10_V1Mag_100.pdf}
-	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$ with an increased directed flow $v_1'(\eta)$.	$C_x = 1/N_x \cdot d N_x/d \eta$.	
-		\textbf{(left)} Particle correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
-	\label{fig:flowresultshad1510bigv1}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\begin{minipage}{0.48\textwidth}
+	\begin{minipage}[t]{0.48\textwidth}
 		\centering
+		\caption*{Large Gap}
 		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
 			
 			\begin{axis}[
 				height=9.6cm,
 				width=13.7cm,
 				font=\tiny,
+				colorbar,
 				anchor=center,
 				view={0}{90},
 				colormap/viridis,
@@ -271,14 +267,14 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 			\end{axis}
 			
 			%z label
-			%\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
 			
 			%phase spaces
 			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
-			\draw (0, 3.6) -- (0, 4.4) node[above] {$\eta = 0$};
-			\draw (-6.0, 3.6) -- (-6.0, 4.4) node[above] {$-0.9$};
-			\draw (6.0, 3.6) -- (6.0, 4.4) node[above] {$0.9$};
-			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi = 0$};
+			\draw (0, -3.6) -- (0, -4.4) node[below] {$\eta$};
+			\draw (-6.0, -3.6) -- (-6.0, -4.4) node[below] {$-0.9$};
+			\draw (6.0, -3.6) -- (6.0, -4.4) node[below] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi \bunit{[rad]}$};
 			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
 			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
 			
@@ -290,11 +286,61 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 			
 			
 		\end{tikzpicture}
-		\caption*{Large Gap}
 	\end{minipage}
 	\hfill
-	\begin{minipage}{0.48\textwidth}
+	\begin{minipage}[t]{0.48\textwidth}
 		\centering
+		\caption*{Small Gap}
+		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
+			
+			\begin{axis}[
+				height=9.6cm,
+				width=13.7cm,
+				font=\tiny,
+				anchor=center,
+				colorbar,
+				point meta min=0.35,
+				point meta max=2.1,
+				view={0}{90},
+				colormap/viridis,
+				xlabel={},
+				xticklabel=\empty,
+				yticklabel=\empty,
+				ylabel={},
+				domain=-0.9:0.9,
+				y domain=-3.14:3.14,
+				samples=50,
+				samples y=50,
+				]
+				
+				\addplot3[
+				surf,
+				shader=interp,
+				] {0.5*(1+(-0.3*x)*2*cos(360*(y+3.14/2)/(2*3.14)) + 0.3*2*cos(720*(y+3.14/2)/(2*3.14))) + 0.5*(1+(-0.3*x)*2*cos(360*(-y+3.14/2)/(2*3.14)) + 0.3*2*cos(720*(-y+3.14/2)/(2*3.14)))};
+				
+			\end{axis}
+			
+			%z label
+			\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			
+			%phase spaces
+			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
+			\draw (0, -3.6) -- (0, -4.4) node[below] {$\eta$};
+			\draw (-6.0, -3.6) -- (-6.0, -4.4) node[below] {$-0.9$};
+			\draw (6.0, -3.6) -- (6.0, -4.4) node[below] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi \bunit{[rad]}$};
+			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
+			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
+			
+			
+			%background measurements
+			\draw[color=orange] (-3,-2) ellipse (2cm and 1cm) node{Signal Area};
+			\draw[color=blue] (3.0,2) circle (0.6) node{SLJ};
+			\draw[color=black] (3.0,-2) circle (0.6) node{LJ};
+			
+			
+		\end{tikzpicture}
+		\caption*{Variant 1}
 		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
 			
 			\begin{axis}[
@@ -327,10 +373,10 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 			
 			%phase spaces
 			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
-			\draw (0, 3.6) -- (0, 4.4) node[above] {$\eta = 0$};
-			\draw (-6.0, 3.6) -- (-6.0, 4.4) node[above] {$-0.9$};
-			\draw (6.0, 3.6) -- (6.0, 4.4) node[above] {$0.9$};
-			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi = 0$};
+			\draw (0, -3.6) -- (0, -4.4) node[below] {$\eta$};
+			\draw (-6.0, -3.6) -- (-6.0, -4.4) node[below] {$-0.9$};
+			\draw (6.0, -3.6) -- (6.0, -4.4) node[below] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi \bunit{[rad]}$};
 			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
 			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
 			
@@ -342,29 +388,105 @@ To test the influence of the directed flow $v_1$ on the analysis result its pseu
 			
 			
 		\end{tikzpicture}
-		\caption*{Small Gap}
+		\caption*{Variant 2}
+		\begin{tikzpicture}[scale=0.5, every node/.style={font=\footnotesize}]
+			
+			\begin{axis}[
+				height=9.6cm,
+				width=13.7cm,
+				font=\tiny,
+				anchor=center,
+				colorbar,
+				view={0}{90},
+				colormap/viridis,
+				xlabel={},
+				xticklabel=\empty,
+				yticklabel=\empty,
+				ylabel={},
+				domain=-0.9:0.9,
+				y domain=-3.14:3.14,
+				samples=50,
+				samples y=50,
+				]
+				
+				\addplot3[
+				surf,
+				shader=interp,
+				] {1+(-0.3*x)*2*cos(360*(-y+3.14/2)/(2*3.14)) + 0.3*2*cos(720*(-y+3.14/2)/(2*3.14))};
+				
+			\end{axis}
+			
+			%z label
+			\node at (7.5,4.5) {$\frac{1}{N}\frac{\dif N}{\dif \phi \dif \eta}$};
+			
+			%phase spaces
+			\draw[color=black] (-6.0,4.0) rectangle ++(12.0,-8.0);
+			\draw (0, -3.6) -- (0, -4.4) node[below] {$\eta$};
+			\draw (-6.0, -3.6) -- (-6.0, -4.4) node[below] {$-0.9$};
+			\draw (6.0, -3.6) -- (6.0, -4.4) node[below] {$0.9$};
+			\draw (-5.6, 0) -- (-6.4, 0) node[left] {$\phi \bunit{[rad]}$};
+			\draw (-5.6, 4) -- (-6.4, 4) node[left] {$\pi$};
+			\draw (-5.6, -4.0) -- (-6.4, -4.0) node[left] {$-\pi$};
+			
+			
+			%background measurements
+			\draw[color=orange] (-3,-2) ellipse (2cm and 1cm) node{Signal Area};
+			\draw[color=blue] (3.0,2) circle (0.6) node{SLJ};
+			\draw[color=black] (3.0,-2) circle (0.6) node{LJ};
+			
+			
+		\end{tikzpicture}
 	\end{minipage}
-	\caption{The most probable correlations between the dijet pair and the soft hadron background in the large/small gap case in the $(\phi, \eta)$ phase space. Soft hadrons are simulated with directed and elliptic flow with demonstration values $v_1 = -0.3\cdot \eta, v_2 = 0.3, \psi_m = \pi/2$. The circles named \textbf{LJ} are exemplary leading jets, the other circles named \textbf{SLJ} are subleading jets, one in each of the categories large gap (red) and small gap (blue). The region marked \textbf{Signal Area} is located where the diffusion wake is expected.}
+	\caption{The most probable correlations between the dijet pair and the soft hadron background in the large/small (left column / right column) gap case in the $(\phi, \eta)$ phase space. Soft hadrons are simulated with directed and elliptic flow with demonstration values $v_1 = -0.3\cdot \eta, v_2 = 0.3, \psi_m = \pi/2$. \textbf{LJ} are exemplary leading jets, \textbf{SLJ} are exemplary subleading jets. The region marked \textbf{Signal Area} is where the diffusion wake is expected. The large gap case only has one preferred dijet-soft hadron correlation. The small gap case has two variants in which jets compete for the soft hadron enhancement. The average is a mixture of the two variants.}
 	\label{fig:v1Bias}
 \end{figure}
 
-For the dijet trigger analysis this behavior can be explained by how probable which soft hadron-jet configuration is. The large gap case (figure \ref{fig:v1Bias}, left) is more probable to happen in the shown configuration. Both jets are embedded in a soft particle enhanced region, thus more easily reaching the required trigger thresholds $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading})$. In this case the region where the diffusion wake is expected is depleted of soft particles. In the small gap case (\ref{fig:v1Bias}, blue) the situation is different. Soft particles have a fractionally larger contribution to the transverse momentum of the subleading jet than to the leading jet because the hard constituents of the leading jet already have a bigger transverse momentum than those of the subleading jet. So on average the leading jet is not tied to the event plane as much because it does not rely on the transverse momenta of soft particles. But the subleading reaches the $p_T$ threshold more quickly if is embedded in a soft particle enhanced region. Therefore the subleading jet tends to be tied to the most soft particle enhanced region. As a direct consequence the area of the diffusion wake of the leading jet is enhanced with soft particles. Subtracting the two correlations leads to a depleted particle correlation difference where the diffusion wake is expected. This mechanism is confirmed by the raw soft hadron correlations in the left panels of figure \ref{fig:flowresultsjet4020bigv1}. The large gap case shows the leading jet embedded in many soft particles. The small gap case shows that the leading jet does not depend on those soft particles which is why the soft particle correlation is more uniform in pseudorapidity.
+To test the influence of the directed flow $v_1(\eta)$ on the analysis result its pseudorapidity dependency (equation (\ref{eq:simuparams})) is made bigger, so $v_1'(\eta) := M \cdot v_1(\eta)$.
 
-In the case of a dihadron trigger the influence of the enhanced directed flow is less pronounced and the explanation is different than in the dijet case because the individual hard trigger hadrons do not rely on soft background. [EXPLANATION]
+Figure \ref{fig:flowresultsjet4020_V1Mag_100} shows the result of the dijet analysis using a transverse momentum threshold of $(40,20)\bunit{GeV/c}$ and a directed flow magnification of $M = 100$. The influence of the increased directed flow is strongest for the softest particles, decreasing with increasing transverse momentum bin. With the original directed flow configuration (figure \ref{fig:flowresultsjet4020}) the correlation difference with the $(40,20) \bunit{GeV/c}$ dijet trigger is non-zero but small. Increasing the directed flow leads to to a depletion of soft particles for $\eta < 0$ and an enhancement of soft particles for $\eta > 0$. To test the scalability of the effect another analysis with $M = 20$ is conducted. The result is shown in figure \ref{fig:flowresultsjet4020_V1Mag_20}. The directed flow effect competes with the bias found in the original flow configuration in figure \ref{fig:flowresultsjet4020}.
 
+Figure \ref{fig:flowresultshad1510_V1Mag_100} shows the result of the dihadron analysis using a trigger hadron pair of $(15,10) \bunit{GeV/c}$ with a directed flow magnification of $M = 100$. The behavior is similar although the influence is smaller. The shape of the correlation difference for the softest particles coincides with the shape of the diffusion wake in the hydrodynamic prediction in figure \ref{fig:diffusionwakesimu}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20_V1Mag100.pdf}
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading jets with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (40,20)\bunit{GeV/c}$ with a 100 times increased directed flow. $C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Soft hadron correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet4020_V1Mag_100}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Jet_40_20_V1Mag20.pdf}
+	\caption{Results of the dijet analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$ with a 20 times increased directed flow. $C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Soft hadron correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultsjet4020_V1Mag_20}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Media/Plots/FlowResults_Had_15_10_V1Mag100.pdf}
+	\caption{Results of the dihadron analysis using simulated Pb--Pb data and leading/subleading hadrons with $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$ with a 100 times increased directed flow. $C_x = 1/N_x \cdot d N_x/d \eta$.	
+		\textbf{(left)} Soft hadron correlations next to the leading jet for large gap and small gap events. \textbf{(right)} The differences between large gap and small gap correlations.}
+	\label{fig:flowresultshad1510_V1Mag_100}
+\end{figure}
+
+
+
+\iffalse
 
 \subsection{Single hadron analysis with MC events}
+
 
 The measurement of the diffusion wake in a dijet-hadron correlation or a dihadron-hadron correlation is done to isolate the diffusion wake signal from the uncorrelated soft background. Naively one could think about selecting evens that have a single high-$p_T$ hadron and to study the correlation of soft hadrons with the trigger hadron. If the trigger hadron has an azimuthal coordinate $\phi_\text{trigger}$, its diffusion wake and therefore the soft hadron depletion is expected at $\phi_\text{depletion} =  \phi_\text{trigger} \pm \pi$. Therefore the soft soft hadron correlation is studied azimuthally opposite in the full pseudorapidity range, that is $|\phi_\text{depletion} - \phi_h| < \Delta \phi, -0.9 \leq \eta_h \leq 0.9$ where $\Delta \phi$ defines how far soft hadrons are allowed to be from the depletion site to be studied. This correlation has to be interpreted relative to another soft hadron correlation that is unbiased by the trigger hadron. To avoid acceptance and tracking efficiency effects this reference correlation should be studied exactly where the original correlation is studied in the $(\phi, \eta)$ phase space. One possibility to accomplish that is to choose a reference event that has very similar properties like the original event. Events are defined to be similar if their particle multiplicity and event plane angle are similar. The reference event only differs from the original event by not having a hard hadron where the trigger hadron in the original event was. Then the reference region is uncorrelated to the trigger hadron in the original event. By subtracting the reference correlation from the soft hadron correlation behind the trigger hadron one should be able to isolate its influence on the soft particle spectrum.
 
 The analysis is conducted as follows. At once around 2000 events are analyzed simultaneously. Each of the events is first checked for a trigger hadron above some threshold, just like in the dijet analysis. Then the azimuthally opposite side of this trigger hadron, where the soft hadron correlation is measured, is required to be free of any high-$p_T$ objects within $\Delta \phi$. If an event fulfills these requirements it is considered suitable for the single hadron analysis. Then, a suitable reference event is chosen for each event. The reference event must have a particle multiplicity that is not far off the original multiplicity, so $|N_i - N_\text{reference(i)}| < \Delta N$ and a similar event plane angle, so $|\psi_{m,i} - \psi_{m,\text{reference(i)}}| < \Delta \psi$. Azimuthally it must also be free of any high-$p_T$ objects around the original trigger hadron in event $i$ and around its azimuthally opposite side within $\Delta \phi$. 
 
-
-
 If an event fulfills these requirements it is considered a suitable reference event of event $i$.
 
 When choosing to study a low-$p_T$ spectrum of soft hadrons that are azimuthally opposite to the trigger hadron the diffusion wake should manifest itself as a dip in the particle spectrum at low transverse momenta. 
 
+\fi
 
 
 \end{document}

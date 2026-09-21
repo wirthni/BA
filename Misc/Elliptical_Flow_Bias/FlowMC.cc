@@ -383,7 +383,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     {
 
                         double DeltaEta = abs(JetVector.back().eta() - HighPtParticles[i][1]);
-                        double DeltaPhi = abs(JetVector.back().phi_std() - HighPtParticles[i][0]);
+                        double DeltaPhi = JetVector.back().phi_std() - HighPtParticles[i][0];
 
                         //since a jet at pi and another one at -pi are equivalent, normalize
                         if(DeltaPhi > Pi) DeltaPhi -= 2* Pi;
@@ -587,7 +587,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
                     {
 
                         double DeltaEta = abs(JetVector.back().eta() - HighPtParticles[i][1]);
-                        double DeltaPhi = abs(JetVector.back().phi_std() - HighPtParticles[i][0]);
+                        double DeltaPhi = JetVector.back().phi_std() - HighPtParticles[i][0];
 
                         //since a jet at pi and another one at -pi are equivalent, normalize
                         if(DeltaPhi > Pi) DeltaPhi -= 2* Pi;
@@ -702,7 +702,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             if(JetVector[0].eta() * JetVector[1].eta() < 0) LargeGap = true;
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            /*Function_FlowByPtAndEta
+            /*
             /
             /                                                     
             /                                           GET PARTICLE MULTIPLICITES IN THE REGIONS OF INTEREST
