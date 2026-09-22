@@ -7,17 +7,18 @@ static const int arr_color_jet[40] = {kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOra
 
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
 
-void Plot_DiJets(int event = 1313, int rebinX = 2, int rebinY = 2, float theta = 45.0, float phi = 70.0)
+void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45.0, float phi = 70.0)
 {
     printf("Plot_DiJets started for event: %d \n",event);
 
     double min_jet_pt_sub_draw_label = 40.0;
 
     SetRootGraphicStyle();
-    TFile* inputfile = TFile::Open("./ResultRoots/OF_HighPtRecoilDistr_BGCompensated_wrong.root");
-    HistName = "/Dijets/h2D_phi_vs_eta;";
-    HistName += event;
-    TH2D* h2D_dijet = (TH2D*)inputfile->Get(HistName.Data());
+    TFile* inputfile = TFile::Open("3DEvents.root");
+    if(!inputfile) cout << "File not found!" << endl;
+    
+    TH2D* h2D_dijet = (TH2D*)inputfile->Get("h2D_Phi_vs_Eta");
+    if(!h2D_dijet) cout << "Histo not found!" << endl;
     h2D_dijet ->Rebin2D(rebinX,rebinY);
 
 
