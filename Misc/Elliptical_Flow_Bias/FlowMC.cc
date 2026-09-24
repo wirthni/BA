@@ -63,8 +63,8 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
     #define DEF_PYTHIAOversampling 100
     #define DEF_BinningPerUnit 100
-    #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false 
+    #define DEF_JetRadius 0.3//////////////////////////////////////
+    #define DEF_OutputEventOverviews true 
     #define DEF_JetLeadingPt 40.0
     #define DEF_JetSubleadingPt 20.0
     #define DEF_HadLeadingPt 15.0
@@ -721,7 +721,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             #if DEF_OutputEventOverviews
-            TH2D* h2D_phi_vs_eta = new TH2D("h2D_phi_vs_eta","h2D_phi_vs_eta", DEF_BinningPerUnit * 2 * Pi, -Pi, Pi, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
+            TH2D* h2D_eta_vs_phi = new TH2D("h2D_eta_vs_phi","h2D_eta_vs_phi", DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9, DEF_BinningPerUnit * 2 * Pi, -Pi, Pi);
             #endif
 
             // Fill leading and subleading jet pt
@@ -754,7 +754,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
                     // Fill event overview
                     #if DEF_OutputEventOverviews
-                        h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        h2D_eta_vs_phi->Fill(particle[1], particle[0], particle[2]);
                     #endif
 
                     // Fill correlation relative to leading jet in phi
@@ -805,7 +805,7 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
 
                     // Fill event overview
                     #if DEF_OutputEventOverviews
-                        h2D_phi_vs_eta->Fill(particle[0], particle[1], particle[2]);
+                        h2D_eta_vs_phi->Fill(particle[1], particle[0], particle[2]);
                     #endif
 
                     // Fill correlation relative to leading jet in phi
@@ -854,18 +854,18 @@ Int_t FlowMC(TString i_PathToPYTHIAFiles = "default", Int_t i_NoOfEvents = -1,bo
             //write event results
             #if DEF_OutputEventOverviews
                 EventHistos->cd();
-                h2D_phi_vs_eta->SetTitle("");
-                h2D_phi_vs_eta->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetXaxis()->SetTitle("#phi [rad]");
-                h2D_phi_vs_eta->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetYaxis()->SetTitle("#eta");
-                h2D_phi_vs_eta->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetZaxis()->SetLabelSize(DEF_AxisLabelSize);
-                h2D_phi_vs_eta->GetZaxis()->SetTitle("#frac{d p_{T}}{d #phi d #eta}");
-                h2D_phi_vs_eta->Write();
-                delete h2D_phi_vs_eta;
+                h2D_eta_vs_phi->SetTitle("");
+                h2D_eta_vs_phi->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetYaxis()->SetTitle("#phi [rad]");
+                h2D_eta_vs_phi->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetXaxis()->SetTitle("#eta");
+                h2D_eta_vs_phi->GetZaxis()->SetTitleSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetZaxis()->SetLabelSize(DEF_AxisLabelSize);
+                h2D_eta_vs_phi->GetZaxis()->SetTitle("#frac{d p_{T}}{d #phi d #eta}");
+                h2D_eta_vs_phi->Write();
+                delete h2D_eta_vs_phi;
             #endif
 
         

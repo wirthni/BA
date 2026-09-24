@@ -21,7 +21,7 @@ Int_t SingleJetAna(TString i_InputFile = "in.root")
 
     #define DEF_BinningPerUnit 100
     #define DEF_JetRadius 0.2
-    #define DEF_OutputEventOverviews false
+    #define DEF_OutputEventOverviews true
     #define DEF_HadLeadingPt 20.0
     #define DEF_BackgroundLimit 7.0 //GeV
     #define DEF_CorrelationMinPt 0.0

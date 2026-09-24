@@ -3,21 +3,77 @@
 using namespace fastjet;
 using namespace std;
 
+Int_t DrawSoftHadCorr(TString InputFile)
+{
+
+    #define DEF_AxisLabelSize 0.03
+    #define DEF_AxisTitleSize 0.05
+    #define DEF_AxisLabelOffset 1.2
+    #define DEF_HistoTitleSize 0.1
+    #define DEF_LegendFontSize 0.055
+
+    gStyle->SetOptStat(0);
+    SetRootGraphicStyle();
+
+    //open the root file
+    TFile *file = TFile::Open(InputFile);
+
+    if (!file || file->IsZombie()) {
+        std::cout << "Error while opening the file!" << std::endl;
+        return 0;
+    }
+
+    cout << "Retrieved file" << endl;
+
+    TH2D* Histo = (TH2D*) file->Get("h2D_eta_vs_dphi_LargeGap");
+
+    if(!Histo || Histo->IsZombie())
+    {
+        std::cout << "Error while opening the histogram!" << std::endl;
+        return 0;
+    }
+
+    gStyle->SetPadTickX(1); // Ticks on top X axis
+    gStyle->SetPadTickY(1); // Ticks on right Y axis
+    //gStyle->SetPadTickZ(1); // Ticks on right Y axis
+    gStyle->SetTickLength(0.02, "x");      // Globally for X axis
+
+    TCanvas* can = new TCanvas("can", "can", 1000, 1000);
+
+    Histo->SetTitle("");
+    Histo->GetXaxis()->SetTitle("#eta");
+    Histo->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Histo->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Histo->GetXaxis()->SetTitleOffset(DEF_AxisLabelOffset);
+    Histo->GetYaxis()->SetTitle("#Delta #phi [rad]");
+    Histo->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Histo->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Histo->GetYaxis()->SetTitleOffset(DEF_AxisLabelOffset);
+    Histo->GetZaxis()->SetTitle("#frac{1}{N_{Events}} #frac{d N}{d #eta d #phi}");
+    Histo->GetZaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Histo->GetZaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Histo->GetZaxis()->SetTitleOffset(DEF_AxisLabelOffset);
+    Histo->Draw("surf1, fb");
+
+    return 1;
+
+}
+
 static const int arr_color_jet[40] = {kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan,kOrange,kGreen+2,kMagenta,kBlue,kCyan};
 
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
 
-void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45.0, float phi = 70.0)
+void Plot_DiJets(int event = 1, int rebinX = 4, int rebinY = 4, float theta = 45.0, float phi = 70.0)
 {
     printf("Plot_DiJets started for event: %d \n",event);
 
     double min_jet_pt_sub_draw_label = 40.0;
 
     SetRootGraphicStyle();
-    TFile* inputfile = TFile::Open("3DEvents.root");
+    TFile* inputfile = TFile::Open("TEST.root");
     if(!inputfile) cout << "File not found!" << endl;
-    
-    TH2D* h2D_dijet = (TH2D*)inputfile->Get("h2D_Phi_vs_Eta");
+
+    TH2D* h2D_dijet = (TH2D*)inputfile->Get("Event Histos/h2D_eta_vs_phi;40");
     if(!h2D_dijet) cout << "Histo not found!" << endl;
     h2D_dijet ->Rebin2D(rebinX,rebinY);
 
@@ -109,7 +165,7 @@ void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45
     jet_rho_array[0] = jet_rho;
     //cout << "jet_sigma" << endl;
     Double_t jet_sigma = bkgd_estimator.sigma();
-    //printf("rho: %4.3f, sigma: %4.3f \n",jet_rho,jet_sigma);
+    printf("rho: %4.3f, sigma: %4.3f \n",jet_rho,jet_sigma);
     //--------------------
 
 
@@ -138,7 +194,7 @@ void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45
 
             vector<PseudoJet> jet_constituents = jets_fiducial[0][i_jet].constituents();
             int N_constituents = (Int_t)jet_constituents.size();
-            printf("Selected jet: %d, jet_pt: %4.3f, jet_pt-rho*area: %4.3f, N_constituents: %d \n ",i_jet,jet_pt,jet_pt_sub,N_constituents);
+            printf("Selected jet: %d, jet_pt: %4.3f, jet_area: %4.3f, jet_pt-rho*area: %4.3f, N_constituents: %d \n ",i_jet,jet_pt,jet_area,jet_pt_sub,N_constituents);
 
             for(Int_t i_constituent = 0; i_constituent < N_constituents; i_constituent++)
             {
@@ -223,12 +279,16 @@ void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45
     hs->GetXaxis()->CenterTitle();
     hs->GetYaxis()->CenterTitle();
     hs->GetXaxis()->SetTitle("#eta");
-    hs->GetYaxis()->SetTitle("#varphi (rad)");
+    hs->GetYaxis()->SetTitle("#phi [rad]");
     hs->GetZaxis()->SetTitle("#it{p}^{track}_{T} (GeV/#it{c})");
     hs->GetZaxis()->SetLabelSize(0.055);
     hs->GetZaxis()->SetTitleSize(0.055);
     hs->GetZaxis()->SetTitleOffset(0.7);
     hs->GetZaxis()->SetNdivisions(505,'N');
+    hs->GetXaxis()->SetLabelSize(0.055);
+    hs->GetXaxis()->SetTitleSize(0.055);
+    hs->GetYaxis()->SetLabelSize(0.055);
+    hs->GetYaxis()->SetTitleSize(0.055);
 
 
     can_h2D_dijet ->Update();
@@ -237,7 +297,7 @@ void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45
     // 1. Ensure the canvas has been drawn and updated
     // This forces ROOT to generate the 3D geometry and projection matrix
 
-    for(Int_t i_jet = 0; i_jet < (Int_t)vec_h2D_dijet_select.size(); i_jet++)
+    for(Int_t i_jet = 0; i_jet < min({(Int_t)vec_h2D_dijet_select.size(),2}); i_jet++)
     {
         double jet_pt_sub = vec_jet_pt_sub[i_jet];
         double jet_pt     = vec_jet_pt[i_jet];
@@ -298,14 +358,14 @@ void Plot_DiJets(int event = 1, int rebinX = 2, int rebinY = 2, float theta = 45
         can_h2D_dijet->AbsPixeltoXY(pixel_coords[0]-15, pixel_coords[1]-15, userX, userY);
 
         //jet_pt_sub
-        sprintf(NoP,"%4.1f",jet_pt);
+        sprintf(NoP,"%4.1f",jet_pt_sub);
         HistName = NoP;
         HistName += " GeV/#it{c}";
         plotTopLegend((char*)HistName.Data(),userX,userY,0.04,1,0.0,42,0,1); // char* label,Float_t x=-1,Float_t y=-1, Float_t size=0.06,Int_t color=1,Float_t angle=0.0, Int_t font = 42, Int_t NDC = 1, Int_t align = 1
 
-        sprintf(NoP,"%4.1f",jet_pt_sub);
-        HistName = NoP;
-        HistName += " GeV/#it{c}";
+        //sprintf(NoP,"%4.1f",jet_pt_sub);
+        //HistName = NoP;
+        //HistName += " GeV/#it{c}";
         //plotTopLegend((char*)HistName.Data(),userX,userY,0.04,1,0.0,42,0,1); // char* label,Float_t x=-1,Float_t y=-1, Float_t size=0.06,Int_t color=1,Float_t angle=0.0, Int_t font = 42, Int_t NDC = 1, Int_t align = 1
     }
     //------------------------------------------------
@@ -524,11 +584,11 @@ Int_t CompareDijetResults()
             leg->AddEntry(Pointer1,"5.36 TeV ALICE Pb--Pb 0-10% data","p");
             leg->AddEntry(Pointer2,"5.36 TeV ALICE Pb--Pb 0-30% data (external)","p");
             leg->AddEntry(Pointer3,"CoLBT-hydro ALICE prediction","f");
-            leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV", 40, 20), "");
+            leg->AddEntry((TObject*)nullptr,Form("Dijet, R = 0.2, |#eta_{jet}| #leq 0.7, p_{T} #geq (%.1d, %.1d) GeV/c", 40, 20), "");
             leg->AddEntry((TObject*)nullptr,"|#phi_{Hadron} - #phi_{Leading}| #leq #pi/2", "");
             leg->AddEntry((TObject*)nullptr,"statistical errors only", "");
         }
-        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV", LowPtCuts[iRow], HighPtCuts[iRow]),"");
+        leg->AddEntry((TObject*)nullptr,Form("%.1f #leq p_{T, Hadron} #leq %.1f GeV/c", LowPtCuts[iRow], HighPtCuts[iRow]),"");
         leg->SetLineColor(10);
         leg->SetTextSize(DEF_LegendFontSize); 
         leg->Draw();

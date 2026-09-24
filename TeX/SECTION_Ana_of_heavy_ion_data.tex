@@ -15,18 +15,18 @@
 \section{Analysis of heavy ion collision data}
 \label{sec:analysis-of-heavy-ion-collision-data}
 
-In this section an introduction to anisotropic charged hadron flow in non-central heavy ion collision is given. Then the necessary quantities to analyze events and particles within are introduced with a focus on using them in the diffusion wake analysis. Lastly triggers, objects that mark events suitable for analyses, are introduced in the heavy ion context.
+In this section an introduction to anisotropic charged hadron flow in non-central heavy ion collision is given. Then, the necessary quantities to analyze events and particles within are introduced with a focus on using them in the diffusion wake analysis. Lastly, triggers, i.e. objects that mark events suitable for analyses, are introduced in the heavy ion context.
 
-\subsection{Anisotropic flow in heavy ion collisions}
+\subsection{Anisotropic flow in heavy-ion collisions}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\linewidth]{Media/Pictures/EllipticFlow}
-	\caption{Schematic illustrations of a $\sqrt{s_{NN}} = 200\bunit{GeV/c}$ Au--Au collision with a $6\bunit{fm}$ impact parameter. The nuclei move towards each other in the $z$ direction. The left panel shows the nucleons of the two colliding nuclei with an ellipse outlining the approximate interaction region. The right panel shows a momentum-space representation of $v_2$. The average radius of each successive ring represents the $p_T$ of the particles while the anisotropy of the ring represents the magnitude of $v_2$. The highest $p_T$ particles (outer-ring) exhibit the strongest $v_2$ while the lowest $p_T$ particles (inner-ring) exhibit a vanishingly small $v_2$. From \cite{collaboration_centrality_2021}.}
+	\caption{The origin of elliptic flow in heavy-ion collisions. Schematic illustrations of a $\sqrt{s_{NN}} = 200\bunit{GeV/c}$ Au--Au collision with a $6\bunit{fm}$ impact parameter. The nuclei move towards each other in the $z$ direction. The left panel shows the nucleons of the two colliding nuclei with an ellipse outlining the approximate interaction region. The right panel shows a momentum-space representation of $v_2$. The average radius of each successive ring represents the $p_T$ of the particles while the anisotropy of the ring represents the magnitude of $v_2$. The highest $p_T$ particles (outer-ring) exhibit the strongest $v_2$ while the lowest $p_T$ particles (inner-ring) exhibit a vanishingly small $v_2$. From \cite{collaboration_centrality_2021}.}
 	\label{fig:ellipticflow}
 \end{figure}
 
-In the following the physics of non-central heavy ion collisions is discussed. The centrality of the collision of two nuclei is characterized by the impact parameter $|\vec{b}|$ between the nuclei which is the distance between their centers in the transverse direction \cite{collaboration_centrality_2021}. The smaller the impact parameter the bigger the overlap region of the nuclei is, thus increasing the size of the QGP medium. The centrality of events is categorized from 0--100\%, where low values describe the most central events, e.g. 0--10\%. The transverse impact vector $\vec{b}$ and the $z$-axis (beam direction) span the reaction plane with azimuthal angle $\psi$. In figure \ref{fig:ellipticflow} the reaction plane lies in the $x-z$ plane and its azimuthal angle is $\psi = 0$. The reaction plane angle can be estimated using the azimuthal distribution of particle momenta. In a hydrodynamic approach the initial spatial anisotropy (almond shape) of the QGP and subsequent interactions among the constituents result in pressure gradients that are larger in the direction of the reaction plane compared to out of this plane. This results in an in-plane enhancement of particle momenta \cite{snellings_elliptic_2011} (see figure \ref{fig:ellipticflow}). The estimation of the reaction plane angle by particle momenta is called the event plane angle $\psi_m$. A Fourier decomposition is used to quantify this eccentricity and other anisotropies in azimuthal particle momenta: \cite{voloshin_flow_1996}
+In the following, the physics of non-central heavy-ion collisions is discussed. The centrality of the collision of two nuclei is characterized by the impact parameter $|\vec{b}|$ between the nuclei, which is the distance between their centers in the transverse direction \cite{collaboration_centrality_2021}. The smaller the impact parameter the bigger the overlap region of the nuclei is, thus increasing the size of the QGP medium. The centrality of events is categorized from 0--100\%, where low values describe the most central events, e.g. 0--10\%. The transverse impact vector $\vec{b}$ and the $z$-axis (beam direction) span the reaction plane with azimuthal angle $\psi$. In figure \ref{fig:ellipticflow} the reaction plane lies in the $x-z$ plane and its azimuthal angle is $\psi = 0$. The reaction plane angle can be estimated using the azimuthal distribution of particle momenta. In a hydrodynamic approach, the initial spatial anisotropy (almond shape) of the QGP and subsequent interactions among the constituents result in pressure gradients that are larger in the direction of the reaction plane compared to out of this plane. This results in an in-plane enhancement of particle momenta \cite{snellings_elliptic_2011} (see figure \ref{fig:ellipticflow}). The estimation of the reaction plane angle by particle momenta is called the event plane angle $\psi_m$. A Fourier decomposition is used to quantify this eccentricity and other anisotropies in azimuthal particle momenta  \cite{voloshin_flow_1996}:
 
 \begin{equation}
 	\frac{d^3 N}{p_T d p_T dy d(\phi - \psi)} = \frac{1}{2 \pi} \frac{d N}{p_T d p_T dy} \cdot \left[1 + 2 \sum_{n=1}^{\infty} v_n \cos(n(\phi - \psi_m)) \right] \, .
@@ -35,13 +35,22 @@ In the following the physics of non-central heavy ion collisions is discussed. T
 
 $\phi$ is the azimuth angle, $\psi_m$ the event plane angle, $y$ the longitudinal rapidity and $p_T$ the transverse momentum. The coefficients $v_n$ quantify the strength of the $n$-th order harmonic in azimuthal particle correlation relative to the event plane.
 
-The first order harmonic $v_1 \approx 10^{-3}$ \cite{selyuzhenkov_charged_2011} is called directed flow. It describes an enhancement of particle momenta in one azimuthal direction with a suppression in the opposite direction \cite{voloshin_flow_1996}. The directed flow can be categorized into rapidity-even ($v_1^\text{even}(\eta) = v_1^\text{even}(- \eta)$) and rapidity-odd ($v_1^\text{odd}(\eta) = - v_1^\text{odd}(- \eta)$) components. Rapidity-even directed flow comes from event-wise fluctuations \cite{luzum_directed_2011} and rapidity-odd flow originates in hydrodynamic effects similar to those of elliptic flow. The spatial medium configuration that leads to rapidity-odd directed flow is pictured in figure \ref{fig:directedflowsketch}. The resulting medium is subject to anisotropic pressure gradients leading to an enhancement of soft hadrons in the $(z, x)$ directions $(-,+)$ and $(+,-)$.
+The first order harmonic $v_1 \approx 10^{-3}$ \cite{selyuzhenkov_charged_2011} is called directed flow. It describes an enhancement of particle momenta in one azimuthal direction with a suppression in the opposite direction \cite{voloshin_flow_1996}. The directed flow can be categorized into rapidity-even ($v_1^\text{even}(\eta) = v_1^\text{even}(- \eta)$) and rapidity-odd ($v_1^\text{odd}(\eta) = - v_1^\text{odd}(- \eta)$) components. Rapidity-even directed flow comes from event-wise fluctuations \cite{luzum_directed_2011} and rapidity-odd flow originates in hydrodynamic effects similar to those of elliptic flow. The spatial medium configuration that leads to rapidity-odd directed flow is pictured in figure \ref{fig:directedflowsketch}. The resulting medium is subject to anisotropic pressure gradients, leading to an enhancement of soft hadrons in the $(z, x)$ directions $(-,+)$ and $(+,-)$.
 
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.7\linewidth]{Media/Pictures/directed_flow_sketch}
-	\caption{The medium configuration shortly after a heavy ion collision. Non-uniform pressure gradients will enhance particle momenta in the positive $x$ direction for negative pseudorapidities and in the negative $x$ direction for positive pseudorapidities. From \cite{collaboration_directed_2013}.}
+	\begin{tikzpicture}
+		\node [inner sep=0pt] (myimage) at (0,0) {\includegraphics[width=0.7\linewidth]{Media/Pictures/directed_flow_sketch}};
+		\fill[white] (.5,-1) rectangle (5.5,-4);%cover the legend
+		\draw[rotate=45, red, thick] (0,0) ellipse (1.5cm and 0.7cm);
+		\draw[->, red, thick] (0.5,-0.5) -- (2,-2) node[right]{$\vec{p}$};
+		\draw[->, red, thick] (-0.5,0.5) -- (-2,2) node[left]{$\vec{p}$};
+		\draw[->, red, thick] (1.05,1.05) -- (1.5,1.5) node[right]{$\vec{p}$};
+		\draw[->, red, thick] (-1.05,-1.05) -- (-1.5,-1.5) node[left]{$\vec{p}$};
+	\end{tikzpicture}
+	
+	\caption{The medium configuration shortly after a heavy ion collision that is the origin of directed flow. Non-uniform pressure gradients will enhance particle momenta in the positive $x$ direction for negative pseudorapidities and in the negative $x$ direction for positive pseudorapidities. From \cite{collaboration_directed_2013}, edited.}
 	\label{fig:directedflowsketch}
 \end{figure}
 
@@ -50,40 +59,33 @@ The second order harmonic $v_2 \approx 10^{-1}$ \cite{adamczyk_elliptic_2013} is
 
 The third order harmonic $v_3 \approx 10^{-2} - 10^{-1}$, called triangular flow, and also higher harmonics describe event-wise initial geometry fluctuations \cite{alver_collision_2010}.
 
-Since the diffusion wake measurement relies on very tiny particle correlation differences it could be sensitive to these kinds of anisotropic flow. The parameters $v_2, v_3$ have a significantly greater magnitude than $v_1$ meaning we will take special care of the elliptic and the triangular flow whenever the analysis requires it. 
+Since the diffusion wake measurement relies on tiny particle correlation differences, it could be sensitive to these kinds of anisotropic flow.
 
 \subsection{Properties of events and particles}
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.7\linewidth]{Media/Pictures/ALICE_COORDINATES}
-	\caption{The coordinate system utilized at ALICE. The x-axis points into the direction of the accelerator’s center and the y-axis points upwards. The z-axis points in such direction that the three axes form a right-handed coordinate system. Image taken from \cite{coordination_alice_technical_definition_2003}}
-	\label{fig:alicecoordinates}
-\end{figure}
-
-The data used for the diffusion wake analysis is from ALICE RUN 3 which is the most recent ALICE data taking period from 2022-2026 \cite{kvapil_alice_2021}. Because the data must be prepared for analysis it is important to know which data is of interest. The first important event property is the position of the primary vertex $(x,y,z)$ that will be needed for only selecting events that have a low $z$ value. This is done because data taking at ALICE is only calibrated to $|z| < 10\bunit{cm}$ around the nominal interaction point. Another important event property is the charged particle multiplicity $N_\text{ch}$ that hold the number of charged particle tracks in the corresponding event. Since particle correlation differences between different events will be taken, it is sometimes important to do so between similarly populated events.
+The data used for the diffusion wake analysis is from ALICE Run 3, which is the most recent ALICE data taking period from 2022-2026 \cite{kvapil_alice_2021}. Because the data must be prepared for analysis, it is important to know which data is of interest. The first important event property is the position of the primary vertex $(x,y,z)$, that will be needed for only selecting events that have a low $z$ value. This is done because data taking at ALICE is only calibrated to $|z| < 10\bunit{cm}$ around the nominal interaction point. Another important event property is the charged particle multiplicity $N_\text{ch}$, that holds the number of charged particle tracks in the corresponding event. Since particle correlation differences between different events will be taken, it is may become important to do so between similarly populated events.
 
 Particles, or tracks, will have individual properties measured by a combination of the ALICE detector systems, including the particle charge $q$, the relativistic momentum $\vec{p} = (p_x, p_y, p_z)$, the particle characteristic TPC energy loss $dE/dx$ for possible particle identification, and the TPC track length. Particles that have their reconstructed trajectories far away from the primary vertex position will be omitted to avoid the analysis of particles produced in interactions with the detector structure. This is characterized by the distance to closest approach (DCA) values DCA$_z$ and DCA$_{xy}$.
 
-From these particle properties one can deduce further useful quantities. The relativistic energy-mass-momentum relation is $E = \sqrt{m^2 + |\vec{p}|^2}$. According to the ALICE coordinate system (figure \ref{fig:alicecoordinates}), the azimuthal angle can be acquired by $\phi = \atan(p_y, p_x)$ and the transverse momentum is $p_T = \sqrt{p_x^2 + p_y^2}$. Most of the data analysis will take place in the $(\phi, \eta, p_T)$ phase space or a subset of it. To get an idea of how data looks like in this case, figure \ref{fig:dijet2dexample} shows an exemplary event. The $(\phi, \eta)$ plane can be thought of as the unwrapped surface area of the barrel-shaped detector and the vertical axis indicates the particle's transverse momentum. 
-
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\begin{tikzpicture}
-		\node [inner sep=0pt] (myimage) at (0,0) {\includegraphics[width=\linewidth]{Media/Plots/RUN3_Event_3D.pdf}};
-		\node at (0,3) [align=left, fill=white] {\footnotesize This thesis \\
+		\node [inner sep=0pt] (myimage) at (0,0) {\includegraphics[width=\linewidth]{Media/Plots/Run3_Event_3D.png}};
+		\node at (0,4.5) [align=left, fill=white] {\footnotesize This thesis \\
 			\footnotesize ALICE Pb--Pb 2023 @ $\sqrt{s_{NN}} = 5.36\bunit{TeV}$ \\
-						\footnotesize $p_T \geq 0.15\bunit{GeV/c}, |\eta| \leq 0.9$ \\
-						\footnotesize DCA$_{xy}$, DCA$_z$ $\leq 0.5\bunit{cm}$};
+			\footnotesize $p_T \geq 0.15\bunit{GeV/c}, |\eta| \leq 0.9$ \\
+			\footnotesize DCA$_{xy}$, DCA$_z$ $\leq 0.5\bunit{cm}$};
 	\end{tikzpicture}
-	\caption{A Pb--Pb collision recorded in ALICE RUN 3. Besides many low-momentum thermal particles one jet can be seen. The jet consists of high-$p_T$ particles accompanied by surrounding particles with slightly lower $p_T$.}
+	\caption{A Pb--Pb event recorded in ALICE Run 3 in the $(\phi, \eta, p_T)$ phase space. Track colors represent jets clustered by the anti-$k_t$ algorithm with $R=0.3$. The two leading reconstructed jets' transverse momenta, i.e. $p_{T,\text{jet}}^\text{reco} = p_{T,\text{jet}}^\text{raw} - \rho \cdot A_\text{jet}$ are shown (see section \ref{sec:antikt} for details on jet algorithms).}
 	\label{fig:dijet2dexample}
 \end{figure}
+
+From these particle properties one can deduce further useful quantities. The relativistic energy-mass-momentum relation is $E = \sqrt{m^2 + |\vec{p}|^2}$. According to the ALICE coordinate system (figure \ref{fig:pseudorapidity}), the azimuthal angle can be acquired by $\phi = \atan(p_y, p_x)$ and the transverse momentum is $p_T = \sqrt{p_x^2 + p_y^2}$. Most of the data analysis will take place in the $(\phi, \eta, p_T)$ phase space or a subset of it. To get an idea of how data looks like in this case, figure \ref{fig:dijet2dexample} shows a ALICE RUN 3 event. The $(\phi, \eta)$ plane can be thought of as the unwrapped surface area of the barrel-shaped detector and the vertical axis indicates the particle's transverse momentum. 
 
 \subsection{Jets as trigger objects and the anti-$k_t$ algorithm}
 \label{sec:antikt}
 
-Many analyses require the presence of a jet that fulfills certain criteria, for example a minimum transverse momentum. In the diffusion wake two correlated jets or hadrons above a certain transverse momentum threshold are required as triggers. To know the transverse momentum of a jet one needs to know the total transverse momentum of the hadrons that belong to the jet, which is not clearly defined since one cannot unambiguously distinguish background particles from particles that result from jet hadronization. The mapping from a collection of single particles to a collection of jets can be done with jet clustering algorithms. FastJet \cite{cacciari_fastjet_2012} is a C++ package that provides a broad range of jet finding tools. The jet algorithm used is the anti-$k_t$ sequential recombination algorithm, \cite{cacciari_anti-_2008} since its jet identification process is very stable under changes of underlying soft radiation. Just like in other sequential recombination algorithms two measures are introduced:
+Many analyses require the presence of a jet that fulfills certain criteria, for example a minimum transverse momentum. In the diffusion wake two correlated jets or hadrons above a certain transverse momentum threshold are required as triggers. To know the transverse momentum of a jet, one needs to know the total transverse momentum of the hadrons that belong to the jet, which is not clearly defined since one cannot unambiguously distinguish background particles from particles that result from jet hadronization. The mapping from a collection of single particles to a collection of jets can be done with jet clustering algorithms. FastJet \cite{cacciari_fastjet_2012} is a C++ package that provides a broad range of jet finding tools. The jet algorithm used is the anti-$k_t$ sequential recombination algorithm \cite{cacciari_anti-_2008}, since its jet identification process is very stable under changes of underlying soft radiation. Just like in other sequential recombination algorithms, two measures are introduced:
 
 \begin{equation}
 	\begin{gathered}
@@ -95,7 +97,7 @@ Many analyses require the presence of a jet that fulfills certain criteria, for 
 
 where $\Delta_{ij}^2 = (y_i - y_j)^2 + (\phi_i - \phi_j)^2$ and $k_{ti}, y_i \text{ and } \phi_i$ are the transverse momentum, rapidity and azimuth of particle $i$ respectively. The quantity $d_{iB}$ is called beam distance of particle $i$. $R$ is the jet radius parameter.
 
-The algorithm starts with the four-momenta for all particles in the event \\ $p_i^\mu, i = 0,1,\dots, N_\text{ch}-1$. All particles, they are called protojets in this stage, are essentially light-like \cite{ellis_successive_1993}. The jet algorithm then recursively groups pairs of protojets together to form new protojets, preferably those with nearly parallel momentum. The formulation of equation (\ref{eq:anti-k_t}) makes clustering of soft particles with neighboring hard particles more probable than the clustering among soft particles themselves. The algorithm decides on when the joining for a particular protojet should cease, after which the protojet is called a jet and not manipulated any further.
+The algorithm starts with the four-momenta for all particles in the event \\ $p_i^\mu, i = 0,1,\dots, N_\text{ch}-1$. All particles, they are called protojets in this stage, are essentially light-like \cite{ellis_successive_1993}. The jet algorithm then recursively groups pairs of protojets together to form new protojets, preferentially those with nearly parallel momentum. The formulation of equation (\ref{eq:anti-k_t}) makes clustering of soft particles with neighboring hard particles more probable than the clustering among soft particles themselves. The algorithm decides on when the joining for a particular protojet should cease, after which the protojet is called a jet and not manipulated any further.
 
 To explain the recursive clustering of the algorithm in terms of equation (\ref{eq:anti-k_t}), there are first determined all quantities $d_{ij}$ and $d_{iB}$ for all particles $i,j$. Among these values, the smallest one is picked and labeled $d_\text{min}$. If $d_\text{min}$ is a $d_{ij}$, merge protojets $i$ and $j$ into a new protojet $k$ with
 
@@ -109,15 +111,15 @@ To explain the recursive clustering of the algorithm in terms of equation (\ref{
 	\end{gathered}
 \end{equation}
 
-so their coordinates in the phase space $(\phi, \eta)$ are weighted based on their respective transverse momenta. If $d_{min}$ is a $d_{iB}$, the corresponding protojet $i$ is considered not mergable. It is removed from the list of protojets and added to the list of jets. This process is repeated until all protojets are in the list of jets \cite{ellis_successive_1993}.
+so their coordinates in the phase space $(\phi, \eta)$ are weighted based on their respective transverse momenta. If $d_{min}$ is a $d_{iB}$, the corresponding protojet $i$ is considered not mergeable. It is removed from the list of protojets and added to the list of jets. This process is repeated until all protojets are in the list of jets \cite{ellis_successive_1993}.
 
-In heavy ion collisions the hard jets are always accompanied by a more diffuse background of soft particles \cite{cacciari_fastjet_2012}. Performing measurements on averages on this background makes it possible to correct the hard jets for the soft contamination. The average background transverse energy density is estimated per event with
+In heavy-ion collisions the hard jets are always accompanied by a more diffuse background of soft particles \cite{cacciari_fastjet_2012}. Performing measurements on averages on this background makes it possible to correct the hard jets for the soft contamination. The average background transverse energy density is estimated per event with
 
 \begin{equation}
 	\rho = \text{median}\left\{\frac{p_{T,\text{jet}^{\text{raw},i}}}{A_\text{jet}^i}\right\}.
 \end{equation}
 
-The estimate is done using a jet algorithm, preferably the $k_t$ algorithm that leads to softer reconstructed jets \cite{cacciari_fastjet_2012} for background estimation. Since the jet radius parameter $R$ is a degree of freedom (e.g. $R = 0.3 \text{ or } 0.4$) the background estimation is not uniquely defined. Usually one also removes the  $N=1,2,\dots$ hardest jets before background estimation as a further correction. The corrected jet transverse momentum is then
+The estimate is done using a jet algorithm, preferentially the $k_t$ algorithm that leads to softer reconstructed jets \cite{cacciari_fastjet_2012} for background estimation. Since the jet radius parameter $R$ is a degree of freedom (e.g. $R = 0.3 \text{ or } 0.4$) the background estimation is not uniquely defined. Usually one also removes the  $N=1,2,\dots$ hardest jets before background estimation as a further correction. The corrected jet transverse momentum is then
 
 \begin{equation}
 	p_{T,\text{jet}}^{\text{reco},i} = p_{T,\text{jet}}^{\text{raw},i} - \rho \cdot A_\text{jet}^i .
@@ -126,16 +128,40 @@ The estimate is done using a jet algorithm, preferably the $k_t$ algorithm that 
 \subsection{Hadrons as trigger objects}
 \label{sec:hadron-triggers}
 
-Identifying high-$p_T$ objects by clustering particles to jets as described in section \ref{sec:antikt} can sometimes lead to unwanted bias effects. The behavior of clustering algorithms is not invariant under changes of local measures, for example the local particle density in the $(\phi, \eta)$ phase space or the local particle transverse momentum spectrum. This can lead to biases if one conducts analyses with different starting conditions. As an example, let the trigger be a jet that has a transverse momentum of more than $30\bunit{GeV/c}$. Since the total transverse momentum of the jet is the sum of the transverse momenta of its constituents, more constituents that are available for clustering means that this threshold is reached quicker. For a positive elliptic flow parameter $v_2$ one will find more particles in the event plane that can be used for jet clustering than out of the event plane. Meaning jets are preferably clustered in-plane than elsewhere although the average initial distribution of hard hadrons is uniform in azimuthal angle. The jet's azimuthal position is therefore biased by the elliptic flow of low-momentum particles.
+Identifying high-$p_T$ objects by clustering particles to jets as described in section \ref{sec:antikt} can sometimes lead to unwanted bias effects. The behavior of clustering algorithms is not invariant under changes of local measures, for example the local particle density in the $(\phi, \eta)$ phase space or the local particle transverse momentum spectrum. This can lead to biases if one conducts analyses with different starting conditions. As an example, let the trigger be a jet that has a transverse momentum of more than $30\bunit{GeV/c}$. Since the total transverse momentum of the jet is the sum of the transverse momenta of its constituents, more constituents that are available for clustering means that this threshold is reached quicker. For a positive elliptic flow parameter $v_2$ one will find more particles in the event plane that can be used for jet clustering than out of the event plane. Meaning jets are preferably clustered in-plane than elsewhere although the average initial distribution of hard hadrons is uniform in azimuthal angle. Figure \ref{fig:EPBiasComparison} (top) shows the average correlation of $1 \leq p_T \leq 2 \bunit{GeV/c}$ hadrons relative to a dihadron pair trigger above $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$. Figure \ref{fig:EPBiasComparison} (bottom) shows the average correlation of $1 \leq p_T \leq 2 \bunit{GeV/c}$ hadrons relative to a dijet pair above $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30,15)\bunit{GeV/c}$. The leading jet ties to the event plane, leading to a $\cos$-shaped hadron correlation. In contrast to this, the soft hadron correlation in the dihadron trigger case is not modulated, i.e. the hadron trigger is not biased by the event plane.
 
-To overcome this issue it is possible to take single, high-$p_T$ hadrons as trigger objects. They occur independently from the anisotropic flow of low-$p_T$ hadrons and are therefore not biased towards the event plane. Usually the threshold for the hadron's transverse momentum can be lowered compared to the jet's threshold because the leading hadron of the jet contributes only a fraction of its total $p_T$. However, there is an issue with this hadron trigger method when triggering for a dihadron pair. When high-$p_T$ hadrons are scattered across the $(\phi, \eta)$ phase space and it happens that the two hadrons with the highest transverse momenta are right next to each other, for instance if they originate from the same jet, they should not be interpreted as independent trigger hadrons. Instead the subleading hadron has to be identified to originate from the same jet as the leading hadron. To do so all $N$ high-$p_T$ hadrons (above a certain threshold, e.g. $5\bunit{GeV/c}$) are first sorted by their transverse momenta to have 
+
+\begin{figure}
+	\begin{tikzpicture}
+		\node [inner sep=0pt] (myimage) at (0,0) {\includegraphics[width=\linewidth]{Media/Plots/EPBias_Had_15_10.pdf}};
+		\node at (-1,4) [align=left, fill=white] {This thesis \\
+		\footnotesize ALICE Pb--Pb 2023 @ $\sqrt{s_{NN}} = 5.36\bunit{TeV}$ \\
+		\footnotesize Dihadron, $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$ \\
+		\footnotesize $\eta_{\text{Leading}} > 0,\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} < 0 , \Delta \phi_{\text{Leading}, \text{Subleading}} > \pi/2$ \\
+		\footnotesize $1 \leq p_T^\text{track} \leq 2 \bunit{GeV/c}$};
+	\end{tikzpicture}
+	\begin{tikzpicture}
+		\node [inner sep=0pt] (myimage) at (0,0) {\includegraphics[width=\linewidth]{Media/Plots/EPBias_Jet_30_15.pdf}};
+		\node at (-1,4) [align=left, fill=white] {This thesis \\
+			\footnotesize ALICE Pb--Pb 2023 @ $\sqrt{s_{NN}} = 5.36\bunit{TeV}$ \\
+			\footnotesize Dijet, $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30,15)\bunit{GeV/c}$ \\
+			\footnotesize $\eta_{\text{Leading}} > 0,\eta_{\text{Leading}} \cdot \eta_{\text{Subleading}} < 0 , \Delta \phi_{\text{Leading}, \text{Subleading}} > \pi/2$ \\
+			\footnotesize $1 \leq p_T^\text{track} \leq 2 \bunit{GeV/c}$};
+	\end{tikzpicture}
+	
+	\caption{\textbf{(top)} The per-event correlation of $1 \leq p_T \leq 2 \bunit{GeV/c}$ hadrons relative to a dihadron pair trigger above $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (15,10)\bunit{GeV/c}$. \\ \textbf{(bottom)} The per-event correlation of $1 \leq p_T \leq 2 \bunit{GeV/c}$ hadrons relative to a dijet pair trigger above $(p_{T,\text{min}}^\text{Leading}, p_{T,\text{min}}^\text{Subleading}) = (30,15)\bunit{GeV/c}$.}
+	\label{fig:EPBiasComparison}
+\end{figure}
+
+To overcome this issue, it is possible to take single, high-$p_T$ hadrons as trigger objects. They occur independently of the anisotropic flow of low-$p_T$ hadrons and are therefore not biased towards the event plane. Usually the threshold for the hadron's transverse momentum can be lowered compared to the jet's threshold because the leading hadron of the jet contributes only a fraction of its total $p_T$. However, there is an issue with this hadron trigger method when triggering for a dihadron pair. When high-$p_T$ hadrons are scattered across the $(\phi, \eta)$ phase space and it happens that the two hadrons with the highest transverse momenta are right next to each other, for instance if they originate from the same jet, they should not be interpreted as independent trigger hadrons. Instead the subleading hadron has to be identified to originate from the same jet as the leading hadron. To do so all $N$ high-$p_T$ hadrons (above a certain threshold, e.g. $5\bunit{GeV/c}$) are first sorted by their transverse momenta to have 
 
 \begin{equation}
 	p_{T\text{,high}}^{(0)} \geq p_{T\text{,high}}^{(1)} \geq \dots \geq p_{T\text{,high}}^{(N-1)} \, .
 \end{equation} 
 
-In each iteration the particle with the highest transverse momentum $p_{T\text{,high}}^{(0)}$ is picked and all other high-$p_T$ hadrons in a radius $R$ from the list of high-$p_T$ hadrons are removed. The value of $R$ could be chosen to be the same as the jet radius. The leading high-$p_T$ hadron is being remembered as a trigger hadron standing alone within a radius of $R$. In the next iteration the process is repeated with the remaining high-$p_T$ particles until all high-$p_T$ triggers stand alone within a radius $R$. Every trigger hadron is now likely to originate from a different jet.
+In each iteration the particle with the highest transverse momentum $p_{T\text{,high}}^{(0)}$ is picked and all other high-$p_T$ hadrons in a radius $R$ from the list of high-$p_T$ hadrons are removed. The value of $R$ could be chosen to be the same as the jet radius. The leading high-$p_T$ hadron is being remembered as a trigger hadron standing alone within a radius of $R$. In the next iteration, the process is repeated with the remaining high-$p_T$ particles until all high-$p_T$ triggers stand alone within a radius $R$. Every trigger hadron is now likely to originate from a different jet.
 
 Both methods, using hadrons as trigger objects as well as using jets, are used in the analysis.
+
 
 \end{document}

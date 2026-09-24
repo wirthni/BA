@@ -23,6 +23,7 @@ Int_t ReadTree(TString i_InputFile)
     PrintInfo("ReadTree started");
 
     #define DEF_BinningPerUnit 100
+    #define DEF_Output3DEventOverviews
 
     double pT_thresh = 15.0;   // threshold that was used to produce the trees
     int total_events = 0;
@@ -193,6 +194,10 @@ Int_t ReadTree(TString i_InputFile)
 
     }
 
+    #ifdef DEF_Output3DEventOverviews
+            vector<TH2D*> HistoOverviewVector;
+    #endif
+
     PrintInfo("Loop Q vector calibrated collisions");
     TIter next_loop(file->GetListOfKeys());
     while ((key = (TKey *)next_loop())) {
@@ -281,6 +286,8 @@ Int_t ReadTree(TString i_InputFile)
 
         int N_events_skipped = 0;
 
+        
+
         for (int i_Collision = 0; i_Collision < entries_col; i_Collision++) {
 
             PrintProgress(i_Collision, entries_col);
@@ -307,6 +314,10 @@ Int_t ReadTree(TString i_InputFile)
             h1d_Ntrack_event ->Fill(CollisionMap[collision.ColID].size());
             h1d_psi2_corrected->Fill(GetEventPlaneInfo(collision.ColID, tracks , CollisionMap, QVectorCorrectionFileName));
 
+            #ifdef DEF_Output3DEventOverviews
+                TH2D* h2D_3DOverview = new TH2D("3DOverview", "3DOverview", 50*1.8, -.9, +.9, 50*2*Pi, -Pi, +Pi);
+            #endif
+
             // loop over tracks for this event
             float pT_sum = 0.0;
             for (int i_Track = 0; i_Track < CollisionMap[collision.ColID].size(); i_Track++)
@@ -315,8 +326,11 @@ Int_t ReadTree(TString i_InputFile)
                 h1d_pT -> Fill(track.Pt);
                 h1d_eta-> Fill(track.Eta);
                 h1d_phi-> Fill(track.Phi);
+                h2D_3DOverview->Fill(track.Eta, track.Phi, track.Pt);
                 pT_sum += track.Pt;
             }
+
+            HistoOverviewVector.push_back(h2D_3DOverview);
 
             h1d_pTsum ->Fill(pT_sum);
 
@@ -326,6 +340,11 @@ Int_t ReadTree(TString i_InputFile)
         cout << "Skipped " << N_events_skipped << "/" << entries_col << " events" << endl;
         total_skip += N_events_skipped;
         /*END USER FINALIZE DF CODE*/
+
+        //if histo overview is requested, only process one DF for memory reasons
+        #ifdef DEF_Output3DEventOverviews
+            break;
+        #endif
 
     }
 
@@ -371,6 +390,13 @@ Int_t ReadTree(TString i_InputFile)
         h2D_Psi_pos_vs_Psi_neg->Write();
         h2D_Q_vec_peak->Write();
         h2D_Q_vec_tail->Write();
+
+        #ifdef DEF_Output3DEventOverviews
+            for(const auto& Histo : HistoOverviewVector)
+            {
+                Histo->Write();
+            }
+        #endif
 
         OutputFile->Close();
     }
@@ -518,6 +544,13 @@ Int_t ReadTree(TString i_InputFile)
         Summed_h2D_Psi_pos_vs_Psi_neg->Write();
         Summed_h2D_Q_vec_peak->Write();
         Summed_h2D_Q_vec_tail->Write();
+
+        #ifdef DEF_Output3DEventOverviews
+            for(const auto& Histo : HistoOverviewVector)
+            {
+                Histo->Write();
+            }
+        #endif
 
         OutputFile->Close();
 
