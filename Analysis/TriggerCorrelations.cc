@@ -18,8 +18,6 @@ Int_t TriggerCorrelations(TString i_InputFile = "in.root")
 
     #define DEF_BinningPerUnit 25
     #define DEF_JetRadius 0.2
-    #define DEF_JetLeadingPt 20.0
-    #define DEF_JetSubleadingPt 10.0
     #define DEF_HadLeadingPt 15.0
     #define DEF_HadSubleadingPt 8.0
     #define DEF_BackgroundLimit 7.0 //GeV
@@ -238,55 +236,50 @@ Int_t TriggerCorrelations(TString i_InputFile = "in.root")
             /
             /
             *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            if(UseJetTrigger)
-            {
-                Jets[collision.ColID] = FindJets(ParticleVector[collision.ColID]);
-            }
-            else
-            {
-                if(HighPtParticles[collision.ColID].size() == 0) continue;
-                do{
 
-                    Int_t HighestPtIndex = 0;
+            if(HighPtParticles[collision.ColID].size() == 0) continue;
+            do{
 
-                    //search for highest momentum and choose corresponding particle as a primary vertex
-                    for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                Int_t HighestPtIndex = 0;
+
+                //search for highest momentum and choose corresponding particle as a primary vertex
+                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                {
+                    if(HighPtParticles[collision.ColID][i].pt() > HighPtParticles[collision.ColID][HighestPtIndex].pt())
                     {
-                        if(HighPtParticles[collision.ColID][i].pt() > HighPtParticles[collision.ColID][HighestPtIndex].pt())
-                        {
-                            HighestPtIndex = i;
-                        }
+                        HighestPtIndex = i;
                     }
+                }
 
-                    //push particle into jet vector 
-                    Jets[collision.ColID].push_back(HighPtParticles[collision.ColID][HighestPtIndex]);
+                //push particle into jet vector 
+                Jets[collision.ColID].push_back(HighPtParticles[collision.ColID][HighestPtIndex]);
 
-                    //pop jet particle
-                    HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin() + HighestPtIndex);
+                //pop jet particle
+                HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin() + HighestPtIndex);
 
-                    //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
-                    for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                //look for other high pt particles in a radius of DEF_JetRadius because they belong to the same jet
+                for(Int_t i=0; i<HighPtParticles[collision.ColID].size(); i++)
+                {
+
+                    double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
+                    double DeltaPhi = Jets[collision.ColID].back().phi() - HighPtParticles[collision.ColID][i].phi();
+
+                    //normalize
+                    if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+                    else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+
+                    double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
+
+                    if(DeltaR <= DEF_JetRadius)
                     {
-
-                        double DeltaEta = Jets[collision.ColID].back().eta() - HighPtParticles[collision.ColID][i].eta();
-                        double DeltaPhi = Jets[collision.ColID].back().phi() - HighPtParticles[collision.ColID][i].phi();
-
-                        //normalize
-                        if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
-                        else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
-
-                        double DeltaR = TMath::Sqrt(DeltaEta*DeltaEta + DeltaPhi*DeltaPhi);
-
-                        if(DeltaR <= DEF_JetRadius)
-                        {
-                            //pop candidate
-                            HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin()+i);
-                            i = -1;//start again for safety
-                        }
+                        //pop candidate
+                        HighPtParticles[collision.ColID].erase(HighPtParticles[collision.ColID].begin()+i);
+                        i = -1;//start again for safety
                     }
+                }
 
-                }while(HighPtParticles[collision.ColID].size() > 0);
-            }
+            }while(HighPtParticles[collision.ColID].size() > 0);
+
 
             if(Jets[collision.ColID].size() < 1) continue; 
 
@@ -424,58 +417,4 @@ Int_t TriggerCorrelations(TString i_InputFile = "in.root")
     }
 
     return 1;
-}
-
-vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
-{
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-    /
-    /                                                           JET FINDER CODE 
-    /
-    /
-    /
-    /
-    *//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //DEFINITIONS
-    #define jet_radius 0.2
-    Double_t ghost_maxrap = 1.1;
-    Double_t eta_acceptance = 0.9;
-    double ptmin = 0.15;
-    JetDefinition jet_def(antikt_algorithm, jet_radius);
-    GhostedAreaSpec area_spec(ghost_maxrap);
-    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-
-    //CLUSTER JETS
-    ClusterSequenceArea clust_seq_hard(vec_particles, jet_def, area_def);
-    vector<PseudoJet> jets_all = sorted_by_pt(clust_seq_hard.inclusive_jets(ptmin));
-    Selector Fiducial_cut_selector = SelectorAbsEtaMax(eta_acceptance - jet_radius);
-    vector<PseudoJet> FiducialJets = Fiducial_cut_selector(jets_all);
-
-    //ESTIMATE AND SUBTRACT BACKGROUND
-    Int_t Rem_n_hardest = 2;
-    double eBkg_R = 0.2;
-    JetDefinition jet_def_bkgd(kt_algorithm, eBkg_R);
-    AreaDefinition area_def_bkgd(active_area_explicit_ghosts,GhostedAreaSpec(ghost_maxrap,1,0.01));
-    ClusterSequenceArea ClustSeqBg(vec_particles, jet_def_bkgd, area_def_bkgd);
-    Selector selector = SelectorAbsEtaMax(0.9 - eBkg_R) * (!SelectorNHardest(Rem_n_hardest));
-    JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
-    bkgd_estimator.set_cluster_sequence(ClustSeqBg);
-    Subtractor subtractor(&bkgd_estimator);
-    subtractor.set_use_rho_m(true);
-    vector<PseudoJet> SubtractedJets = subtractor(FiducialJets);
-
-    //APPEND INFO AND KICK OUT JETS WITH TOO SMALL AREA
-    Double_t Jet_area_cut = 0.56*TMath::Pi()*TMath::Power(jet_radius,2);
-    for(int iJet = SubtractedJets.size() - 1; iJet >= 0; iJet--)
-    {
-        if(SubtractedJets[iJet].area() < Jet_area_cut){SubtractedJets.erase(SubtractedJets.begin() + iJet);}
-        //SubtractedJets[iJet].set_user_info(new MyUserInfo(SubtractedJets[iJet].constituents().size()));
-
-    }
-
-    return sorted_by_pt(SubtractedJets);
-
 }
