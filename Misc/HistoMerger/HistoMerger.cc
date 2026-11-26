@@ -67,6 +67,8 @@ Int_t HistoMerger(TString i_RootFileName, TString i_PathToHistosInRootFile, int 
         //append the other files 2,3,...
         for(int j=2; j<=i_NoOfHistos; j++)
         {
+
+            if (j==1) continue;
             DataFile = "DataToMerge/" + i_RootFileName + Form("_%d", j) + ".root";
 
             if(gSystem->AccessPathName(DataFile))

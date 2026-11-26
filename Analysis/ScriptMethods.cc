@@ -3,6 +3,59 @@
 using namespace fastjet;
 using namespace std;
 
+Int_t PlotDihadTriggerEPCorrelation()
+{
+    #define DEF_AxisLabelSize 0.05
+    #define DEF_AxisTitleSize 0.05
+    #define DEF_HistoTitleSize 0.1
+    #define DEF_LegendTextSize 0.03
+    #define DEF_LegendFontSize 0.03
+
+    gStyle->SetOptStat(0);
+    SetRootGraphicStyle();
+
+    Int_t n = 100;
+    float v_1 = 5.42e-3;
+    Double_t x[n], y_LG[n], y_SG[n];
+    for (Int_t i=0;i<n;i++) {
+        x[i] = -Pi + 2*Pi*(float)i/(float)n;
+        y_LG[i] = (1 + 2*v_1*TMath::Cos(x[i])) * (1 - 2*v_1*TMath::Cos(x[i]+Pi));
+        y_SG[i] = (1 + 2*v_1*TMath::Cos(x[i])) * (1 + 2*v_1*TMath::Cos(x[i]+Pi));
+    }
+    // create graph
+
+    TCanvas *can = new TCanvas("can", "can", 1000, 1000);
+    TGraph *Graph_LG  = new TGraph(n,x,y_LG);
+    TGraph *Graph_SG  = new TGraph(n,x,y_SG);
+    // draw the graph with axis, continuous line, and put
+
+    Graph_LG->SetTitle("");
+    Graph_LG->GetXaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Graph_LG->GetXaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Graph_LG->GetXaxis()->SetTitle("#phi[rad]");
+    Graph_LG->GetYaxis()->SetTitleSize(DEF_AxisTitleSize);
+    Graph_LG->GetYaxis()->SetLabelSize(DEF_AxisLabelSize);
+    Graph_LG->GetYaxis()->SetTitle("p(AB) = p(#phi_{A} - #psi_{m}) * p(#phi_{B} - #psi_{m}) [a.u.]");
+    Graph_LG->SetLineColor(kRed);
+    Graph_LG->Draw("AC");
+
+    Graph_SG->SetLineColor(kBlue);
+    Graph_SG->Draw("SAME C");
+
+    TLegend *leg = new TLegend(0.25,0.77,0.26,0.93);
+    leg->AddEntry((TObject*)nullptr,"#phi_{A} = #phi_{B} + #pi", "");
+    leg->AddEntry((TObject*)nullptr,"p_{T}^{A/B} := 8.5 GeV/c, |#eta^{A/B}| := 0.6", "");
+    leg->AddEntry((TObject*)nullptr,"v_{1}^{A/B}(p_{T}^{A/B}, #eta^{A/B}) = -5.42 * 10^{-3} * sgn(#eta) (ALICE Prelim.)", "");
+    leg->AddEntry((TObject*)nullptr,"p(#phi_{A/B} - #psi_{m}) = 1 + 2v_{1}^{A/B}cos(#phi_{A/B} - #psi_{m})", "");
+    leg->AddEntry(Graph_LG,"Large Gap (v_{1}^{A} = -v_{1}^{B})","l");
+    leg->AddEntry(Graph_SG,"Small Gap (v_{1}^{A} = v_{1}^{B})","l");
+    leg->SetLineColor(10);
+    leg->SetTextSize(DEF_LegendFontSize); 
+    leg->Draw();
+
+    return 1;
+}
+
 Int_t DrawSoftHadCorr(TString InputFile)
 {
 

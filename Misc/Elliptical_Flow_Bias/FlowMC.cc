@@ -9,6 +9,7 @@ Author: Nicolas Wirth, Nicolas.Wirth@cern.ch
 #include "Math/Vector4D.h"
 #include <algorithm>
 #include <cstdlib>
+#include <ctime>
 #include "Fastjet/fastjet-3.5.1/include/fastjet/config.h"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/ClusterSequenceArea.hh"
 #include "Fastjet/fastjet-3.5.1/include/fastjet/PseudoJet.hh"
@@ -51,7 +52,7 @@ i_OutputFileName should be of form "NAME". File type is appended automatically
 i_InputDataDivisions number of times the input files should be separated (e.g. 10) ->only 1/10 of the input data is processed
 i_InputDataDivisionNumber 1->work off the first 1/10, 2->work off the second 1/10, ... . Goes from 1...i_InputDataDivisions
 */
-Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "Default", int8_t i_InstanceNo = 1)
+Int_t FlowMC(int i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = false, TString i_OutputFileName = "Default", int i_InstanceNo = 1)
 {
 
     gStyle->SetOptStat(0);
@@ -71,6 +72,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     #define DEF_MaxJetPt 150.0
     #define DEF_AxisLabelSize 0.05
     #define DEF_HistoTitleSize 0.1
+    #define DEF_BackToBackSmearingSigma 50
 
     //other variables
     TH2D* h2D_pt_vs_eta_LargeGap = new TH2D("h2D_pt_vs_eta_LargeGap","h2D_pt_vs_eta_LargeGap",100, 0, 10, DEF_BinningPerUnit * 2 * 0.9,-0.9,0.9);
@@ -90,14 +92,9 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     TH1D* h1D_AllJetsEta_PYTHIA = new TH1D("h1D_AllJetsEta_PYTHIA", "h1D_AllJetsEta_PYTHIA", 20, -0.9, 0.9);
     TH1D* h1D_AllJetsEta_HYBRID = new TH1D("h1D_AllJetsEta_HYBRID", "h1D_AllJetsEta_HYBRID", 20, -0.9, 0.9);
     TH2F* h2F_SoftHadronRelEP = new TH2F("h2F_SoftHadronRelEP", "h2F_SoftHadronRelEP", DEF_BinningPerUnit * 2 * Pi, -Pi/2, 3*Pi/2, DEF_BinningPerUnit * 2 * 0.9, -0.9, 0.9);
-
-
-    TRandom TR_Eta;
-    TR_Eta.SetSeed(0);
-    TRandom TR_V2Angle;
-    TR_V2Angle.SetSeed(0);
-    TRandom TR_V3Angle;
-    TR_V3Angle.SetSeed(0);
+    TH1F* h1F_PhiLeadMinusPsi_LG = new TH1F("h1F_PhiLeadMinusPsi_LG", "h1F_PhiLeadMinusPsi_LG", DEF_BinningPerUnit * 2 * Pi, -Pi, +Pi);
+    TH1F* h1F_PhiLeadMinusPsi_SG = new TH1F("h1F_PhiLeadMinusPsi_SG", "h1F_PhiLeadMinusPsi_SG", DEF_BinningPerUnit * 2 * Pi, -Pi, +Pi);
+    
 
     Long64_t            LargeGapEventCounter = 0;
     Long64_t            SmallGapEventCounter = 0;
@@ -185,6 +182,11 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     TDirectory *EventHistos = OutputFile->mkdir("Event Histos");
     TDirectory *Results = OutputFile->mkdir("Results");
 
+    TRandom3 TR_Eta(0);
+    TRandom3 TR_V2Angle(0);
+    TRandom3 TR_V3Angle(0);
+    TRandom3 TR_N(0);
+    TRandom3 TR_pT(0);
 
     for(Int_t iEvent = 0; iEvent < i_NoOfEvents; iEvent++)
     {
@@ -204,7 +206,9 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
         float DistanceToClosestV2MaximumAfterBG;
         float DistanceToClosestV3MaximumBeforeBG;
         float DistanceToClosestV3MaximumAfterBG;
-        Int_t N = h1D_NDist->GetRandom();
+
+        
+        Int_t N = h1D_NDist->GetRandom(&TR_N);
         double V2_Angle = TR_V2Angle.Uniform(-Pi, Pi);
         double V3_Angle = TR_V3Angle.Uniform(-Pi, Pi);
         vector<array<double, 4>> ParticleMemory;//remembers randomly generated particle coordinates (phi, eta, pt) for relevant cuts later in the analysis
@@ -229,67 +233,83 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
         //get trigger hadron kinematics
         //PhaseSpaceHisto->GetRandom(TriggerPhaseSpaceTuple, kTRUE);
 
-        //generate leading&subleading hadron
-        for(int i=1; i<=2; i++)
+        //generate leading hadron
+        double Pt;
+        do{
+            Pt = h1D_PtDist->GetRandom(&TR_pT);
+        }while(fabs(Pt) <= DEF_HadLeadingPt);
+        //get particle eta
+        double Eta = TR_Eta.Uniform(-0.9, 0.9);
+        //get elliptic flow strength from pt
+        double pseudoparams[2] = {Pt,Eta};
+        double v_2_and_v_3 = Function_v2v3ByPtAndEta(Pt, pseudoparams);
+    
+        /* Decision Matrix: 6 possibilities
+        Eta: > 1
+        Pt: < 1 >
+        */
+        double v_1;
+        if(abs(Eta) > 0.6 && Pt < 0.2)
         {
-            double Pt;
-            do{
-                Pt = h1D_PtDist->GetRandom();
-            }while(fabs(Pt) <= DEF_HadSubleadingPt);
-            //get particle eta
-            double Eta = TR_Eta.Uniform(-0.9, 0.9);
-            //get elliptic flow strength from pt
-            double pseudoparams[2] = {Pt,Eta};
-            double v_2_and_v_3 = Function_v2v3ByPtAndEta(Pt, pseudoparams);
-        
-            /* Decision Matrix: 6 possibilities
-            Eta: > 1
-            Pt: < 1 >
-            */
-            double v_1;
-            if(abs(Eta) > 0.6 && Pt < 0.2)
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(0.2, 0.6*sgn(Eta));
-                v_1 *= abs(Eta)/0.6;
-            }
-            else if(abs(Eta) > 0.6 && Pt >= 0.2 && Pt <= 9.5)
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(Pt, 0.6*sgn(Eta));
-                v_1 *= abs(Eta)/0.6;
-            }
-            else if(abs(Eta) > 0.6 && Pt > 9.5)
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(9.5, 0.6*sgn(Eta));
-                v_1 *= abs(Eta)/0.6;
-            }
-            else if(abs(Eta) <= 0.6 && Pt < 0.2)
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(0.2, Eta);
-            }
-            else if(abs(Eta) <= 0.6 && Pt >= 0.2 && Pt <= 9.5)
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(Pt, Eta);
-            }
-            else //eta is ok, Pt too big
-            {
-                v_1 = h2D_v1_pT_Eta->Interpolate(9.5, Eta);
-            }
-        
-            h2D_Eta_vs_v1->Fill(Eta, v_1);
-
-            double FlowParamsArray[5] = {v_1, v_2_and_v_3 * i_AllowV2, v_2_and_v_3 * i_AllowV3, V2_Angle, V3_Angle};
-
-            double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
-            if(Phi > Pi) Phi -= 2*Pi;
-            else if(Phi < -Pi) Phi += 2*Pi;
-            //remember particle
-            ParticleMemory.push_back({Phi, Eta, Pt});
-
-            h2D_GeneratedParticles->Fill(Eta, Phi);
-
-            HighPtParticles.push_back({Phi, Eta, Pt});
-
+            v_1 = h2D_v1_pT_Eta->Interpolate(0.2, 0.6*sgn(Eta));
+            v_1 *= abs(Eta)/0.6;
         }
+        else if(abs(Eta) > 0.6 && Pt >= 0.2 && Pt <= 9.5)
+        {
+            v_1 = h2D_v1_pT_Eta->Interpolate(Pt, 0.6*sgn(Eta));
+            v_1 *= abs(Eta)/0.6;
+        }
+        else if(abs(Eta) > 0.6 && Pt > 9.5)
+        {
+            v_1 = h2D_v1_pT_Eta->Interpolate(9.5, 0.6*sgn(Eta));
+            v_1 *= abs(Eta)/0.6;
+        }
+        else if(abs(Eta) <= 0.6 && Pt < 0.2)
+        {
+            v_1 = h2D_v1_pT_Eta->Interpolate(0.2, Eta);
+        }
+        else if(abs(Eta) <= 0.6 && Pt >= 0.2 && Pt <= 9.5)
+        {
+            v_1 = h2D_v1_pT_Eta->Interpolate(Pt, Eta);
+        }
+        else //eta is ok, Pt too big
+        {
+            v_1 = h2D_v1_pT_Eta->Interpolate(9.5, Eta);
+        }
+    
+        h2D_Eta_vs_v1->Fill(Eta, v_1);
+
+        double FlowParamsArray[5] = {v_1, v_2_and_v_3 * i_AllowV2, v_2_and_v_3 * i_AllowV3, V2_Angle, V3_Angle};
+
+        double Phi = GetRandomF(Function_PhiByFlow, -Pi, +Pi, FlowParamsArray);
+        if(Phi > Pi) Phi -= 2*Pi;
+        else if(Phi < -Pi) Phi += 2*Pi;
+        //remember particle
+        ParticleMemory.push_back({Phi, Eta, Pt});
+
+        h2D_GeneratedParticles->Fill(Eta, Phi);
+
+        HighPtParticles.push_back({Phi, Eta, Pt});
+
+        
+        //generate subleading hadron
+        do{
+            Pt = h1D_PtDist->GetRandom(&TR_pT);
+        }while(fabs(Pt) <= DEF_HadSubleadingPt);
+        //get particle eta
+        Eta = TR_Eta.Uniform(-0.9, 0.9);
+
+        TRandom3 QCDFluctRNG(0);
+        Phi += (Pi + QCDFluctRNG.Gaus(0.0, DEF_BackToBackSmearingSigma));
+        while(Phi > Pi) Phi -= 2*Pi;
+        while(Phi < -Pi) Phi += 2*Pi;
+        //remember particle
+        ParticleMemory.push_back({Phi, Eta, Pt});
+
+        h2D_GeneratedParticles->Fill(Eta, Phi);
+
+        HighPtParticles.push_back({Phi, Eta, Pt});
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /*
@@ -311,7 +331,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
             //get particle pt
             double Pt;
             do{
-                Pt = h1D_PtDist->GetRandom();
+                Pt = h1D_PtDist->GetRandom(&TR_pT);
             }while(fabs(Pt) <= 0.15);
             if (Pt >= DEF_HadSubleadingPt) continue;//dont draw them, we dont need them
             //get particle eta
@@ -465,7 +485,7 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
         if(JetVector[0].pt() <= DEF_HadLeadingPt || JetVector[1].pt() <= DEF_HadSubleadingPt) continue;
 
         double PhiSeparation = JetVector[0].phi_std() - JetVector[1].phi_std();
-    
+
         if(PhiSeparation > Pi) PhiSeparation -= 2*Pi;
         else if(PhiSeparation < -Pi) PhiSeparation += 2*Pi;
         if(abs(PhiSeparation) < Pi/2) continue;
@@ -545,6 +565,20 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
             // Fill large gap cut jet coordinates
             h2D_eta_vs_phi_JetCoordinates_Leading_LargeGapCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
 
+            double DeltaPhi = JetVector[0].phi_std() - V2_Angle;
+            if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+            else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+
+            //in case of negative eta, invert in phi because of direct flow asymmetry
+            if (JetVector[0].eta() < 0)
+            {
+                DeltaPhi += Pi;
+                if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+                else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+            }
+
+            h1F_PhiLeadMinusPsi_LG->Fill(DeltaPhi);
+
             LargeGapEventCounter++;
         }
         else
@@ -582,6 +616,20 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
 
             // Fill small gap cut jet coordinates
             h2D_eta_vs_phi_JetCoordinates_Leading_SmallGapCut->Fill(JetVector[0].eta(), JetVector[0].phi_std());
+
+            double DeltaPhi = JetVector[0].phi_std() - V2_Angle;
+            if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+            else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+
+            //in case of negative eta, invert in phi because of direct flow asymmetry
+            if (JetVector[0].eta() < 0)
+            {
+                DeltaPhi += Pi;
+                if(DeltaPhi > Pi) DeltaPhi -= 2*Pi;
+                else if(DeltaPhi < -Pi) DeltaPhi += 2*Pi;
+            }
+
+            h1F_PhiLeadMinusPsi_SG->Fill(DeltaPhi);
 
             SmallGapEventCounter++;
         }
@@ -624,6 +672,9 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     h2D_eta_vs_dphi_SmallGap->Rebin2D(8,8);
     h2D_eta_vs_dphi_LargeGap->Scale(1.0/8.0);
     h2D_eta_vs_dphi_SmallGap->Scale(1.0/8.0);
+
+    h1F_PhiLeadMinusPsi_LG->Rebin(32);
+    h1F_PhiLeadMinusPsi_SG->Rebin(32);
 
     // Divide by bin widths
     h2D_eta_vs_dphi_LargeGap->Scale(1./(h2D_eta_vs_dphi_LargeGap->GetXaxis()->GetBinWidth(0) * h2D_eta_vs_dphi_LargeGap->GetYaxis()->GetBinWidth(0)));
@@ -769,6 +820,18 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     h2D_v1_pT_Eta->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
     h2D_v1_pT_Eta->GetYaxis()->SetTitle("#eta");
 
+    h1F_PhiLeadMinusPsi_LG->SetTitle("Correlation of the leading hadron with the event plane, Large Gap");
+    h1F_PhiLeadMinusPsi_LG->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_PhiLeadMinusPsi_LG->GetXaxis()->SetTitle("#phi_{Lead} - #psi_{2}");
+    h1F_PhiLeadMinusPsi_LG->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_PhiLeadMinusPsi_LG->GetYaxis()->SetTitle("#");
+
+    h1F_PhiLeadMinusPsi_SG->SetTitle("Correlation of the leading hadron with the event plane, Small Gap");
+    h1F_PhiLeadMinusPsi_SG->GetXaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_PhiLeadMinusPsi_SG->GetXaxis()->SetTitle("#phi_{Lead} - #psi_{2}");
+    h1F_PhiLeadMinusPsi_SG->GetYaxis()->SetTitleSize(DEF_AxisLabelSize);
+    h1F_PhiLeadMinusPsi_SG->GetYaxis()->SetTitle("#");
+
     //write global results
     Results->cd();
     h2D_pt_vs_eta_LargeGap->Write();
@@ -791,6 +854,8 @@ Int_t FlowMC(Int_t i_NoOfEvents = -1, bool i_AllowV2 = false, bool i_AllowV3 = f
     h1D_AllJetsEta_HYBRID->Write();
     h2D_v1_pT_Eta->Write();
     h2F_SoftHadronRelEP->Write();
+    h1F_PhiLeadMinusPsi_LG->Write();
+    h1F_PhiLeadMinusPsi_SG->Write();
 
     OutputFile ->Close();
     
@@ -1216,6 +1281,7 @@ vector<PseudoJet> FindJets(const vector<PseudoJet> vec_particles)
 
 
 float RandomFloat(float a, float b) {
+    //srand(static_cast<unsigned int>(std::time(0)));
     float random = ((float) rand()) / (float) RAND_MAX;
     float diff = b - a;
     float r = random * diff;
@@ -1269,6 +1335,7 @@ double GetRandomF(double (*i_FuncPtr)(double, double[]), double i_LowerLim, doub
         TotalProb += i_FuncPtr(i_LowerLim + (0.5+i)*IntervalLength, i_FuncParams) * (i_UpperLim - i_LowerLim)/ACCURACY;
     }
 
+    //srand(static_cast<unsigned int>(std::time(0)));
     double Lim = TotalProb * (double)rand() / RAND_MAX;
     for(int8_t i=0; i<=ACCURACY+10; i++)
     {
